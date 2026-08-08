@@ -73,7 +73,7 @@ npm run lint
 npm run build
 ```
 
-The current page is the unmodified official Vite React + TypeScript starter. Team members must replace it only through claimed LeanKit work, a traceable branch and a reviewed Pull Request.
+The current page was initialised from the official Vite React + TypeScript starter and adapted as a neutral Team TE37 repository baseline. Assessed features must be added only through claimed LeanKit work, a traceable branch and a reviewed Pull Request.
 
 ## Before implementation starts
 
