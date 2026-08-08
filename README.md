@@ -8,7 +8,8 @@ This repository is the planned source-of-truth for Team TE37's runnable web buil
 - Frontend decision: React + Vite + TypeScript.
 - Backend decision: Supabase, using Postgres and the generated Data API first.
 - Hosting decision: deferred. Vercel may be considered later, but it is not configured now.
-- Assessed application code: not generated in this baseline.
+- Official Vite React + TypeScript starter: present and locally verifiable.
+- Assessed business features: not implemented in this baseline.
 - Database schema, real datasets, user-facing features and acceptance tests: pending LeanKit claims and team decisions.
 
 ## Course alignment
@@ -51,8 +52,28 @@ Every implementation change must map to a LeanKit Epic, User Story and Acceptanc
 │   └── migrations/         # Versioned database and RLS changes
 ├── .env.example
 ├── .gitignore
+├── package.json
+├── package-lock.json
+├── tsconfig.json
+├── vite.config.ts
 └── README.md
 ```
+
+## Local setup
+
+```bash
+npm install
+npm run dev
+```
+
+Before opening a Pull Request, run:
+
+```bash
+npm run lint
+npm run build
+```
+
+The current page is the unmodified official Vite React + TypeScript starter. Team members must replace it only through claimed LeanKit work, a traceable branch and a reviewed Pull Request.
 
 ## Before implementation starts
 
