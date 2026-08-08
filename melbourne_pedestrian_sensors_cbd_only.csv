@@ -1,0 +1,90 @@
+location_id,sensor_name,sensor_description,installation_date,year_installed,sensor_age_years,status,status_label,is_active,location_type,direction_1,direction_2,directions,latitude,longitude,in_cbd,note,has_note
+3,Swa295_T,Melbourne Central,2009-03-25,2009.0,17.360711841204655,A,Active,True,Outdoor,North,South,North / South,-37.81101524,144.96429485,True,,False
+5,PriNW_T,Princes Bridge,2009-03-26,2009.0,17.357973990417523,A,Active,True,Outdoor,North,South,North / South,-37.81874249,144.96787656,True,Replace with: 00:6e:02:01:9e:54,True
+14,SanBri_T,Sandridge Bridge,2009-03-24,2009.0,17.363449691991786,A,Active,True,Outdoor,North,South,North / South,-37.82011242,144.96291897,True,Sensor relocated to sensor ID 25 on 2/10/2019,True
+18,Col12_T,Collins Place (North),2009-03-30,2009.0,17.347022587268995,A,Active,True,Outdoor,East,West,East / West,-37.81344862,144.97305353,True,,False
+19,LtB210_T,Chinatown-Swanston St (North),2013-09-02,2013.0,12.919917864476385,A,Active,True,Outdoor,East,West,East / West,-37.81237202,144.96550671,True,"Pushbox Upgrade, 20/07/2023",True
+20,LtB170_T,Chinatown-Lt Bourke St (South),2013-09-06,2013.0,12.908966461327857,A,Active,True,Outdoor,East,West,East / West,-37.81172914,144.9682466,True,"Pushbox Upgrade, 20/07/2023",True
+27,Vic_T,QV Market-Peel St,2013-08-16,2013.0,12.966461327857632,A,Active,True,Outdoor,East,West,East / West,-37.80606888,144.95644692,True,,False
+35,SouthB_T,Southbank Promenade,2016-04-11,2016.0,10.313483915126625,A,Active,True,Outdoor,East,West,East / West,-37.82018685,144.96508508,True,Device replaced with two new sensors on 15-4-21,True
+41,Swa31,Flinders La-Swanston St (West),2017-06-29,2017.0,9.097878165639973,A,Active,True,Outdoor,North,South,North / South,-37.81668634,144.96689733,True,,False
+47,Eli250_T,Melbourne Central-Elizabeth St (East),2017-08-24,2017.0,8.944558521560575,A,Active,True,Outdoor,North,South,North / South,-37.81258467,144.9625775,True,"Pushbox Upgrade, 25/07/2023. Move to 250 Elizabeth Street from adjacent St. Francis Church at 266 Elizabeth.",True
+48,QVMQ_T,QVM-Queen St (East),2017-10-02,2017.0,8.837782340862423,A,Active,True,Outdoor,East,West,East / West,-37.80631581,144.95866697,True,"Pushbox Upgrade, 03/07/2023",True
+51,Fra118_T,QVM-Franklin St (North),2017-11-30,2017.0,8.676249144421629,A,Active,True,Outdoor,East,West,East / West,-37.80841815,144.95906316,True,"Pushbox Upgrade, 20/07/2023",True
+52,Eli263_T,Elizabeth St-Lonsdale St (South),2017-07-31,2017.0,9.010266940451745,A,Active,True,Outdoor,East,West,East / West,-37.81252157,144.9619401,True,"Pushbox Upgrade, 25/07/2023",True
+53,Col254_T,Collins Street (North),2015-09-23,2015.0,10.863791923340179,A,Active,True,Outdoor,East,West,East / West,-37.81564191,144.965499,True,,False
+56,Lon364_T,Lonsdale St - Elizabeth St (North),2018-07-25,2018.0,8.02737850787132,A,Active,True,Outdoor,East,West,East / West,-37.81234775,144.96153311,True,Sensor device has been replaced,True
+68,FLDegN_T,Flinders Ln -Degraves St (North),2020-06-03,2020.0,6.168377823408624,A,Active,True,Outdoor,East,West,East / West,-37.8168479,144.96559789,True,,False
+69,FLDegC_T,Flinders Ln -Degraves St (Crossing),2020-06-03,2020.0,6.168377823408624,A,Active,True,Outdoor,North,South,North / South,-37.81687226,144.96559144,True,,False
+72,ACMI_T,Flinders St- ACMI,2020-11-30,2020.0,5.675564681724846,A,Active,True,Outdoor,East,West,East / West,-37.81726338,144.96872809,True,,False
+82,Eli512_T,512 Elizabeth Street,2021-11-05,2021.0,4.744695414099931,A,Active,True,Indoor,,,,-37.80667227,144.96005554,True,,False
+89,CityLi_T,City Library,2013-12-11,2013.0,12.646132785763175,A,Active,True,Indoor,,,,-37.81685964,144.96586575,True,,False
+96,FitGarVisIInt_T,Fitzroy Garden Visitor Centre Internal,2015-03-02,2015.0,11.425051334702259,A,Active,True,Indoor,,,,-37.81499687,144.97925064,True,"Pushbox Upgrade, 30/06/2023",True
+108,261Will_T,William St - Little Lonsdale St (West),2022-10-08,2022.0,3.8220396988364134,A,Active,True,Outdoor,North,South,North / South,-37.81295822,144.95678789,True,Added lines for 7 Eleven Store - 2025-05-07,True
+116,FitCafVis_T,Fitzroy Garden Visitor Centre Cafe Verandah,2015-03-02,2015.0,11.425051334702259,A,Active,True,Indoor,,,,-37.81493732,144.97932442,True,"Pushbox Upgrade, 30/06/2023",True
+117,Fli114F_T,114 Flinders Street Car Park Footpath,2022-12-06,2022.0,3.6605065023956196,A,Active,True,Outdoor,East,West,East / West,-37.81629332,144.97090877,True,,False
+123,BirBridge_T,Birrarung Marr East - Batman Ave Bridge Entry,2023-06-02,2023.0,3.1731690622861053,A,Active,True,Outdoor,East,West,East / West,-37.81753741,144.97329734,True,<Null>,True
+136,BirFed1120_T,"COM Pole 1120 - Towards the City, Near Federation Square Bridge",2023-11-03,2023.0,2.751540041067762,A,Active,True,Outdoor,East,West,East / West,-37.8184141,144.97357915,True,,False
+139,Signal1647_T,COM Pole 1647 - Sandridge Bridge Signal Box,2023-11-20,2023.0,2.704996577686516,A,Active,True,Outdoor,East,West,East / West,-37.81959923,144.9632832,True,,False
+142,Hammer1584_T,COM Pole 1584 - Hammer Hall Entrance,2023-11-03,2023.0,2.751540041067762,A,Active,True,Outdoor,East,West,East / West,-37.81970749,144.96795734,True,,False
+146,narrLibL1L3_T,narrm ngarrgu Library - Level 1 - Lift 3,2023-10-23,2023.0,2.7816563997262147,A,Active,True,Indoor,,,,-37.80766922,144.95840594,True,,False
+150,narrLibL1MB_T,narrm ngarrgu Library - Level 1 Main Stairs B,2023-10-23,2023.0,2.7816563997262147,A,Active,True,Indoor,,,,-37.80791198,144.95820087,True,,False
+155,narrLibL#C2_T,narrm ngarrgu Library - Level 3 Children's Library Door 2,2023-10-23,2023.0,2.7816563997262147,A,Active,True,Indoor,,,,-37.80783201,144.95845043,True,,False
+160,Swa420_T,"City Baths, 420 Swanston Street - Main Entry",2024-06-04,2024.0,2.1656399726214923,A,Active,True,Indoor,,,,-37.80699526,144.96306214,True,,False
+161,BirArt1109_T,Birrarung Marr - COM - Pole 1109,2024-06-04,2024.0,2.1656399726214923,A,Active,True,Outdoor,East,West,East / West,-37.81851276,144.97131336,True,,False
+181,Eli368_T,368 Elizabeth Street,2025-03-26,2025.0,1.3579739904175223,A,Active,True,Outdoor,North,South,North / South,-37.81009465,144.96143149,True,Moved from 380 Elizabeth Street,True
+188,RMIT51_T,RMIT Building 51 - 80-92 Victoria Street,2025-10-17,2025.0,0.7967145790554415,A,Active,True,Outdoor,North,South,North / South,-37.80663222,144.96456557,True,,False
+1,Bou292_T,Bourke Street Mall (North),2009-03-24,2009.0,17.363449691991786,A,Active,True,Outdoor,East,West,East / West,-37.81349441,144.96515323,True,,False
+4,Swa123_T,Town Hall (West),2009-03-23,2009.0,17.366187542778917,A,Active,True,Outdoor,North,South,North / South,-37.81487988,144.9660878,True,,False
+6,FliS_T,Flinders Underpass - Myki Barriers,2009-03-25,2009.0,17.360711841204655,A,Active,True,Outdoor,North,South,North / South,-37.81907439,144.96557866,True,Upgraded on 8/09/21,True
+17,Col15_T,Collins Place (South),2009-03-30,2009.0,17.347022587268995,A,Active,True,Outdoor,East,West,East / West,-37.81362543,144.97323591,True,Device upgraded in 26/02/2020,True
+36,Que85_T,Queen St (West),2015-01-20,2015.0,11.537303216974674,A,Active,True,Outdoor,North,South,North / South,-37.81652527,144.96121062,True,"Pushbox Upgrade, 03/08/2023",True
+39,AlfPl_T,Alfred Place,2019-12-04,2019.0,6.666666666666667,A,Active,True,Outdoor,North,South,North / South,-37.81379749,144.96995745,True,In 4/12/2019 sensor upgraded,True
+45,Swa148_T,Little Collins St-Swanston St (East),2017-06-29,2017.0,9.097878165639973,A,Active,True,Outdoor,North,South,North / South,-37.81414075,144.96609379,True,"Pushbox Upgrade, 03/08/2023",True
+49,Eli501_T,QVM-Therry St (South),2017-11-29,2017.0,8.678986995208762,A,Active,True,Outdoor,East,West,East / West,-37.80730068,144.95956055,True,"Pushbox Upgrade, 20/07/2023",True
+59,RMIT_T,Building 80 RMIT,2019-02-13,2019.0,7.471594798083505,A,Active,True,Outdoor,North,South,North / South,-37.80825648,144.96304859,True,,False
+61,RMIT14_T,RMIT Building 14,2019-06-28,2019.0,7.101984941820671,A,Active,True,Outdoor,North,South,North / South,-37.80767455,144.96309114,True,,False
+62,Lat224_T,La Trobe St (North),2019-09-25,2019.0,6.8583162217659135,A,Active,True,Outdoor,East,West,East / West,-37.80996494,144.96216521,True,,False
+66,QVN_T,"QV2 Apartments, 300 Swanston Street",2020-04-06,2020.0,6.327173169062286,A,Active,True,Outdoor,North,South,North / South,-37.81057846,144.96444294,True,,False
+75,SprFli_T,Spring St- Flinders st (West),2020-12-18,2020.0,5.626283367556468,A,Active,True,Outdoor,North,South,North / South,-37.81515276,144.97467661,True,,False
+79,FliSS_T,Flinders St (South),2021-09-10,2021.0,4.898015058179329,A,Active,True,Outdoor,East,West,East / West,-37.81794046,144.96616678,True,,False
+83,Eli510_T,510 Elizabeth Street,2021-11-05,2021.0,4.744695414099931,A,Active,True,Indoor,,,,-37.8067319,144.96005113,True,,False
+84,ElFi_T,Elizabeth St - Flinders St (East) - New footpath,2021-12-03,2021.0,4.6680355920602326,A,Active,True,Outdoor,North,South,North / South,-37.81798049,144.96503383,True,Sensing Data started on 2019-02-14,True
+94,FitConVis_T,Fitzroy Garden- The Conservatory,2015-03-02,2015.0,11.425051334702259,A,Active,True,Indoor,,,,-37.81424531,144.97851861,True,,False
+95,FitGarExtVisExt_T,Fitzroy Garden Visitor Centre External,2015-03-02,2015.0,11.425051334702259,A,Active,True,Indoor,,,,-37.81488315,144.97926569,True,"Pushbox Upgrade, 30/06/2023",True
+107,280Will_T,Royal Mint 280 William St,2022-10-08,2022.0,3.8220396988364134,A,Active,True,Outdoor,North,South,North / South,-37.81246271,144.95690188,True,,False
+109,LatWill_T,La Trobe St- William St (South),2022-10-08,2022.0,3.8220396988364134,A,Active,True,Outdoor,East,West,East / West,-37.81193681,144.95621105,True,,False
+124,BirBridge_T,Birrarung Marr East - Batman Ave Bridge Entry,2023-06-02,2023.0,3.1731690622861053,A,Active,True,Outdoor,North,South,North / South,-37.81757416,144.97329934,True,,False
+138,EntPark1671_T,"COM Pole 1671 - Enterprize Park, Queens Bridge",2023-11-20,2023.0,2.704996577686516,A,Active,True,Outdoor,East,West,East / West,-37.81996544,144.95981454,True,,False
+141,474Fl_T,Awning of Nationwide Parking 474 Flinders Street,2023-11-10,2023.0,2.732375085557837,A,Active,True,Outdoor,East,West,East / West,-37.81997273,144.95834911,True,,False
+148,narrLibMRL2_T,narrm ngarrgu Library - Level 1 - Meeting Room Lift 2,2023-10-23,2023.0,2.7816563997262147,A,Active,True,Indoor,,,,-37.80772224,144.95823515,True,,False
+149,narrLibL1MA_T,narrm ngarrgu Library - Level 1 Main Stairs A,2023-10-23,2023.0,2.7816563997262147,A,Active,True,Indoor,,,,-37.80781158,144.9582219,True,,False
+151,narrLibL2CA_T,narrm ngarrgu Library - Level 2 - Collections Stairs A,2023-10-23,2023.0,2.7816563997262147,A,Active,True,Indoor,,,,-37.80771581,144.9586238,True,,False
+153,narrLibL2S2_T,narrm ngarrgu Library - Level 2 - Study Area Lifts 2,2023-10-23,2023.0,2.7816563997262147,A,Active,True,Indoor,,,,-37.80780367,144.95829765,True,,False
+154,narrLibL3C1_T,narrm ngarrgu Library - Level 3 Children's Library Door 1,2023-10-23,2023.0,2.7816563997262147,A,Active,True,Indoor,,,,-37.80778437,144.95862772,True,,False
+158,Eli514_T,514 Elizebeth Street,2024-01-29,2024.0,2.513347022587269,A,Active,True,Indoor,,,,-37.80657467,144.96007044,True,,False
+185,Eli197_T,197 Elizabeth Street,2025-06-28,2025.0,1.1006160164271048,A,Active,True,Outdoor,North,South,North / South,-37.81374643,144.96276183,True,,False
+209,FliS_T,Flinders Underpass - Walkway,2009-03-25,2009.0,17.360711841204655,A,Active,True,Outdoor,North,South,North / South,-37.81909037,144.96549709,True,Upgraded on 8/09/21,True
+2,Bou283_T,Bourke Street Mall (South),2009-03-30,2009.0,17.347022587268995,A,Active,True,Outdoor,East,West,East / West,-37.81380668,144.96516718,True,,False
+21,Bourke155_T,155-161 Russell Street,2013-09-02,2013.0,12.919917864476385,A,Active,True,Outdoor,North,South,North / South,-37.81267313,144.96788288,True,,False
+25,MCEC_T,Melbourne Convention Exhibition Centre,2013-08-28,2013.0,12.933607118412047,A,Active,True,Outdoor,East,West,East / West,-37.82401776,144.95604426,True,,False
+29,AG_T,St Kilda Rd-Alexandra Gardens,2013-10-11,2013.0,12.813141683778234,A,Active,True,Outdoor,North,South,North / South,-37.8199817,144.96872865,True,sensor upgraded from laser to 3D on 19/12/2019,True
+30,Lon189_T,Lonsdale St (South),2013-10-14,2013.0,12.804928131416839,A,Active,True,Outdoor,East,West,East / West,-37.8112185,144.96656806,True,"Pushbox Upgrade, 20/07/2023",True
+40,Spr201_T,Lonsdale St-Spring St (West),2015-01-19,2015.0,11.540041067761807,A,Active,True,Outdoor,North,South,North / South,-37.80999341,144.97227587,True,"Pushbox Upgrade, 03/08/2023",True
+63,Bou231_T,231 Bourke St,2020-01-07,2020.0,6.573579739904175,A,Active,True,Outdoor,East,West,East / West,-37.81333081,144.96675571,True,,False
+67,FLDegS_T,Flinders Ln -Degraves St (South),2020-06-03,2020.0,6.168377823408624,A,Active,True,Outdoor,East,West,East / West,-37.81688755,144.96562569,True,,False
+71,WestWP_T,Westwood Place,2020-10-16,2020.0,5.798767967145791,A,Active,True,Outdoor,North,South,North / South,-37.81235775,144.97136962,True,,False
+99,TownVis_T,Town Hall Visitor Centre,2020-02-02,2020.0,6.50239561943874,A,Active,True,Indoor,,,,-37.81462143,144.96623279,True,"Pushbox Upgrade, 03/08/2023",True
+118,Fli114C_T,114 Flinders Street Car Park Crossing,2022-12-06,2022.0,3.6605065023956196,A,Active,True,Outdoor,North,South,North / South,-37.81632783,144.97090512,True,,False
+131,King2_T,I-Hub Corner of King Street and Flinders Street (2-6 King),2023-09-25,2023.0,2.858316221765914,A,Active,True,Outdoor,North,South,North / South,-37.82009057,144.95758725,True,,False
+143,Spencer_T,"Mounted on Toilet - Spencer Street, Batman Park",2024-04-10,2024.0,2.316221765913758,A,Active,True,Outdoor,North,South,North / South,-37.821728,144.95557015,True,,False
+144,narrLibL1L1_T,narrm ngarrgu Library - Level 1 - Lift 1,2023-10-23,2023.0,2.7816563997262147,A,Active,True,Indoor,,,,-37.80760657,144.95862847,True,,False
+145,narrLibL1L2_T,narrm ngarrgu Library - Level 1 - Lift 2,2023-10-23,2023.0,2.7816563997262147,A,Active,True,Indoor,,,,-37.80763871,144.95850722,True,,False
+147,narrLibMRL1_T,narrm ngarrgu Library - Level 1 - Meeting Room Lift 1,2023-10-23,2023.0,2.7816563997262147,A,Active,True,Indoor,,,,-37.80769805,144.95832131,True,,False
+152,narrLibL2S1_T,narrm ngarrgu Library - Level 2 - Study Area Lifts 1,2023-10-23,2023.0,2.7816563997262147,A,Active,True,Indoor,,,,-37.80776728,144.95843977,True,,False
+159,Eli516_T,516 Elizeberth Street,2024-01-29,2024.0,2.513347022587269,A,Active,True,Indoor,,,,-37.80651646,144.96007934,True,,False
+162,Eli489_T,iHub 489 Elizabeth Street,2024-07-01,2024.0,2.0917180013689256,A,Active,True,Outdoor,North,South,North / South,-37.80740397,144.95987909,True,,False
+179,Pow61_T,61-67 Power Street Southbank,2024-12-19,2024.0,1.623545516769336,A,Active,True,Outdoor,North,South,North / South,-37.82392385,144.96299677,True,,False
+182,King163_T,163 King Street,2025-04-11,2025.0,1.3141683778234086,A,Active,True,Outdoor,North,South,North / South,-37.81627451,144.95550503,True,,False
+184,Eli124_T,124 Elizabeth Street,2025-06-28,2025.0,1.1006160164271048,A,Active,True,Outdoor,North,South,North / South,-37.81512416,144.96371988,True,,False
+187,Swa330_T,RMIT Building 22 - 330 Swanston Street,2025-10-18,2025.0,0.7939767282683093,A,Active,True,Outdoor,East,West,East / West,-37.80942561,144.96395473,True,,False
