@@ -1,0 +1,43 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Env / secrets
+.env
+.env.local
+.env.*.local
+apps/web/.env.local
+
+# Next.js
+apps/web/.next/
+apps/web/out/
+
+# Build / cache
+dist/
+build/
+.turbo/
+*.tsbuildinfo
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+
+# Python / notebook leftovers
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+.venv/
+venv/
+
+# Logs / coverage
+*.log
+npm-debug.log*
+coverage/
+.nyc_output/
+
+# Supabase CLI local
+supabase/.branches
+supabase/.temp
