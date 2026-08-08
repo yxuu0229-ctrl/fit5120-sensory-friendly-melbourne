@@ -1,7 +1,7 @@
 ---
 name: Coursework implementation task
 about: Connect one implementation task to LeanKit and Acceptance Criteria
-title: "[LK-ID] "
+title: "[EPIC1-US1] "
 labels: ""
 assignees: ""
 ---
@@ -11,6 +11,7 @@ assignees: ""
 - LeanKit card:
 - Epic:
 - User Story:
+- Planned branch: `feature/epic1-us1-short-description`
 - Claimant:
 - Planned finish:
 

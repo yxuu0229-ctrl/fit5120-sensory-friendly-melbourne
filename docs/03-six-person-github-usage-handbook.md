@@ -23,10 +23,18 @@ LeanKit card → GitHub issue → work branch → Pull Request → review → Le
 | Branch | Purpose | Rule |
 |---|---|---|
 | `main` | Reviewed, locally runnable integration baseline | No direct push; merge reviewed Pull Requests only |
-| `feature/LK-ID-description` | New feature or User Story work | Create from the latest agreed base and keep short-lived |
-| `fix/LK-ID-description` | Defect correction | Link the defect and affected Acceptance Criterion |
-| `data/LK-ID-description` | Schema, migration or data-pipeline work | Include reproducibility and RLS impact |
-| `docs/LK-ID-description` | Documentation-only work | Review changes to course or operating instructions |
+| `feature/epic1-us1-description` | New feature or User Story work | Replace the Epic and User Story numbers; keep the description short and lowercase |
+| `fix/epic1-us1-description` | Defect correction | Use the Epic/User Story affected by the defect and link its Acceptance Criterion |
+| `data/epic1-us1-description` | Schema, migration or data-pipeline work | Use the Epic/User Story supported by the data change and include RLS impact |
+| `docs/epic1-us1-description` | Documentation-only work | Use the Epic/User Story documented and request review when instructions change |
+
+Naming rules:
+
+1. Use lowercase letters, numbers and hyphens only.
+2. Use `epic1-us1`, `epic1-us2`, `epic2-us1` and similar numbering agreed in LeanKit.
+3. Keep the description to approximately two to five words.
+4. Keep the LeanKit card linked in the GitHub issue and Pull Request; the branch name does not replace the card link.
+5. For repository work that is not connected to a User Story, use `chore/repository-short-description`.
 
 ## Daily workflow
 
