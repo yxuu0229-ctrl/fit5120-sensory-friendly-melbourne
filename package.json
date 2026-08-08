@@ -13,6 +13,6 @@
     "sync:full": "npm run sync:full --workspace=@melbourne-sensory/sync"
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=22"
   }
 }
