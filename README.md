@@ -51,7 +51,7 @@ Every implementation change must map to a LeanKit Epic, User Story and Acceptanc
 │   └── migrations/         # Versioned database and RLS changes
 ├── .env.example
 ├── .gitignore
-└── CONTRIBUTING.md
+└── README.md
 ```
 
 ## Before implementation starts
