@@ -56,7 +56,7 @@ Fill both files:
 NEXT_PUBLIC_SUPABASE_URL=https://YOUR_PROJECT.supabase.co
 SUPABASE_URL=https://YOUR_PROJECT.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
-SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+SUPABASE_SERVICE_ROLE_KEY=
 MELBOURNE_DATA_BASE_URL=https://data.melbourne.vic.gov.au/api/v2/catalog/datasets
 ```
 
