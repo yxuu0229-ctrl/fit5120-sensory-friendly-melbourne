@@ -14,7 +14,7 @@ st.set_page_config(
 )
 
 
-@st.cache_data(ttl=900)
+@st.cache_data(ttl=900, show_spinner="Loading live pedestrian counts...")
 def load_past_hour():
     url = (
         "https://data.melbourne.vic.gov.au/api/v2/catalog/datasets/"
@@ -39,7 +39,7 @@ def load_past_hour():
     return df
 
 
-@st.cache_data
+@st.cache_data(show_spinner="Loading historical counts (this might takes a while)...")
 def load_hourly_historical():
     base_url = (
         "https://data.melbourne.vic.gov.au/api/v2/catalog/datasets/"
@@ -107,7 +107,7 @@ def _map_category(row):
     return "Other"
 
 
-@st.cache_data
+@st.cache_data(show_spinner="Loading landmarks...")
 def load_landmarks():
     url = (
         "https://data.melbourne.vic.gov.au/api/v2/catalog/datasets/"
@@ -162,17 +162,16 @@ page = st.sidebar.radio(
 st.sidebar.markdown("---")
 st.sidebar.info("Data sources: City of Melbourne Open Data (CC BY 4.0)")
 
-with st.spinner("Loading open data..."):
-    df_live = load_past_hour()
-    df_hist = load_hourly_historical()
-    df_land = load_landmarks()
-
 DAY_ORDER = [
     "Monday", "Tuesday", "Wednesday", "Thursday",
     "Friday", "Saturday", "Sunday",
 ]
 
 if page == "Overview":
+    df_live = load_past_hour()
+    df_hist = load_hourly_historical()
+    df_land = load_landmarks()
+
     st.title("Sensory-Friendly Melbourne CBD")
     st.markdown(
         "Real-time pedestrian density, historical quiet windows, and sensory "
@@ -202,6 +201,8 @@ if page == "Overview":
     st.plotly_chart(fig, use_container_width=True)
 
 elif page == "Live Density (Past Hour)":
+    df_live = load_past_hour()
+
     st.title("Live Pedestrian Density (Past Hour)")
 
     col1, col2 = st.columns(2)
@@ -249,6 +250,8 @@ elif page == "Live Density (Past Hour)":
     st.plotly_chart(fig, use_container_width=True)
 
 elif page == "Historical Patterns":
+    df_hist = load_hourly_historical()
+
     st.title("Historical Pedestrian Patterns (2024+)")
 
     if df_hist.empty:
@@ -303,6 +306,8 @@ elif page == "Historical Patterns":
         st.plotly_chart(fig, use_container_width=True)
 
 elif page == "Quiet Windows":
+    df_hist = load_hourly_historical()
+
     st.title("Quiet Travel Windows")
 
     if df_hist.empty:
@@ -336,6 +341,8 @@ elif page == "Quiet Windows":
         st.plotly_chart(fig, use_container_width=True)
 
 elif page == "Sensory Refuges Map":
+    df_land = load_landmarks()
+
     st.title("Sensory Refuge Locations")
 
     if df_land.empty:
