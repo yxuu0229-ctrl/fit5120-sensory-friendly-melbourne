@@ -92,6 +92,8 @@ export default function RouteMap() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<PlannedTrip | null>(null);
+  const [trips, setTrips] = useState<PlannedTrip[]>([]);
+  const [selectedTripIndex, setSelectedTripIndex] = useState(0);
   const [showDensity, setShowDensity] = useState(true);
   const [showRefuges, setShowRefuges] = useState(true);
   const [refuges, setRefuges] = useState<Place[]>([]);
@@ -144,10 +146,14 @@ export default function RouteMap() {
         setFrom(p);
         setPickMode("B");
         setResult(null);
+        setTrips([]);
+        setSelectedTripIndex(0);
       } else if (pickMode === "B") {
         setTo(p);
         setPickMode(null);
         setResult(null);
+        setTrips([]);
+        setSelectedTripIndex(0);
       }
     },
     [pickMode]
@@ -163,6 +169,8 @@ export default function RouteMap() {
         setFrom({ lat: pos.coords.latitude, lng: pos.coords.longitude });
         setPickMode("B");
         setResult(null);
+        setTrips([]);
+        setSelectedTripIndex(0);
         setError(null);
       },
       () =>
@@ -183,13 +191,23 @@ export default function RouteMap() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ from, to, mode: transportMode }),
       });
-      const data = (await res.json()) as { trip?: PlannedTrip; error?: string };
+      const data = (await res.json()) as {
+        trip?: PlannedTrip;
+        trips?: PlannedTrip[];
+        error?: string;
+      };
       if (!res.ok || !data.trip) {
         throw new Error(data.error || "Routing failed");
       }
-      setResult(data.trip);
+      const listed =
+        data.trips && data.trips.length > 0 ? data.trips : [data.trip];
+      setTrips(listed);
+      setSelectedTripIndex(0);
+      setResult(listed[0]);
     } catch (e) {
       setResult(null);
+      setTrips([]);
+      setSelectedTripIndex(0);
       setError(e instanceof Error ? e.message : "Routing failed");
     } finally {
       setLoading(false);
@@ -200,8 +218,17 @@ export default function RouteMap() {
     setFrom(null);
     setTo(null);
     setResult(null);
+    setTrips([]);
+    setSelectedTripIndex(0);
     setPickMode("A");
     setError(null);
+  };
+
+  const selectTrip = (index: number) => {
+    const next = trips[index];
+    if (!next) return;
+    setSelectedTripIndex(index);
+    setResult(next);
   };
 
   return (
@@ -232,6 +259,8 @@ export default function RouteMap() {
                   onChange={() => {
                     setTransportMode(opt.id);
                     setResult(null);
+                    setTrips([]);
+                    setSelectedTripIndex(0);
                   }}
                 />
                 <span className="mode-label">{opt.label}</span>
@@ -315,9 +344,48 @@ export default function RouteMap() {
 
         {error && <div className="banner">{error}</div>}
 
+        {trips.length > 1 && (
+          <div className="route-list" aria-label="Routes by sensory load">
+            <h2>Route options</h2>
+            <p className="meta">
+              Ordered calmest → busiest (lowest sensory indicator first).
+            </p>
+            <ol className="route-options">
+              {trips.map((t, i) => {
+                const indicator = t.sensoryIndicator ?? t.crowdScore;
+                return (
+                  <li key={`${t.label}-${i}`}>
+                    <button
+                      type="button"
+                      className={
+                        i === selectedTripIndex
+                          ? "route-option active"
+                          : "route-option"
+                      }
+                      onClick={() => selectTrip(i)}
+                    >
+                      <span className="route-option-rank">#{i + 1}</span>
+                      <span className="route-option-body">
+                        <strong>{t.label}</strong>
+                        <span className="meta">
+                          {formatDistance(t.distanceMeters)} ·{" "}
+                          {formatDuration(t.durationSeconds)}
+                          {indicator != null
+                            ? ` · sensory ${indicator}`
+                            : ""}
+                        </span>
+                      </span>
+                    </button>
+                  </li>
+                );
+              })}
+            </ol>
+          </div>
+        )}
+
         {result && (
           <div className="route-card">
-            <h2>Selected route</h2>
+            <h2>{trips.length > 1 ? "Selected route" : "Route"}</h2>
             <p>
               <strong>{result.label}</strong>
             </p>
@@ -325,9 +393,11 @@ export default function RouteMap() {
               {formatDistance(result.distanceMeters)} ·{" "}
               {formatDuration(result.durationSeconds)}
             </p>
-            {result.crowdScore != null && (
+            {(result.sensoryIndicator != null || result.crowdScore != null) && (
               <p className="meta">
-                Crowd score {result.crowdScore} (lower is quieter)
+                Sensory indicator{" "}
+                {result.sensoryIndicator ?? result.crowdScore} (lower is
+                calmer)
                 {result.alternativesConsidered != null
                   ? ` · ${result.alternativesConsidered} candidates`
                   : ""}

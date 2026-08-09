@@ -67,8 +67,9 @@ export async function POST(req: Request) {
     } catch {
       sensors = [];
     }
-    const trip = await planQuietWalkingRoute(from, to, sensors);
-    return NextResponse.json({ trip });
+    const { trip, trips } = await planQuietWalkingRoute(from, to, sensors);
+    // AC 1.1.4: `trips` is ordered lowest → highest sensory indicator.
+    return NextResponse.json({ trip, trips });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     return NextResponse.json({ error: message }, { status: 500 });
