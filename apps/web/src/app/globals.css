@@ -275,6 +275,40 @@ a {
   margin-bottom: 0.55rem;
 }
 
+.density-legend {
+  margin: 0.85rem 0 1rem;
+  padding: 0.85rem 0.9rem;
+  border: 1px solid var(--line);
+  background: #fff;
+}
+
+.density-legend h2 {
+  margin: 0 0 0.25rem;
+  font-size: 1rem;
+}
+
+.density-legend-list {
+  list-style: none;
+  padding: 0;
+  margin: 0.55rem 0 0;
+}
+
+.density-legend-list li {
+  display: flex;
+  gap: 0.55rem;
+  align-items: flex-start;
+  margin-bottom: 0.4rem;
+  font-size: 0.88rem;
+}
+
+.density-swatch {
+  width: 12px;
+  height: 12px;
+  min-width: 12px;
+  margin-top: 0.25rem;
+  border-radius: 999px;
+}
+
 .leg-swatch {
   width: 10px;
   min-width: 10px;

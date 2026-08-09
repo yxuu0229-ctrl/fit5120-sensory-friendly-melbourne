@@ -109,6 +109,22 @@ npm run dev
 - Status: [http://localhost:3000](http://localhost:3000)
 - Map A→B routing: [http://localhost:3000/map](http://localhost:3000/map)
 
+### Map density layer (AC 2.1.1)
+
+On `/map` load, current `sensor_density_current` points are shown across the covered CBD in agreed bands:
+
+| Band | Threshold |
+|---|---|
+| Low | ≤ 50 |
+| Medium | 51–150 |
+| High | > 150 |
+
+```bash
+npm run verify:ac-211
+```
+
+Evidence (upload to team Google Drive PGP): [`pgp/evidence/AC-2.1.1/`](pgp/evidence/AC-2.1.1/). Owner: unassigned until claimed.
+
 ### Transport modes on `/map`
 
 | Mode | Engine |
