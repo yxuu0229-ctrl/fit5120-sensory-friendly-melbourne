@@ -1,0 +1,5 @@
+# Optional Supabase CLI config.
+# Apply schema via SQL Editor or: supabase db push
+
+[db]
+major_version = 15
