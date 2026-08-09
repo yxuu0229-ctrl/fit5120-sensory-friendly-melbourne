@@ -10,7 +10,8 @@
     "dev": "npm run dev --workspace=@melbourne-sensory/web",
     "build": "npm run build --workspace=@melbourne-sensory/web",
     "sync": "npm run sync --workspace=@melbourne-sensory/sync",
-    "sync:full": "npm run sync:full --workspace=@melbourne-sensory/sync"
+    "sync:full": "npm run sync:full --workspace=@melbourne-sensory/sync",
+    "verify:ac-225": "node scripts/verify/ac-225-historical-trend-com-validation.mjs --location-id 3"
   },
   "engines": {
     "node": ">=22"
