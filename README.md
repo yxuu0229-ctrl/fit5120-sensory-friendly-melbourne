@@ -212,6 +212,22 @@ Typical crowd by weekday + hour (from 2024+ hourly history).
 - `pedestrian_live` — past-hour time series (detail charts)
 - `sync_runs` — ETL audit (`status`, `rows_upserted`, `error`)
 
+### Historical trend validation (AC 2.2.5)
+
+Per-location day×hour trend from City of Melbourne hourly counts:
+
+```http
+GET /api/sensors/{locationId}/historical-trend
+```
+
+Validate the calculation against live CoM open data and write PGP evidence:
+
+```bash
+npm run verify:ac-225
+```
+
+Evidence pack (upload to the team **Google Drive PGP** folder): [`pgp/evidence/AC-2.2.5/`](pgp/evidence/AC-2.2.5/).
+
 ## Open data sources
 
 City of Melbourne ([data.melbourne.vic.gov.au](https://data.melbourne.vic.gov.au/pages/home/)), CC BY:
