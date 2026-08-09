@@ -147,6 +147,16 @@ Request credentials: [PTV Timetable API](https://www.ptv.vic.gov.au/footer/data-
 
 Routing API used by the map: `POST /api/route/plan` with `{ from, to, mode }`.
 
+### Route options ordering (AC 1.1.4)
+
+For walk mode, when multiple alternatives are returned, `trips` is ordered **lowest → highest sensory indicator** (calmest first). The selected/default `trip` is always `trips[0]`.
+
+```bash
+npm run verify:ac-114
+```
+
+Evidence pack (upload to the team Google Drive PGP): [`pgp/evidence/AC-1.1.4/`](pgp/evidence/AC-1.1.4/).
+
 ## Frontend table contract
 
 All tables are **public read** via the anon key (RLS `SELECT` only). Writes happen only with the service role in the ETL.

@@ -84,12 +84,12 @@ export async function POST(req: Request) {
       sensors = [];
       densityAvailable = false;
     }
-
     // AC 1.1.7 / 1.3.6 / 2.1.3 — the route always runs on cached readings, so
     // say which ones and how old they are rather than implying they are live.
     const dataProvenance = buildProvenance(sensors, densityAvailable);
-    const trip = await planQuietWalkingRoute(from, to, sensors);
-    return NextResponse.json({ trip, coverage, dataProvenance });
+    const { trip, trips } = await planQuietWalkingRoute(from, to, sensors);
+    // AC 1.1.4: `trips` is ordered lowest → highest sensory indicator.
+    return NextResponse.json({ trip, trips, coverage, dataProvenance });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     return NextResponse.json({ error: message }, { status: 500 });
