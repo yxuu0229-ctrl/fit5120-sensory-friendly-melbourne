@@ -1,67 +1,20 @@
-# Team TE37 Sensory-Aware Web Project
+# Team TE37 Melbourne Sensory Map
 
-This repository is the planned source-of-truth for Team TE37's runnable web build.
+Team TE37's shared source of truth for the Supabase-backed open-data pipeline and Next.js sensory-aware Melbourne CBD travel map.
 
-## Current status
+Every implementation change must map to a LeanKit Epic, User Story and Acceptance Criterion. Development is reviewed through Pull Requests; protected or privileged values must never be committed.
 
-- Repository governance and architecture baseline: ready for team review.
-- Frontend decision: React + Vite + TypeScript.
-- Backend decision: Supabase, using Postgres and the generated Data API first.
-- Hosting decision: deferred. Vercel may be considered later, but it is not configured now.
-- Assessed application code: not generated in this baseline.
-- Database schema, real datasets, user-facing features and acceptance tests: pending LeanKit claims and team decisions.
+## What you get
 
-## Course alignment
+| Piece | Path |
+|---|---|
+| Schema + RLS | [`supabase/migrations/`](supabase/migrations/) |
+| Open-data ETL | [`scripts/sync/`](scripts/sync/) |
+| GitHub Actions sync | [`.github/workflows/sync-open-data.yml`](.github/workflows/sync-open-data.yml) |
+| Next.js status page and route map | [`apps/web/`](apps/web/) |
+| Env template | [`.env.example`](.env.example) |
 
-Every implementation change must map to a LeanKit Epic, User Story and Acceptance Criteria. The deployed build must remain consistent with the presentation and LeanKit board, include database/data scripts and documentation, and run without mentor-visible errors.
-
-- [LeanKit / AgilePlace](https://monashie.leankit.com)
-- [Team TE37 Project Governance Portfolio](https://drive.google.com/drive/folders/1zkA3NtSfl-Jjgt35kKVRmSxm1q3pCHG6)
-
-## Proposed technology stack
-
-| Layer | Choice | Why now |
-|---|---|---|
-| Frontend | React + Vite + TypeScript | Small, fast SPA with type checking and a simple deployment path |
-| Database | Supabase Postgres | Managed relational database with migrations and generated APIs |
-| Backend API | Supabase Data API | Avoids maintaining a separate server for ordinary database reads |
-| Protected server logic | Supabase Edge Functions | Keeps third-party secrets and privileged operations out of the browser |
-| Frontend hosting | Deferred | Choose a provider only after the deployment readiness gate is satisfied |
-| Source control | GitHub | Pull requests, review history and CI evidence |
-| Work tracking | LeanKit | Course-required source for Stories, Acceptance Criteria, ownership and status |
-| Governance evidence | PGP | Course-required location for reviewed artefacts and evidence |
-
-## Repository map
-
-```text
-.
-├── .github/
-│   ├── ISSUE_TEMPLATE/
-│   └── PULL_REQUEST_TEMPLATE.md
-├── docs/
-│   ├── 01-overall-solution-and-repository-structure.md
-│   ├── 02-system-architecture-plan.md
-│   ├── 03-six-person-github-usage-handbook.md
-│   ├── 04-deployment-handbook.md
-│   ├── 05-security-baseline.md
-│   └── 06-member-contribution-rules.md
-├── src/                    # React application; team-authored code goes here
-├── supabase/
-│   ├── functions/          # Server-side functions only when justified
-│   └── migrations/         # Versioned database and RLS changes
-├── .env.example
-├── .gitignore
-└── README.md
-```
-
-## Before implementation starts
-
-1. Confirm the exact onboarding scope and Acceptance Criteria in LeanKit.
-2. Record the actual open-data sources, licences, fields and refresh method.
-3. Agree on the first database migration and security policies in a team architecture review.
-4. Confirm the course boundary for AI-assisted coding; the current student-reported permission covers planning, not implementation code.
-
-## Working documents
+## Team governance
 
 - [Overall solution and repository structure](docs/01-overall-solution-and-repository-structure.md)
 - [System architecture plan](docs/02-system-architecture-plan.md)
@@ -69,3 +22,190 @@ Every implementation change must map to a LeanKit Epic, User Story and Acceptanc
 - [Deployment handbook](docs/04-deployment-handbook.md)
 - [Security baseline](docs/05-security-baseline.md)
 - [Member contribution rules](docs/06-member-contribution-rules.md)
+- [LeanKit / AgilePlace](https://monashie.leankit.com)
+- [Team TE37 Project Governance Portfolio](https://drive.google.com/drive/folders/1zkA3NtSfl-Jjgt35kKVRmSxm1q3pCHG6)
+
+## Architecture
+
+```
+City of Melbourne Open Data  →  GitHub Actions (every 15 min)  →  Supabase
+                                                                      ↓
+                                              apps/web (status) + other FE map
+```
+
+## 1. Create a Supabase project
+
+1. Create a project at [supabase.com](https://supabase.com).
+2. Open **SQL Editor** and run the full contents of
+   [`supabase/migrations/20260328000000_init_schema.sql`](supabase/migrations/20260328000000_init_schema.sql).
+3. In **Settings → API**, copy:
+   - Project URL
+   - `anon` `public` key
+   - `service_role` key (secret)
+
+## 2. Configure environment
+
+```bash
+cp .env.example .env
+cp .env.example apps/web/.env.local
+```
+
+Fill both files:
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=https://YOUR_PROJECT.supabase.co
+SUPABASE_URL=https://YOUR_PROJECT.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+MELBOURNE_DATA_BASE_URL=https://data.melbourne.vic.gov.au/api/v2/catalog/datasets
+```
+
+- Browser / Next.js: only `NEXT_PUBLIC_*`
+- Sync scripts / GitHub Actions: `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY`
+
+## 3. Install and run first sync
+
+```bash
+npm install
+npm run sync:full
+```
+
+`sync:full` loads sensors, live density, quiet windows, landmarks, and toilets.
+
+Live-only sync (default Action schedule):
+
+```bash
+npm run sync
+```
+
+Flags also accepted by the script:
+
+- `--quiet-windows` — recompute historical quiet profiles
+- `--places` — refresh landmarks + toilets
+- `--full` — everything
+
+## 4. GitHub Actions secrets
+
+Repo → **Settings → Secrets and variables → Actions**:
+
+| Secret | Value |
+|---|---|
+| `SUPABASE_URL` | Project URL |
+| `SUPABASE_SERVICE_ROLE_KEY` | Service role key |
+
+Workflow [`.github/workflows/sync-open-data.yml`](.github/workflows/sync-open-data.yml):
+
+- Cron every 15 minutes (live sensors + density)
+- Quiet windows once per UTC day (00:00 window)
+- Places weekly (Sunday UTC 00:00 window)
+- Manual **Run workflow** with `full` for a complete refresh
+
+## 5. Status shell + quieter route map (local)
+
+```bash
+npm run dev
+```
+
+- Status: [http://localhost:3000](http://localhost:3000)
+- Map A→B routing: [http://localhost:3000/map](http://localhost:3000/map)
+
+### Transport modes on `/map`
+
+| Mode | Engine |
+|---|---|
+| Walk | OSRM `foot` + quieter bias from `sensor_density_current` |
+| Cycle | OSRM `bike` |
+| Drive | OSRM `driving` |
+| Public transport / Train / Tram / Bus | **PTV Timetable API v3** (nearby stops → shared route → departures) + OSRM walk legs |
+
+PTV does **not** expose an official A→B journey planner. Our transit mode builds a practical itinerary from open PTV stop/route/departure data.
+
+Add to `apps/web/.env.local` (and restart `npm run dev`):
+
+```env
+PTV_DEVID=your_developer_id
+PTV_API_KEY=your_api_key
+```
+
+Request credentials: [PTV Timetable API](https://www.ptv.vic.gov.au/footer/data-and-reporting/datasets/ptv-timetable-api/).
+
+Routing API used by the map: `POST /api/route/plan` with `{ from, to, mode }`.
+
+## Frontend table contract
+
+All tables are **public read** via the anon key (RLS `SELECT` only). Writes happen only with the service role in the ETL.
+
+### `sensor_density_current` (primary map layer)
+
+One row per sensor — latest crowd reading.
+
+| Column | Type | Notes |
+|---|---|---|
+| `location_id` | int PK | Joins to `sensors` |
+| `sensor_name` | text | |
+| `latitude` / `longitude` | float | WGS84 |
+| `in_cbd` | bool | Rough CBD bbox |
+| `total_count` | int | Pedestrians in latest minute bucket |
+| `density_level` | text | `Low` ≤50, `Medium` ≤150, `High` >150 |
+| `sensing_datetime` | timestamptz | |
+| `updated_at` | timestamptz | |
+
+Example:
+
+```ts
+const { data } = await supabase.from("sensor_density_current").select("*");
+```
+
+### `places`
+
+Landmarks + public toilets.
+
+| Column | Type | Notes |
+|---|---|---|
+| `id` | text PK | Stable hash |
+| `name` | text | |
+| `category` | text | e.g. Parks & Open Space |
+| `theme` / `sub_theme` | text | Source taxonomy |
+| `source` | text | `landmarks` or `toilets` |
+| `is_sensory_refuge` | bool | Keyword-tagged quiet-ish places |
+| `latitude` / `longitude` | float | |
+| `in_cbd` | bool | |
+
+Sensory refuges:
+
+```ts
+const { data } = await supabase
+  .from("places")
+  .select("*")
+  .eq("is_sensory_refuge", true);
+```
+
+### `quiet_windows`
+
+Typical crowd by weekday + hour (from 2024+ hourly history).
+
+| Column | Type |
+|---|---|
+| `day_name` | text (`Monday` …) |
+| `hourday` | int 0–23 |
+| `mean` / `median` / `std` / `count` | numbers |
+
+### Also available
+
+- `sensors` — static sensor metadata
+- `pedestrian_live` — past-hour time series (detail charts)
+- `sync_runs` — ETL audit (`status`, `rows_upserted`, `error`)
+
+## Open data sources
+
+City of Melbourne ([data.melbourne.vic.gov.au](https://data.melbourne.vic.gov.au/pages/home/)), CC BY:
+
+- `pedestrian-counting-system-past-hour-counts-per-minute`
+- `pedestrian-counting-system-sensor-locations`
+- `pedestrian-counting-system-monthly-counts-per-hour`
+- `landmarks-and-places-of-interest-including-schools-theatres-health-services-spor`
+- `public-toilets`
+
+## Prototype reference
+
+Earlier Streamlit exploration lives in `sensory_dashboard.py` and the cleaned CSVs at repo root. The production path is Supabase + this sync pipeline.
