@@ -184,6 +184,22 @@ Typical crowd by weekday + hour (from 2024+ hourly history).
 - `pedestrian_live` — past-hour time series (detail charts)
 - `sync_runs` — ETL audit (`status`, `rows_upserted`, `error`)
 
+### Sensor detail view (AC 2.2.7)
+
+Click a density sensor on `/map`, or call:
+
+```http
+GET /api/sensors/{locationId}/detail
+```
+
+Agreed response time: **≤ 2000 ms** for the Supabase detail queries. Verify:
+
+```bash
+npm run verify:ac-227
+```
+
+Evidence pack: [`pgp/evidence/AC-2.2.7/`](pgp/evidence/AC-2.2.7/).
+
 ## Open data sources
 
 City of Melbourne ([data.melbourne.vic.gov.au](https://data.melbourne.vic.gov.au/pages/home/)), CC BY:
