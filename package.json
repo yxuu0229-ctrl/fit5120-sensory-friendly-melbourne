@@ -12,7 +12,8 @@
     "sync": "npm run sync --workspace=@melbourne-sensory/sync",
     "sync:full": "npm run sync:full --workspace=@melbourne-sensory/sync",
     "verify:ac-211": "node scripts/verify/ac-211-map-density-bands.mjs",
-    "verify:ac-225": "node scripts/verify/ac-225-historical-trend-com-validation.mjs --location-id 3"
+    "verify:ac-225": "node scripts/verify/ac-225-historical-trend-com-validation.mjs --location-id 3",
+    "verify:ac-227": "node scripts/verify/ac-227-detail-response-time.mjs --runs 5"
   },
   "engines": {
     "node": ">=22"

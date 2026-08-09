@@ -27,6 +27,7 @@ import {
 } from "@/lib/densityBands";
 import { filterPlacesAlongRoute, type LatLng } from "@/lib/geo";
 import type { PlannedTrip } from "@/lib/planTypes";
+import type { SensorDetailResult } from "@/lib/sensorDetail";
 import { getBrowserSupabase } from "@/lib/supabaseBrowser";
 import {
   isTransitMode,
@@ -168,6 +169,9 @@ export default function RouteMap() {
 
   /** Fixed for the lifetime of the view — the popup describes "right now". */
   const { dayName, hourday } = useMemo(() => melbourneDayHour(), []);
+  const [detail, setDetail] = useState<SensorDetailResult | null>(null);
+  const [detailLoading, setDetailLoading] = useState(false);
+  const [detailError, setDetailError] = useState<string | null>(null);
 
   const startIcon = useMemo(() => makePin("A", "pin-a"), []);
   const endIcon = useMemo(() => makePin("B", "pin-b"), []);
@@ -328,6 +332,24 @@ export default function RouteMap() {
     setProvenance(null);
   };
 
+  const openSensorDetail = async (locationId: number) => {
+    setDetailLoading(true);
+    setDetailError(null);
+    try {
+      const res = await fetch(`/api/sensors/${locationId}/detail`);
+      const data = (await res.json()) as SensorDetailResult & { error?: string };
+      if (!res.ok) {
+        throw new Error(data.error || "Detail query failed");
+      }
+      setDetail(data);
+    } catch (e) {
+      setDetail(null);
+      setDetailError(e instanceof Error ? e.message : "Detail query failed");
+    } finally {
+      setDetailLoading(false);
+    }
+  };
+
   return (
     <div className="map-app">
       <aside className="map-panel">
@@ -413,6 +435,75 @@ export default function RouteMap() {
           />
           Covered CBD area only
         </label>
+        <p className="meta">
+          Click a sensor marker for the past-hour detail view (AC 2.2.7).
+        </p>
+
+        {(detailLoading || detail || detailError) && (
+          <section className="detail-panel" aria-live="polite">
+            <div className="detail-panel-head">
+              <h2>Sensor detail</h2>
+              <button
+                type="button"
+                className="linkish"
+                onClick={() => {
+                  setDetail(null);
+                  setDetailError(null);
+                }}
+              >
+                Close
+              </button>
+            </div>
+            {detailLoading && <p className="meta">Loading detail…</p>}
+            {detailError && <p className="error">{detailError}</p>}
+            {detail && !detailLoading && (
+              <>
+                <p>
+                  <strong>
+                    {detail.sensor?.sensor_name ||
+                      `Sensor ${detail.locationId}`}
+                  </strong>
+                </p>
+                <p className="meta">
+                  {detail.sensor
+                    ? `${detail.sensor.density_level} · ${detail.sensor.total_count} peds (latest)`
+                    : "No current density row"}
+                  {" · "}
+                  {detail.series.length} past-hour points
+                </p>
+                <p
+                  className={
+                    detail.withinSla ? "detail-timing ok" : "detail-timing slow"
+                  }
+                >
+                  Query {detail.queryMs} ms (SLA ≤ {detail.slaMs} ms) —{" "}
+                  {detail.withinSla ? "within SLA" : "exceeded SLA"}
+                </p>
+                {detail.series.length > 0 && (
+                  <ul className="detail-series">
+                    {detail.series.slice(-8).map((p) => (
+                      <li key={p.sensing_datetime}>
+                        <span>
+                          {new Date(p.sensing_datetime).toLocaleTimeString(
+                            "en-AU",
+                            {
+                              timeZone: "Australia/Melbourne",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            }
+                          )}
+                        </span>
+                        <span>
+                          {p.total_count} · {p.density_level}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </>
+            )}
+          </section>
+        )}
 
         <label className="check">
           <input
@@ -634,6 +725,11 @@ export default function RouteMap() {
                   fillOpacity: 0.55,
                   weight: 1,
                 }}
+                eventHandlers={{
+                  click: () => {
+                    void openSensorDetail(s.location_id);
+                  },
+                }}
               >
                 <Popup>
                   <strong>{s.sensor_name || `Sensor ${s.location_id}`}</strong>
@@ -641,6 +737,8 @@ export default function RouteMap() {
                   {s.density_level} · {s.total_count} peds
                   <br />
                   <em>Agreed band: Low ≤50 · Medium ≤150 · High &gt;150</em>
+                  <br />
+                  <em>Detail loading in side panel…</em>
                   <QuietWindowEstimate
                     row={quietWindows.get(s.location_id)}
                     dayName={dayName}
