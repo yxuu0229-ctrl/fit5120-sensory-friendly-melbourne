@@ -51,4 +51,5 @@ Exit code `0` = PASS (every run ≤ SLA); `1` = FAIL.
 |---|---|
 | PGP evidence (this folder) | `pgp/evidence/AC-2.2.7/` |
 | Latest test result | [`results/latest.json`](./results/latest.json) |
-| GitHub Pull Request | _filled after PR is opened_ |
+| GitHub Pull Request | https://github.com/Atharva-deep/melbourne-sensory-map/pull/1 |
+| Latest verification | **PASS** — avg 57 ms, max 140 ms (SLA ≤ 2000 ms) |
