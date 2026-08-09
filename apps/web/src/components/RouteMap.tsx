@@ -13,6 +13,12 @@ import {
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
+import {
+  CBD_CENTER,
+  densityColor,
+  DENSITY_BANDS,
+  inCbd,
+} from "@/lib/densityBands";
 import { filterPlacesAlongRoute, type LatLng } from "@/lib/geo";
 import type { PlannedTrip } from "@/lib/planTypes";
 import { getBrowserSupabase } from "@/lib/supabaseBrowser";
@@ -23,7 +29,6 @@ import {
 } from "@/lib/transportModes";
 import type { Place, SensorDensityCurrent } from "@/lib/types";
 
-const CBD_CENTER: LatLng = { lat: -37.8136, lng: 144.9631 };
 /** How close a refuge must be to the route to count as "along the journey" */
 const REFUGE_ALONG_ROUTE_METERS = 200;
 
@@ -34,12 +39,6 @@ function makePin(label: string, className: string, size = 28) {
     iconSize: [size, size],
     iconAnchor: [size / 2, size / 2],
   });
-}
-
-function densityColor(level: string) {
-  if (level === "Low") return "#1f7a4c";
-  if (level === "Medium") return "#b36b00";
-  return "#b42318";
 }
 
 function ClickPicker({
@@ -93,6 +92,8 @@ export default function RouteMap() {
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<PlannedTrip | null>(null);
   const [showDensity, setShowDensity] = useState(true);
+  const [cbdOnly, setCbdOnly] = useState(true);
+  const [densityLoading, setDensityLoading] = useState(true);
   const [showRefuges, setShowRefuges] = useState(true);
   const [refuges, setRefuges] = useState<Place[]>([]);
 
@@ -104,6 +105,7 @@ export default function RouteMap() {
   useEffect(() => {
     let cancelled = false;
     (async () => {
+      setDensityLoading(true);
       try {
         const sb = getBrowserSupabase();
         const [densityRes, placesRes] = await Promise.all([
@@ -122,12 +124,31 @@ export default function RouteMap() {
             e instanceof Error ? e.message : "Failed to load map data"
           );
         }
+      } finally {
+        if (!cancelled) setDensityLoading(false);
       }
     })();
     return () => {
       cancelled = true;
     };
   }, []);
+
+  const densitySensors = useMemo(() => {
+    if (!cbdOnly) return sensors;
+    return sensors.filter(
+      (s) => s.in_cbd === true || inCbd(s.latitude, s.longitude)
+    );
+  }, [sensors, cbdOnly]);
+
+  const densityBandCounts = useMemo(() => {
+    const counts = { Low: 0, Medium: 0, High: 0 };
+    for (const s of densitySensors) {
+      if (s.density_level in counts) {
+        counts[s.density_level as keyof typeof counts] += 1;
+      }
+    }
+    return counts;
+  }, [densitySensors]);
 
   const refugesAlongJourney = useMemo(() => {
     if (!result?.allPositions?.length) return [];
@@ -277,7 +298,17 @@ export default function RouteMap() {
             checked={showDensity}
             onChange={(e) => setShowDensity(e.target.checked)}
           />
-          Show crowd density sensors
+          Show current pedestrian density
+        </label>
+
+        <label className="check">
+          <input
+            type="checkbox"
+            checked={cbdOnly}
+            onChange={(e) => setCbdOnly(e.target.checked)}
+            disabled={!showDensity}
+          />
+          Covered CBD area only
         </label>
 
         <label className="check">
@@ -288,6 +319,36 @@ export default function RouteMap() {
           />
           Show sensory refuges along journey
         </label>
+
+        <section className="density-legend" aria-label="Density bands">
+          <h2>Pedestrian density</h2>
+          <p className="meta">
+            {densityLoading
+              ? "Loading current density…"
+              : `${densitySensors.length} sensors · Low / Medium / High bands`}
+          </p>
+          <ul className="density-legend-list">
+            {DENSITY_BANDS.map((band) => (
+              <li key={band.level}>
+                <span
+                  className="density-swatch"
+                  style={{ background: band.color }}
+                  aria-hidden
+                />
+                <span>
+                  <strong>{band.label}</strong>
+                  <span className="meta">
+                    {" "}
+                    {band.description}
+                    {!densityLoading
+                      ? ` · ${densityBandCounts[band.level]} on map`
+                      : ""}
+                  </span>
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
 
         <p className="meta">
           Click mode:{" "}
@@ -425,7 +486,7 @@ export default function RouteMap() {
           <ClickPicker mode={pickMode} onPick={onPick} />
 
           {showDensity &&
-            sensors.map((s) => (
+            densitySensors.map((s) => (
               <CircleMarker
                 key={s.location_id}
                 center={[s.latitude, s.longitude]}
@@ -441,6 +502,8 @@ export default function RouteMap() {
                   <strong>{s.sensor_name || `Sensor ${s.location_id}`}</strong>
                   <br />
                   {s.density_level} · {s.total_count} peds
+                  <br />
+                  <em>Agreed band: Low ≤50 · Medium ≤150 · High &gt;150</em>
                 </Popup>
               </CircleMarker>
             ))}
