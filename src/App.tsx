@@ -55,7 +55,7 @@ const refuges: Refuge[] = [
     cardQuietnessData: "Medium",
     note: "Not guaranteed quiet; use as potential refuge.",
     category: "Library",
-    imageUrl: "https://www.figma.com/api/mcp/asset/3c55515b-58bd-4546-bd88-aeaa6e951e44.png",
+    imageUrl: "/images/library.jpg",
   },
   {
     id: "flagstaff-gardens",
@@ -70,7 +70,7 @@ const refuges: Refuge[] = [
     cardQuietnessData: "Current",
     note: "Outdoor space with lower pedestrian flow.",
     category: "Park",
-    imageUrl: "https://www.figma.com/api/mcp/asset/3c55515b-58bd-4546-bd88-aeaa6e951e44.png",
+    imageUrl: "/images/park.jpg",
   },
   {
     id: "town-hall-arcade",
@@ -85,7 +85,7 @@ const refuges: Refuge[] = [
     cardQuietnessData: "Unavailable",
     note: "Quietness unconfirmed; basic access known.",
     category: "Public",
-    imageUrl: "https://www.figma.com/api/mcp/asset/3c55515b-58bd-4546-bd88-aeaa6e951e44.png",
+    imageUrl: "/images/public-space.jpg",
   },
 ];
 

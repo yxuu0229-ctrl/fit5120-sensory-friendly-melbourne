@@ -277,7 +277,7 @@ a {
 }
 
 .toggle span {
-  background: #b1b1b1;
+  background: #ffffff;
   border: 1px solid #1f2120;
   border-radius: 50%;
   height: 26px;
@@ -289,7 +289,8 @@ a {
 }
 
 .toggle-on {
-  background: #4f7666;
+  background: #45b76f;
+  border-color: #2f9f59;
 }
 
 .toggle-on span {
