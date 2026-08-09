@@ -12,6 +12,23 @@ export type SensorDensityCurrent = {
   updated_at: string;
 };
 
+/**
+ * Typical pedestrian volume for one sensor at one weekday-hour.
+ * `is_reliable` is computed during sync from `sample_count`; consumers must not
+ * re-derive it, so the threshold lives in exactly one place.
+ */
+export type LocationQuietWindow = {
+  location_id: number;
+  day_name: string;
+  hourday: number;
+  mean: number;
+  median: number;
+  std: number;
+  sample_count: number;
+  is_reliable: boolean;
+  updated_at: string;
+};
+
 export type Place = {
   id: string;
   name: string;

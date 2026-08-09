@@ -35,6 +35,17 @@ export function densityLevel(totalCount) {
   return "High";
 }
 
+/**
+ * Minimum observations behind a per-location hourly estimate before it is
+ * treated as reliable (AC 2.2.6).
+ *
+ * The hourly dataset carries one reading per (sensor, date, hour), so a bucket
+ * gains roughly one sample per week. 12 is about three months of coverage for
+ * that weekday-hour — enough to be more than noise, low enough that recently
+ * installed sensors become usable within a season.
+ */
+export const MIN_RELIABLE_SAMPLES = 12;
+
 export const CBD = {
   latMin: -37.825,
   latMax: -37.805,

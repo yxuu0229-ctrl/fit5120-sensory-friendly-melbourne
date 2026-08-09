@@ -21,7 +21,11 @@ import {
   MODE_OPTIONS,
   type TransportMode,
 } from "@/lib/transportModes";
-import type { Place, SensorDensityCurrent } from "@/lib/types";
+import type {
+  LocationQuietWindow,
+  Place,
+  SensorDensityCurrent,
+} from "@/lib/types";
 
 const CBD_CENTER: LatLng = { lat: -37.8136, lng: 144.9631 };
 /** How close a refuge must be to the route to count as "along the journey" */
@@ -70,6 +74,60 @@ function formatDuration(s: number) {
   return `${h} h ${rem} min`;
 }
 
+/** Current weekday + hour in Melbourne, matching location_quiet_windows keys. */
+function melbourneDayHour(now = new Date()) {
+  const parts = new Intl.DateTimeFormat("en-AU", {
+    timeZone: "Australia/Melbourne",
+    weekday: "long",
+    hour: "numeric",
+    hour12: false,
+  }).formatToParts(now);
+
+  const dayName = parts.find((p) => p.type === "weekday")?.value ?? "";
+  // hour12:false yields "24" for midnight in some environments.
+  const hourday = Number(parts.find((p) => p.type === "hour")?.value ?? "0") % 24;
+  return { dayName, hourday };
+}
+
+function formatHour(hourday: number) {
+  if (hourday === 0) return "12am";
+  if (hourday === 12) return "12pm";
+  return hourday < 12 ? `${hourday}am` : `${hourday - 12}pm`;
+}
+
+/**
+ * AC 2.2.6 — when a location has too little history, state that plainly instead
+ * of showing a number the user cannot rely on.
+ */
+function QuietWindowEstimate({
+  row,
+  dayName,
+  hourday,
+}: {
+  row: LocationQuietWindow | undefined;
+  dayName: string;
+  hourday: number;
+}) {
+  const when = `${dayName} ${formatHour(hourday)}`;
+
+  if (!row || !row.is_reliable) {
+    return (
+      <div className="quiet-note quiet-note-insufficient">
+        Not enough historical data for this location to say how busy it usually
+        is on {when}.
+        {row ? ` Only ${row.sample_count} past readings for this hour.` : ""}
+      </div>
+    );
+  }
+
+  return (
+    <div className="quiet-note">
+      Usually about {Math.round(row.mean)} people on {when}, based on{" "}
+      {row.sample_count} past readings.
+    </div>
+  );
+}
+
 function formatDeparture(utc: string) {
   try {
     return new Date(utc).toLocaleString("en-AU", {
@@ -95,6 +153,12 @@ export default function RouteMap() {
   const [showDensity, setShowDensity] = useState(true);
   const [showRefuges, setShowRefuges] = useState(true);
   const [refuges, setRefuges] = useState<Place[]>([]);
+  const [quietWindows, setQuietWindows] = useState<
+    Map<number, LocationQuietWindow>
+  >(new Map());
+
+  /** Fixed for the lifetime of the view — the popup describes "right now". */
+  const { dayName, hourday } = useMemo(() => melbourneDayHour(), []);
 
   const startIcon = useMemo(() => makePin("A", "pin-a"), []);
   const endIcon = useMemo(() => makePin("B", "pin-b"), []);
@@ -106,15 +170,27 @@ export default function RouteMap() {
     (async () => {
       try {
         const sb = getBrowserSupabase();
-        const [densityRes, placesRes] = await Promise.all([
+        const [densityRes, placesRes, quietRes] = await Promise.all([
           sb.from("sensor_density_current").select("*"),
           sb.from("places").select("*").eq("is_sensory_refuge", true),
+          // Only this weekday-hour: ~one row per sensor rather than 168.
+          sb
+            .from("location_quiet_windows")
+            .select("*")
+            .eq("day_name", dayName)
+            .eq("hourday", hourday),
         ]);
         if (densityRes.error) throw densityRes.error;
         if (placesRes.error) throw placesRes.error;
         if (!cancelled) {
           setSensors((densityRes.data || []) as SensorDensityCurrent[]);
           setRefuges((placesRes.data || []) as Place[]);
+          // A failed quiet-window query is not fatal: every sensor then falls
+          // through to the "not enough data" branch, which is the honest state.
+          const quietRows = quietRes.error
+            ? []
+            : ((quietRes.data || []) as LocationQuietWindow[]);
+          setQuietWindows(new Map(quietRows.map((r) => [r.location_id, r])));
         }
       } catch (e) {
         if (!cancelled) {
@@ -127,7 +203,7 @@ export default function RouteMap() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [dayName, hourday]);
 
   const refugesAlongJourney = useMemo(() => {
     if (!result?.allPositions?.length) return [];
@@ -441,6 +517,11 @@ export default function RouteMap() {
                   <strong>{s.sensor_name || `Sensor ${s.location_id}`}</strong>
                   <br />
                   {s.density_level} · {s.total_count} peds
+                  <QuietWindowEstimate
+                    row={quietWindows.get(s.location_id)}
+                    dayName={dayName}
+                    hourday={hourday}
+                  />
                 </Popup>
               </CircleMarker>
             ))}
