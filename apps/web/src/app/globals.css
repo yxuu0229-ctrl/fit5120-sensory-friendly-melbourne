@@ -370,6 +370,23 @@ a {
   margin-bottom: 0.55rem;
 }
 
+/* Typical-volume estimate inside a sensor popup (AC 2.2.6) */
+.quiet-note {
+  margin-top: 0.5rem;
+  padding-top: 0.45rem;
+  border-top: 1px solid var(--line);
+  font-size: 0.85rem;
+  line-height: 1.35;
+}
+
+/* Insufficient history: stated plainly, not styled as an alarm. */
+.quiet-note-insufficient {
+  color: #5c4b00;
+  background: #fff3cd;
+  border-top: 0;
+  padding: 0.45rem 0.55rem;
+}
+
 @media (max-width: 860px) {
   .map-app {
     grid-template-columns: 1fr;
