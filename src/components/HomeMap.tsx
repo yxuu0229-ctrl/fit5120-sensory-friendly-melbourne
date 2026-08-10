@@ -545,7 +545,7 @@ export default function HomeMap({ onNavigatePage }: HomeMapProps) {
   return (
     <div className="home-mockup-wrapper">
       {/* Search Header Overlay */}
-      <div className="search-header-overlay">
+      <div className={`search-header-overlay ${activeMode === "navigate" ? "navigate-mode" : ""}`}>
         {activeMode === "heat" ? (
           <div
             className="thresholds-header-pill"
@@ -560,15 +560,14 @@ export default function HomeMap({ onNavigatePage }: HomeMapProps) {
           <div className="navigate-stacked-inputs">
             {/* From Input */}
             <div className="search-input-wrapper input-row">
-              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#10B981" stroke-width="2.5" style={{ marginRight: 6, flexShrink: 0 }}>
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#10B981" stroke-width="2.5" style={{ marginRight: 8, flexShrink: 0 }}>
                 <path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 12 8 12s8-6.75 8-12a8 8 0 0 0-8-8z" fill="#D1FAE5" />
                 <circle cx="12" cy="10" r="3" fill="#10B981" />
               </svg>
-              <span className="input-field-label start-label">Start</span>
               <input
                 type="text"
                 className="search-destination-input"
-                placeholder="Choose start point..."
+                placeholder="Search start location..."
                 value={originQuery}
                 onChange={(e) => {
                   setOriginQuery(e.target.value);
@@ -596,15 +595,14 @@ export default function HomeMap({ onNavigatePage }: HomeMapProps) {
 
             {/* To Input */}
             <div className="search-input-wrapper input-row">
-              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#EF4444" stroke-width="2.5" style={{ marginRight: 6, flexShrink: 0 }}>
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#EF4444" stroke-width="2.5" style={{ marginRight: 8, flexShrink: 0 }}>
                 <path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 12 8 12s8-6.75 8-12a8 8 0 0 0-8-8z" fill="#FEE2E2" />
                 <circle cx="12" cy="10" r="3" fill="#EF4444" />
               </svg>
-              <span className="input-field-label end-label">End</span>
               <input
                 type="text"
                 className="search-destination-input"
-                placeholder="Choose destination..."
+                placeholder="Search destination..."
                 value={destinationQuery}
                 onChange={(e) => {
                   setDestinationQuery(e.target.value);
@@ -633,12 +631,12 @@ export default function HomeMap({ onNavigatePage }: HomeMapProps) {
         ) : (
           <div className="search-input-wrapper">
             <div className="search-icon-btn">
-              <SearchIcon size={18} fill="#777777" />
+              <SearchIcon size={20} fill="#777777" />
             </div>
             <input
               type="text"
               className="search-destination-input"
-              placeholder="Search Destination"
+              placeholder="Search destination..."
               value={searchQuery}
               onChange={(e) => {
                 setSearchQuery(e.target.value);

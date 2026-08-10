@@ -3119,10 +3119,10 @@ body,
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-radius: 24px;
-  padding: 8px 14px;
+  padding: 10px 16px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.5);
-  height: 42px;
+  height: 48px;
   position: relative;
 }
 
@@ -3136,7 +3136,7 @@ body,
   border: none;
   background: transparent;
   width: 100%;
-  font-size: 14px;
+  font-size: 15.5px;
   color: #111111;
   font-weight: 500;
   outline: none;
@@ -3176,7 +3176,7 @@ body,
 /* Suggestions Dropdown */
 .search-suggestions-dropdown {
   position: absolute;
-  top: 48px;
+  top: 54px;
   left: 0;
   right: 50px;
   background: rgba(255, 255, 255, 0.95);
@@ -3319,26 +3319,34 @@ body,
 }
 
 /* Stacked Search Inputs in Navigate Mode */
+.search-header-overlay.navigate-mode {
+  align-items: flex-start !important;
+}
+
+.search-header-overlay.navigate-mode .avatar-wrapper {
+  margin-top: 18px;
+}
+
 .navigate-stacked-inputs {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  background: rgba(255, 255, 255, 0.45);
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.65);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-radius: 20px;
-  padding: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.35);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+  padding: 16px 20px;
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
 }
 
 .navigate-stacked-inputs .input-row {
-  background: rgba(255, 255, 255, 0.65) !important;
+  background: rgba(255, 255, 255, 0.75) !important;
   box-shadow: none !important;
-  border: 1px solid rgba(0, 0, 0, 0.05) !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
   border-radius: 12px !important;
-  height: 38px !important;
+  height: 46px !important;
   padding: 0 12px !important;
 }
 
@@ -3362,22 +3370,27 @@ body,
 
 /* Offset suggestions in navigate mode */
 .search-suggestions-dropdown.navigate-mode {
-  top: 106px !important;
+  top: 150px !important;
+  right: 50px !important;
+  border-radius: 20px !important;
+  background: rgba(255, 255, 255, 0.65) !important;
+  border: 1px solid rgba(255, 255, 255, 0.45) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08) !important;
 }
 
 /* Routes List Card Overlay */
 .routes-list-card-overlay {
   position: absolute;
-  top: 120px;
+  top: 166px;
   left: 12px;
   right: 12px;
-  background: rgba(255, 255, 255, 0.85);
+  background: rgba(255, 255, 255, 0.65);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border-radius: 18px;
-  padding: 16px;
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 20px;
+  padding: 16px 20px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.45);
   z-index: 1000;
   display: flex;
   flex-direction: column;
@@ -3779,21 +3792,4 @@ body,
   border-left: 3px solid #ef4444;
 }
 
-/* Stacked inputs inline field labels */
-.input-field-label {
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-  margin-right: 6px;
-  flex-shrink: 0;
-  user-select: none;
-}
-
-.start-label {
-  color: #10b981;
-}
-
-.end-label {
-  color: #ef4444;
-}
 
