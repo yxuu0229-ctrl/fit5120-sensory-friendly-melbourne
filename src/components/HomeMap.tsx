@@ -3,7 +3,6 @@ import {
   MapContainer,
   TileLayer,
   CircleMarker,
-  Rectangle,
   Polyline,
   Popup,
   useMap,
@@ -73,6 +72,17 @@ export default function HomeMap({ onNavigatePage }: HomeMapProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [destination, setDestination] = useState<{ name: string; lat: number; lng: number } | null>(null);
+
+  // Stacked search state for Navigate mode
+  const [origin, setOrigin] = useState<{ name: string; lat: number; lng: number } | null>(null);
+  const [originQuery, setOriginQuery] = useState("");
+  const [destinationQuery, setDestinationQuery] = useState("");
+  const [focusedInput, setFocusedInput] = useState<"origin" | "destination" | null>(null);
+
+  // Planned routes state for Navigate mode
+  const [plannedTrips, setPlannedTrips] = useState<any[]>([]);
+  const [selectedRouteIdx, setSelectedRouteIdx] = useState<number>(0);
+  const [loadingRoutes, setLoadingRoutes] = useState(false);
 
   // Threshold settings state
   const [soundThreshold, setSoundThreshold] = useState(35);
@@ -313,29 +323,79 @@ export default function HomeMap({ onNavigatePage }: HomeMapProps) {
       { name: "Carlton Gardens North", lat: -37.8017, lng: 144.9720 },
     ];
 
-    if (!searchQuery.trim()) return combinedSuggestions;
-    const query = searchQuery.toLowerCase();
+    const currentQuery = activeMode === "navigate"
+      ? (focusedInput === "origin" ? originQuery : destinationQuery)
+      : searchQuery;
+
+    if (!currentQuery.trim()) return combinedSuggestions;
+    const query = currentQuery.toLowerCase();
 
     return combinedSuggestions.filter(item =>
       item.name.toLowerCase().includes(query)
     );
-  }, [searchQuery]);
+  }, [searchQuery, originQuery, destinationQuery, activeMode, focusedInput]);
+
+  // Helper to calculate the warnings along a given route path by combining sound and crowd levels
+  const getRouteWarnings = (path: [number, number][]) => {
+    if (!path || path.length === 0) return 0;
+    
+    // Find all sensors along the route within 150m
+    const nearbySensors = filterPlacesAlongRoute(sensors, path, 150);
+    
+    let warnings = 0;
+    nearbySensors.forEach(sensor => {
+      // Calculate simulated sound level based on pedestrian counts
+      const sensorSound = 30 + Math.min(55, Math.round(sensor.total_count * 0.3));
+      
+      // Check if sound exceeds user threshold
+      if (sensorSound >= soundThreshold) {
+        warnings += 1;
+      }
+      // Check if crowd count exceeds user threshold
+      if (sensor.total_count >= crowdThreshold) {
+        warnings += 1;
+      }
+    });
+    
+    return warnings;
+  };
+
+  // Rank trips by sensory threshold warning counts (lowest first)
+  const rankedTrips = useMemo(() => {
+    if (!plannedTrips || plannedTrips.length === 0) return [];
+    
+    const tripsWithWarnings = plannedTrips.map(trip => {
+      const warnings = getRouteWarnings(trip.allPositions);
+      return {
+        ...trip,
+        warnings,
+      };
+    });
+    
+    return tripsWithWarnings.sort((a, b) => a.warnings - b.warnings);
+  }, [plannedTrips, sensors, soundThreshold, crowdThreshold]);
 
   // Filter quiet spaces along active route (if active), otherwise show all
   const activeQuietSpaces = useMemo(() => {
+    if (activeMode === "navigate" && rankedTrips[selectedRouteIdx]) {
+      return filterPlacesAlongRoute(quietSpaces, rankedTrips[selectedRouteIdx].allPositions, 300);
+    }
     if (routePath.length > 0) {
       return filterPlacesAlongRoute(quietSpaces, routePath, 300);
     }
     return quietSpaces;
-  }, [quietSpaces, routePath]);
+  }, [quietSpaces, routePath, rankedTrips, selectedRouteIdx, activeMode]);
 
   // Filter sensors along active route (if active), otherwise show all
   const activeSensors = useMemo(() => {
+    if (activeMode === "navigate" && rankedTrips[selectedRouteIdx]) {
+      return filterPlacesAlongRoute(sensors, rankedTrips[selectedRouteIdx].allPositions, 300);
+    }
     if (routePath.length > 0) {
       return filterPlacesAlongRoute(sensors, routePath, 300);
     }
     return sensors;
-  }, [sensors, routePath]);
+  }, [sensors, routePath, rankedTrips, selectedRouteIdx, activeMode]);
 
   // Filter sensors for Heat Zones mode based on sound & crowd thresholds
   const filteredHeatSensors = useMemo(() => {
@@ -346,8 +406,9 @@ export default function HomeMap({ onNavigatePage }: HomeMapProps) {
     });
   }, [activeSensors, soundThreshold, crowdThreshold]);
 
-  // Plan route when destination changes
+  // Plan route when destination changes (for non-navigate modes)
   useEffect(() => {
+    if (activeMode === "navigate") return;
     if (!destination) {
       setRoutePath([]);
       setRouteDetails(null);
@@ -375,13 +436,64 @@ export default function HomeMap({ onNavigatePage }: HomeMapProps) {
     };
 
     planWalkRoute();
-  }, [destination, userLocation]);
+  }, [destination, userLocation, activeMode]);
+
+  // Plan routes in Navigate mode when origin or destination changes
+  useEffect(() => {
+    if (activeMode !== "navigate") return;
+    if (!origin || !destination) {
+      setPlannedTrips([]);
+      setSelectedRouteIdx(0);
+      return;
+    }
+
+    const planNavigateRoutes = async () => {
+      setLoadingRoutes(true);
+      try {
+        const res = await planRoute(
+          { lat: origin.lat, lng: origin.lng },
+          { lat: destination.lat, lng: destination.lng },
+          "walk"
+        );
+        if (res.trips && res.trips.length > 0) {
+          setPlannedTrips(res.trips);
+          setSelectedRouteIdx(0);
+          setMapCenter([destination.lat, destination.lng]);
+        } else if (res.trip) {
+          setPlannedTrips([res.trip]);
+          setSelectedRouteIdx(0);
+          setMapCenter([destination.lat, destination.lng]);
+        } else {
+          setPlannedTrips([]);
+        }
+      } catch (err) {
+        console.error("Failed to plan navigate routes", err);
+        setPlannedTrips([]);
+      } finally {
+        setLoadingRoutes(false);
+      }
+    };
+
+    planNavigateRoutes();
+  }, [origin, destination, activeMode]);
 
   const handleSelectSuggestion = (item: { name: string; lat: number; lng: number }) => {
-    setDestination(item);
-    setSearchQuery(item.name);
-    setShowSuggestions(false);
-    setMapCenter([item.lat, item.lng]);
+    if (activeMode === "navigate") {
+      if (focusedInput === "origin") {
+        setOrigin(item);
+        setOriginQuery(item.name);
+      } else {
+        setDestination(item);
+        setDestinationQuery(item.name);
+      }
+      setShowSuggestions(false);
+      setMapCenter([item.lat, item.lng]);
+    } else {
+      setDestination(item);
+      setSearchQuery(item.name);
+      setShowSuggestions(false);
+      setMapCenter([item.lat, item.lng]);
+    }
   };
 
   const handleClearRoute = () => {
@@ -410,6 +522,72 @@ export default function HomeMap({ onNavigatePage }: HomeMapProps) {
             <div className="thresholds-title-container">
               <SettingsIcon size={18} fill="#111111" />
               <span className="thresholds-title-text">Thresholds</span>
+            </div>
+          </div>
+        ) : activeMode === "navigate" ? (
+          <div className="navigate-stacked-inputs">
+            {/* From Input */}
+            <div className="search-input-wrapper input-row">
+              <span className="input-dot-indicator origin-dot"></span>
+              <input
+                type="text"
+                className="search-destination-input"
+                placeholder="Choose start point..."
+                value={originQuery}
+                onChange={(e) => {
+                  setOriginQuery(e.target.value);
+                  setFocusedInput("origin");
+                  setShowSuggestions(true);
+                }}
+                onFocus={() => {
+                  setFocusedInput("origin");
+                  setShowSuggestions(true);
+                }}
+              />
+              {originQuery && (
+                <button
+                  className="clear-search-btn"
+                  onClick={() => {
+                    setOrigin(null);
+                    setOriginQuery("");
+                    setPlannedTrips([]);
+                  }}
+                >
+                  &times;
+                </button>
+              )}
+            </div>
+
+            {/* To Input */}
+            <div className="search-input-wrapper input-row">
+              <span className="input-dot-indicator destination-dot"></span>
+              <input
+                type="text"
+                className="search-destination-input"
+                placeholder="Choose destination..."
+                value={destinationQuery}
+                onChange={(e) => {
+                  setDestinationQuery(e.target.value);
+                  setFocusedInput("destination");
+                  setShowSuggestions(true);
+                }}
+                onFocus={() => {
+                  setFocusedInput("destination");
+                  setShowSuggestions(true);
+                }}
+              />
+              {destinationQuery && (
+                <button
+                  className="clear-search-btn"
+                  onClick={() => {
+                    setDestination(null);
+                    setDestinationQuery("");
+                    setPlannedTrips([]);
+                  }}
+                >
+                  &times;
+                </button>
+              )}
             </div>
           </div>
         ) : (
@@ -447,7 +625,7 @@ export default function HomeMap({ onNavigatePage }: HomeMapProps) {
 
         {/* Suggestion Dropdown */}
         {activeMode !== "heat" && showSuggestions && suggestions.length > 0 && (
-          <ul className="search-suggestions-dropdown">
+          <ul className={`search-suggestions-dropdown ${activeMode === "navigate" ? "navigate-mode" : ""}`}>
             {suggestions.map((item, idx) => (
               <li
                 key={idx}
@@ -536,7 +714,7 @@ export default function HomeMap({ onNavigatePage }: HomeMapProps) {
       )}
 
       {/* Navigation Route Card */}
-      {activeMode === "navigate" && routeDetails && (
+      {activeMode !== "navigate" && routeDetails && (
         <div className="routing-card-overlay">
           <div className="routing-info">
             <div className="routing-headline">Calmer route ready</div>
@@ -548,6 +726,61 @@ export default function HomeMap({ onNavigatePage }: HomeMapProps) {
           </div>
           <button className="start-journey-btn" onClick={() => onNavigatePage("monitor")}>
             Start
+          </button>
+        </div>
+      )}
+
+      {/* Navigate Mode Routes List Card Overlay */}
+      {activeMode === "navigate" && rankedTrips.length > 0 && (
+        <div className="routes-list-card-overlay">
+          <div className="routes-list-header">Suggested Routes</div>
+          <div className="routes-list-container">
+            {rankedTrips.map((trip, idx) => {
+              const isCalmest = idx === 0;
+              const isSelected = selectedRouteIdx === idx;
+              const distanceKm = (trip.distanceMeters / 1000).toFixed(2);
+              const durationMins = Math.round(trip.durationSeconds / 60);
+              
+              return (
+                <div
+                  key={idx}
+                  className={`route-option-row ${isSelected ? "selected" : ""}`}
+                  onClick={() => setSelectedRouteIdx(idx)}
+                >
+                  <div className="route-option-left">
+                    <div
+                      className="route-color-indicator"
+                      style={{ backgroundColor: isCalmest ? "#2563eb" : "#222222" }}
+                    ></div>
+                    <div className="route-name-container">
+                      <div className="route-name">{isCalmest ? "Route A (Calmest)" : `Route B (Alternative)`}</div>
+                      <div className="route-details-text">
+                        {durationMins} min &bull; {trip.distanceMeters < 1000 ? `${Math.round(trip.distanceMeters)}m` : `${distanceKm} km`}
+                      </div>
+                    </div>
+                  </div>
+                  <div className={`route-warning-badge ${trip.warnings > 0 ? "has-warnings" : "no-warnings"}`}>
+                    {trip.warnings === 0 ? "No warnings" : `${trip.warnings} warning${trip.warnings > 1 ? "s" : ""}`}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          <button
+            className="start-journey-btn large-start-btn"
+            onClick={() => {
+              // Set the active route path and details for the monitor page
+              setRoutePath(rankedTrips[selectedRouteIdx].allPositions);
+              setRouteDetails({
+                distance: rankedTrips[selectedRouteIdx].distanceMeters < 1000 
+                  ? `${Math.round(rankedTrips[selectedRouteIdx].distanceMeters)} m`
+                  : `${(rankedTrips[selectedRouteIdx].distanceMeters / 1000).toFixed(2)} km`,
+                duration: `${Math.round(rankedTrips[selectedRouteIdx].durationSeconds / 60)} min`
+              });
+              onNavigatePage("monitor");
+            }}
+          >
+            Start Journey
           </button>
         </div>
       )}
@@ -705,15 +938,35 @@ export default function HomeMap({ onNavigatePage }: HomeMapProps) {
               );
             })}
 
-          {/* Render Route Polyline & Destination in all modes if planned */}
-          {routePath.length > 0 && (
+          {/* Render Route Polyline & Destination/Origin in Navigate Mode */}
+          {activeMode === "navigate" ? (
             <>
+              {/* Origin Pin */}
+              {origin && (
+                <CircleMarker
+                  center={[origin.lat, origin.lng]}
+                  pathOptions={{
+                    fillColor: "#10B981", // green for origin
+                    fillOpacity: 1,
+                    color: "#ffffff",
+                    weight: 2,
+                  }}
+                  radius={7}
+                >
+                  <Popup>
+                    <strong>{origin.name}</strong>
+                    <br />
+                    Start Location
+                  </Popup>
+                </CircleMarker>
+              )}
+
               {/* Destination Pin */}
               {destination && (
                 <CircleMarker
                   center={[destination.lat, destination.lng]}
                   pathOptions={{
-                    fillColor: "#000000",
+                    fillColor: "#000000", // black for destination
                     fillOpacity: 1,
                     color: "#ffffff",
                     weight: 2,
@@ -727,20 +980,34 @@ export default function HomeMap({ onNavigatePage }: HomeMapProps) {
                   </Popup>
                 </CircleMarker>
               )}
-              {/* Walking path polyline */}
-              <Polyline
-                positions={routePath}
-                pathOptions={{
-                  color: "#000000",
-                  weight: 5,
-                  opacity: 0.85,
-                  dashArray: "1, 8", // dotted style navigation line
-                  lineCap: "round",
-                }}
-              />
 
-              {/* Render quiet spaces along the route (when not already in Chill Mode) */}
-              {activeMode !== "chill" && activeQuietSpaces.map((refuge) => (
+              {/* Multiple walking path polylines */}
+              {rankedTrips.map((trip, idx) => {
+                const isCalmest = idx === 0;
+                const isSelected = selectedRouteIdx === idx;
+                return (
+                  <Polyline
+                    key={idx}
+                    positions={trip.allPositions}
+                    eventHandlers={{
+                      click: () => {
+                        setSelectedRouteIdx(idx);
+                      },
+                    }}
+                    pathOptions={{
+                      color: isCalmest ? "#2563eb" : "#222222",
+                      weight: isSelected ? 6 : 4,
+                      opacity: isSelected ? 0.95 : 0.45,
+                      dashArray: isSelected ? undefined : "5, 10",
+                      lineCap: "round",
+                      className: "interactive-route-line",
+                    }}
+                  />
+                );
+              })}
+
+              {/* Render quiet spaces along the route */}
+              {activeQuietSpaces.map((refuge) => (
                 <React.Fragment key={refuge.id}>
                   {/* Glowing Blur Aura around each place */}
                   <CircleMarker
@@ -776,8 +1043,8 @@ export default function HomeMap({ onNavigatePage }: HomeMapProps) {
                 </React.Fragment>
               ))}
 
-              {/* Render sensors along the route (when not already in Heat Zones Mode) */}
-              {activeMode !== "heat" && activeSensors.map((sensor) => (
+              {/* Render sensors along the route */}
+              {activeSensors.map((sensor) => (
                 <React.Fragment key={sensor.location_id}>
                   <CircleMarker
                     center={[sensor.latitude, sensor.longitude]}
@@ -812,6 +1079,115 @@ export default function HomeMap({ onNavigatePage }: HomeMapProps) {
                 </React.Fragment>
               ))}
             </>
+          ) : (
+            // Non-navigate modes (single route rendering)
+            routePath.length > 0 && (
+              <>
+                {/* Destination Pin */}
+                {destination && (
+                  <CircleMarker
+                    center={[destination.lat, destination.lng]}
+                    pathOptions={{
+                      fillColor: "#000000",
+                      fillOpacity: 1,
+                      color: "#ffffff",
+                      weight: 2,
+                    }}
+                    radius={7}
+                  >
+                    <Popup>
+                      <strong>{destination.name}</strong>
+                      <br />
+                      Destination
+                    </Popup>
+                  </CircleMarker>
+                )}
+                {/* Walking path polyline */}
+                <Polyline
+                  positions={routePath}
+                  pathOptions={{
+                    color: "#000000",
+                    weight: 5,
+                    opacity: 0.85,
+                    dashArray: "1, 8",
+                    lineCap: "round",
+                  }}
+                />
+
+                {/* Render quiet spaces along the route (when not already in Chill Mode) */}
+                {activeMode !== "chill" && activeQuietSpaces.map((refuge) => (
+                  <React.Fragment key={refuge.id}>
+                    {/* Glowing Blur Aura around each place */}
+                    <CircleMarker
+                      center={[refuge.latitude, refuge.longitude]}
+                      pathOptions={{
+                        fillColor: "#3EBFFF",
+                        fillOpacity: 0.65,
+                        color: "transparent",
+                        weight: 0,
+                        className: "quiet-highlight-space",
+                      }}
+                      radius={25}
+                    />
+                    {/* Small sharp core */}
+                    <CircleMarker
+                      center={[refuge.latitude, refuge.longitude]}
+                      pathOptions={{
+                        fillColor: "#3EBFFF",
+                        fillOpacity: 1,
+                        color: "#ffffff",
+                        weight: 2,
+                      }}
+                      radius={7}
+                    >
+                      <Popup>
+                        <strong>{refuge.name}</strong>
+                        <br />
+                        <span className="refuge-popup-category">{refuge.category ?? "Quiet Space"}</span>
+                        <br />
+                        <span className="refuge-popup-theme">{refuge.theme}</span>
+                      </Popup>
+                    </CircleMarker>
+                  </React.Fragment>
+                ))}
+
+                {/* Render sensors along the route (when not already in Heat Zones Mode) */}
+                {activeMode !== "heat" && activeSensors.map((sensor) => (
+                  <React.Fragment key={sensor.location_id}>
+                    <CircleMarker
+                      center={[sensor.latitude, sensor.longitude]}
+                      pathOptions={{
+                        fillColor: getSensorColor(sensor.density_level),
+                        fillOpacity: 0.75,
+                        color: "transparent",
+                        weight: 0,
+                        className: "quiet-highlight-space",
+                      }}
+                      radius={sensor.density_level === "High" ? 35 : sensor.density_level === "Medium" ? 25 : 15}
+                    />
+                    {/* Solid Core */}
+                    <CircleMarker
+                      center={[sensor.latitude, sensor.longitude]}
+                      pathOptions={{
+                        fillColor: getSensorColor(sensor.density_level),
+                        fillOpacity: 1,
+                        color: "#ffffff",
+                        weight: 1.5,
+                      }}
+                      radius={7}
+                    >
+                      <Popup>
+                        <strong>{sensor.sensor_name || `Sensor ${sensor.location_id}`}</strong>
+                        <br />
+                        Density: <strong>{sensor.density_level}</strong>
+                        <br />
+                        Count: {sensor.total_count} peds/min
+                      </Popup>
+                    </CircleMarker>
+                  </React.Fragment>
+                ))}
+              </>
+            )
           )}
         </MapContainer>
       </div>
@@ -848,7 +1224,7 @@ export default function HomeMap({ onNavigatePage }: HomeMapProps) {
           onClick={() => setActiveMode("navigate")}
           type="button"
         >
-          <NavigateIcon fill={activeMode === "navigate" ? "#000000" : "#111111"} size={22} />
+          <NavigateIcon fill={activeMode === "navigate" ? "#155724" : "#111111"} size={22} />
           {activeMode === "navigate" && <span className="mode-text">Navigate</span>}
         </button>
       </div>
