@@ -6,6 +6,7 @@ import {
 import { planPtvTransitTrip } from "@/lib/ptvTransitPlan";
 import { hasPtvCredentials } from "@/lib/ptvServer";
 import { checkCoverage } from "@/lib/coverage";
+import { buildProvenance } from "@/lib/dataProvenance";
 import { getSupabase } from "@/lib/supabase";
 import {
   isTransitMode,
@@ -69,15 +70,26 @@ export async function POST(req: Request) {
 
     // walk (default) — density-aware
     let sensors: SensorDensityCurrent[] = [];
+    let densityAvailable = true;
     try {
       const sb = getSupabase();
-      const { data } = await sb.from("sensor_density_current").select("*");
+      const { data, error } = await sb
+        .from("sensor_density_current")
+        .select("*");
+      // Supabase reports failures in `error` rather than throwing, so an
+      // unchecked destructure would degrade silently.
+      if (error) throw error;
       sensors = (data || []) as SensorDensityCurrent[];
     } catch {
       sensors = [];
+      densityAvailable = false;
     }
+
+    // AC 1.1.7 / 1.3.6 / 2.1.3 — the route always runs on cached readings, so
+    // say which ones and how old they are rather than implying they are live.
+    const dataProvenance = buildProvenance(sensors, densityAvailable);
     const trip = await planQuietWalkingRoute(from, to, sensors);
-    return NextResponse.json({ trip, coverage });
+    return NextResponse.json({ trip, coverage, dataProvenance });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     return NextResponse.json({ error: message }, { status: 500 });
