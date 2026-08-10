@@ -147,6 +147,10 @@ a {
   opacity: 1;
 }
 
+.field-group input:not(:placeholder-shown) {
+  color: #131414;
+}
+
 .field-group input:focus,
 .threshold-range:focus-visible,
 .primary-action:focus-visible,
@@ -154,6 +158,58 @@ a {
 .nav-link:focus-visible {
   outline: 3px solid rgba(11, 137, 100, 0.35);
   outline-offset: 3px;
+}
+
+.location-field {
+  position: relative;
+}
+
+.location-menu {
+  background: #ffffff;
+  border: 1px solid #9c9e9c;
+  border-radius: 8px;
+  box-shadow: 0 12px 24px rgba(19, 20, 20, 0.14);
+  display: grid;
+  left: 0;
+  overflow: hidden;
+  position: absolute;
+  right: 0;
+  top: calc(100% + 6px);
+  z-index: 20;
+}
+
+.location-menu button {
+  background: #ffffff;
+  border: 0;
+  color: #131414;
+  cursor: pointer;
+  font-size: 15px;
+  padding: 12px 16px;
+  text-align: left;
+}
+
+.location-menu button:hover {
+  background: #dde9e2;
+}
+
+.address-note {
+  color: #454747;
+  font-size: 12px;
+  line-height: 1.25;
+  margin: -2px 0 0;
+  max-width: 100%;
+}
+
+.address-note-ready {
+  color: #2f6f4d;
+}
+
+.address-note-checking {
+  color: #5f6461;
+}
+
+.address-note-error {
+  color: #a43822;
 }
 
 .card {
@@ -506,12 +562,28 @@ a {
   font-size: 15px;
   font-weight: 600;
   height: 46px;
+  transition:
+    background 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease,
+    transform 160ms ease;
+}
+
+.route-card-footer button:hover {
+  background: #45b76f;
+  transform: translateY(-1px);
 }
 
 .route-card-footer .secondary-button {
   background: #ffffff;
   border: 1px solid #1f2120;
   color: #131414;
+}
+
+.route-card-footer .secondary-button:hover {
+  background: #dde9e2;
+  border-color: #35890e;
+  color: #1f5f3a;
 }
 
 .map-panel {
@@ -551,11 +623,41 @@ a {
   width: 100%;
 }
 
+.leaflet-route-map {
+  border: 1px solid #9c9e9c;
+  border-radius: 12px;
+  height: 430px;
+  margin-top: 22px;
+  overflow: hidden;
+  position: relative;
+  width: 100%;
+}
+
+.leaflet-container {
+  font-family: Inter, Arial, sans-serif;
+}
+
 .map-canvas::before {
   background: rgba(255, 255, 255, 0.38);
   content: "";
   inset: 0;
   position: absolute;
+}
+
+.real-route-layer {
+  height: 100%;
+  inset: 0;
+  position: absolute;
+  width: 100%;
+  z-index: 4;
+}
+
+.real-route-layer polyline {
+  fill: none;
+  stroke: #35890e;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.1;
 }
 
 .street {
@@ -685,6 +787,10 @@ a {
   margin-left: 6px;
   vertical-align: -1px;
   width: 11px;
+}
+
+.active-map-panel .map-legend {
+  color: #131414;
 }
 
 .legend-low {
@@ -931,6 +1037,14 @@ a {
 .confirm-map .route-label {
   left: 27%;
   top: 75%;
+}
+
+.route-preview-panel .leaflet-route-map {
+  height: 300px;
+}
+
+.active-leaflet-map {
+  height: 575px;
 }
 
 .preview-low-one {
@@ -1274,7 +1388,8 @@ a {
 
 .prediction-card dl div {
   display: grid;
-  grid-template-columns: 120px 1fr;
+  grid-template-columns: 136px 1fr;
+  gap: 16px;
 }
 
 .prediction-card dt,
@@ -1283,6 +1398,11 @@ a {
   font-size: 18px;
   line-height: 1.1;
   margin: 0;
+}
+
+.prediction-card dt {
+  font-weight: 500;
+  white-space: nowrap;
 }
 
 .prediction-card p {
@@ -1441,6 +1561,35 @@ a {
   margin: 0 0 18px;
 }
 
+.refuge-search-actions {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: 1fr 1fr;
+  margin-bottom: 16px;
+}
+
+.refuge-search-actions button {
+  background: #ffffff;
+  border: 1px solid #1f2120;
+  border-radius: 8px;
+  color: #131414;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 700;
+  min-height: 42px;
+  padding: 8px 10px;
+}
+
+.refuge-search-actions button:disabled {
+  color: #787c7a;
+  cursor: not-allowed;
+}
+
+.refuge-search-actions .refuge-search-active {
+  background: #2f8f12;
+  color: #ffffff;
+}
+
 .refuge-card {
   background: #ffffff;
   border: 1px solid #9c9e9c;
@@ -1529,6 +1678,26 @@ a {
   font-size: 12px;
   line-height: 1.2;
   margin: 8px 18px 0;
+}
+
+.refuge-pagination {
+  align-items: center;
+  display: grid;
+  gap: 10px;
+  grid-template-columns: 1fr auto 1fr;
+  margin-top: 18px;
+}
+
+.refuge-pagination span {
+  color: #131414;
+  font-size: 14px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.refuge-pagination button {
+  min-height: 38px;
+  padding: 8px 12px;
 }
 
 .refuge-map-panel {
@@ -1665,6 +1834,12 @@ a {
   font-size: 15px;
   font-weight: 600;
   height: 48px;
+}
+
+.refuge-actions button:disabled {
+  background: #9c9e9c;
+  border-color: #9c9e9c;
+  cursor: not-allowed;
 }
 
 .refuge-actions .secondary-button {
