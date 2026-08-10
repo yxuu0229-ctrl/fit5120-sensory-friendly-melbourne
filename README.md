@@ -116,18 +116,6 @@ npm run dev
 | Walk | OSRM `foot` + quieter bias from `sensor_density_current` |
 | Cycle | OSRM `bike` |
 | Drive | OSRM `driving` |
-| Public transport / Train / Tram / Bus | **PTV Timetable API v3** (nearby stops → shared route → departures) + OSRM walk legs |
-
-PTV does **not** expose an official A→B journey planner. Our transit mode builds a practical itinerary from open PTV stop/route/departure data.
-
-Add to `apps/web/.env.local` (and restart `npm run dev`):
-
-```env
-PTV_DEVID=your_developer_id
-PTV_API_KEY=your_api_key
-```
-
-Request credentials: [PTV Timetable API](https://www.ptv.vic.gov.au/footer/data-and-reporting/datasets/ptv-timetable-api/).
 
 Routing API used by the map: `POST /api/route/plan` with `{ from, to, mode }`.
 

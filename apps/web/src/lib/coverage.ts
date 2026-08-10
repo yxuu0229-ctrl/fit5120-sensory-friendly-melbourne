@@ -54,8 +54,8 @@ function describe(outside: CoveragePoint[]): string {
  * AC 1.1.6 — describe a coverage gap in plain language rather than failing.
  *
  * `blocking` is true only for walking, the one mode that depends on sensor
- * data. Cycling, driving and public transport are unaffected by the sensor
- * footprint, so those still return a route and carry the notice as context.
+ * data. Cycling and driving are unaffected by the sensor footprint, so those
+ * still return a route and carry the notice as context.
  */
 export function checkCoverage(
   from: LatLng,

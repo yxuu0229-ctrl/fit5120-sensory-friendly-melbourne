@@ -3,15 +3,10 @@ import {
   planOsrmModeRoute,
   planQuietWalkingRoute,
 } from "@/lib/quietRoute";
-import { planPtvTransitTrip } from "@/lib/ptvTransitPlan";
-import { hasPtvCredentials } from "@/lib/ptvServer";
 import { checkCoverage } from "@/lib/coverage";
 import { buildProvenance } from "@/lib/dataProvenance";
 import { getSupabase } from "@/lib/supabase";
-import {
-  isTransitMode,
-  type TransportMode,
-} from "@/lib/transportModes";
+import type { TransportMode } from "@/lib/transportModes";
 import type { SensorDensityCurrent } from "@/lib/types";
 
 type Body = {
@@ -41,26 +36,22 @@ export async function POST(req: Request) {
       );
     }
 
+    if (mode !== "walk" && mode !== "cycle" && mode !== "drive") {
+      return NextResponse.json(
+        {
+          error:
+            "Unsupported transport mode. Available modes: walk, cycle, drive.",
+        },
+        { status: 400 }
+      );
+    }
+
     // AC 1.1.6 — points outside the sensor footprint are a coverage limit, not
     // an error. Only walking depends on that data, so only walking is blocked;
     // every other mode still routes and carries the notice as context.
     const coverage = checkCoverage(from, to, mode === "walk");
     if (coverage?.blocking) {
       return NextResponse.json({ coverage });
-    }
-
-    if (isTransitMode(mode)) {
-      if (!hasPtvCredentials()) {
-        return NextResponse.json(
-          {
-            error:
-              "PTV credentials not configured. Add PTV_DEVID and PTV_API_KEY to apps/web/.env.local (request a key from PTV Timetable API).",
-          },
-          { status: 503 }
-        );
-      }
-      const trip = await planPtvTransitTrip(from, to, mode);
-      return NextResponse.json({ trip, coverage });
     }
 
     if (mode === "cycle" || mode === "drive") {

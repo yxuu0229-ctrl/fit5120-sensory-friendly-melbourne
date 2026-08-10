@@ -22,11 +22,7 @@ import type { DataProvenance } from "@/lib/dataProvenance";
 import { filterPlacesAlongRoute, type LatLng } from "@/lib/geo";
 import type { PlannedTrip } from "@/lib/planTypes";
 import { getBrowserSupabase } from "@/lib/supabaseBrowser";
-import {
-  isTransitMode,
-  MODE_OPTIONS,
-  type TransportMode,
-} from "@/lib/transportModes";
+import { MODE_OPTIONS, type TransportMode } from "@/lib/transportModes";
 import type {
   LocationQuietWindow,
   Place,
@@ -132,19 +128,6 @@ function QuietWindowEstimate({
       {row.sample_count} past readings.
     </div>
   );
-}
-
-function formatDeparture(utc: string) {
-  try {
-    return new Date(utc).toLocaleString("en-AU", {
-      timeZone: "Australia/Melbourne",
-      hour: "numeric",
-      minute: "2-digit",
-      weekday: "short",
-    });
-  } catch {
-    return utc;
-  }
 }
 
 export default function RouteMap() {
@@ -313,8 +296,7 @@ export default function RouteMap() {
         <h1>Melbourne travel map</h1>
         <p className="lead">
           Choose a transport mode, set A and B, then plan a route. Walk uses
-          quieter-path bias from pedestrian sensors; public transport uses{" "}
-          <strong>PTV Timetable API</strong> open data.
+          quieter-path bias from pedestrian sensors.
         </p>
 
         <fieldset className="mode-field">
@@ -343,13 +325,6 @@ export default function RouteMap() {
             ))}
           </div>
         </fieldset>
-
-        {isTransitMode(transportMode) && (
-          <p className="meta">
-            Needs <code>PTV_DEVID</code> + <code>PTV_API_KEY</code> in{" "}
-            <code>apps/web/.env.local</code>.
-          </p>
-        )}
 
         <div className="actions">
           <button type="button" onClick={() => setPickMode("A")}>
@@ -470,9 +445,6 @@ export default function RouteMap() {
                     <div className="meta">
                       {formatDistance(leg.distanceMeters)} ·{" "}
                       {formatDuration(leg.durationSeconds)}
-                      {leg.departureUtc
-                        ? ` · departs ${formatDeparture(leg.departureUtc)}`
-                        : ""}
                     </div>
                   </div>
                 </li>
@@ -512,21 +484,13 @@ export default function RouteMap() {
         )}
 
         <p className="meta">
-          Routers:{" "}
+          Router:{" "}
           <a
             href="https://project-osrm.org/"
             target="_blank"
             rel="noreferrer"
           >
             OSRM
-          </a>{" "}
-          ·{" "}
-          <a
-            href="https://www.ptv.vic.gov.au/footer/data-and-reporting/datasets/ptv-timetable-api/"
-            target="_blank"
-            rel="noreferrer"
-          >
-            PTV Timetable API
           </a>{" "}
           · Density: City of Melbourne Open Data
         </p>

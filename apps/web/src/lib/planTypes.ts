@@ -1,15 +1,7 @@
 import type { LatLng } from "./geo";
 import type { TransportMode } from "./transportModes";
 
-export type RouteLegMode =
-  | "walk"
-  | "cycle"
-  | "drive"
-  | "train"
-  | "tram"
-  | "bus"
-  | "vline"
-  | "transit";
+export type RouteLegMode = "walk" | "cycle" | "drive";
 
 export type RouteLeg = {
   mode: RouteLegMode;
@@ -20,7 +12,6 @@ export type RouteLeg = {
   durationSeconds: number;
   /** [lat, lng] for Leaflet */
   positions: [number, number][];
-  departureUtc?: string | null;
   color: string;
 };
 
@@ -46,13 +37,6 @@ export function legColor(mode: RouteLegMode): string {
       return "#0a7a3e";
     case "drive":
       return "#5b3cc4";
-    case "train":
-    case "vline":
-      return "#0077c8";
-    case "tram":
-      return "#78be20";
-    case "bus":
-      return "#ff8200";
     default:
       return "#333333";
   }
