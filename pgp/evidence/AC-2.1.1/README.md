@@ -59,4 +59,5 @@ node scripts/verify/ac-211-map-density-bands.mjs --live
 | Comparison write-up | [`COMPARISON.md`](./COMPARISON.md) |
 | Latest test result | [`results/latest.json`](./results/latest.json) |
 | Google Drive PGP | see [`DRIVE_LINK.md`](./DRIVE_LINK.md) |
-| GitHub Pull Request | _filled after PR is opened_ |
+| GitHub Pull Request | https://github.com/Atharva-deep/melbourne-sensory-map/pull/4 |
+| Latest verification | **PASS** — 75 CBD sensors, valid Low/Medium/High bands |
