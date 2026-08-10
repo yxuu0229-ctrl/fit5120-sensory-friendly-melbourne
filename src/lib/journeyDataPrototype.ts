@@ -50,16 +50,15 @@ export const prototypeRouteOptions: PlannedRoute[] = [
 
 export function createPrototypeJourneyData(): JourneyData {
   return {
-    async sensorReadings(limit: number): Promise<SensorReading[]> {
-      return cbdLocations
-        .map((location, index) => ({
-          location_id: index,
-          sensor_name: location.name,
-          latitude: location.lat,
-          longitude: location.lng,
-          density_level: densityLevels[index % densityLevels.length],
-        }))
-        .slice(0, limit);
+    async sensorReadings(limit?: number): Promise<SensorReading[]> {
+      const readings = cbdLocations.map((location, index) => ({
+        location_id: index,
+        sensor_name: location.name,
+        latitude: location.lat,
+        longitude: location.lng,
+        density_level: densityLevels[index % densityLevels.length],
+      }));
+      return limit != null && limit > 0 ? readings.slice(0, limit) : readings;
     },
 
     async sensoryRefuges(): Promise<RefugePlace[]> {

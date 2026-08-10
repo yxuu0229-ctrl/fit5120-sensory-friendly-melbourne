@@ -40,11 +40,11 @@ export type WalkingRoutesResult = {
 };
 
 export const BACKEND_UNAVAILABLE_MESSAGE =
-  "Backend route API is not available. Showing prototype route data.";
+  "Could not plan walking routes right now. Check your connection and try again.";
 
 export interface JourneyData {
-  /** Missing env => []; never throws. */
-  sensorReadings(limit: number): Promise<SensorReading[]>;
+  /** Missing env => []; never throws. Omit limit to fetch all rows. */
+  sensorReadings(limit?: number): Promise<SensorReading[]>;
   /** Returns UNFILTERED rows. Missing env => []; never throws. */
   sensoryRefuges(): Promise<RefugePlace[]>;
   walkingRoutes(from: LatLng, to: LatLng): Promise<WalkingRoutesResult>;

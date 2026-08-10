@@ -1,8 +1,11 @@
 import { type FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import "leaflet/dist/leaflet.css";
 import { hasSupabaseEnv } from "./lib/supabase";
-import { distanceMeters, distanceToRouteMeters, type LatLng } from "./lib/geo";
-import { highDensitySensorsNearRoute } from "./lib/congestion";
+import {
+  distanceMeters,
+  distanceToRouteMeters,
+  type LatLng,
+} from "./lib/geo";
 import { planJourney, type PlannedRoute } from "./lib/journeyPlanning";
 import { createLiveJourneyData } from "./lib/journeyDataLive";
 import type { PlannedTrip, SensorReading } from "./lib/journeyData";
@@ -30,6 +33,13 @@ import LiveMapPage from "./components/LiveMapPage";
 import DataStatusPage from "./components/DataStatusPage";
 
 const nearbyRefugeRadiusMeters = 1000;
+const sensorRefreshPages: Page[] = [
+  "routes",
+  "warning",
+  "confirm",
+  "monitor",
+  "predictive",
+];
 
 function App() {
   const [page, setPage] = useState<Page>("plan");
@@ -40,8 +50,11 @@ function App() {
   const [routeOptions, setRouteOptions] = useState<PlannedRoute[]>([]);
   const [selectedRouteIndex, setSelectedRouteIndex] = useState(0);
   const [routeError, setRouteError] = useState("");
+  const [isPlanning, setIsPlanning] = useState(false);
   const [currentLocation, setCurrentLocation] = useState<LatLng | null>(null);
-  const [locationStatus, setLocationStatus] = useState<"idle" | "loading" | "ready" | "error">("idle");
+  const [locationStatus, setLocationStatus] = useState<
+    "idle" | "loading" | "ready" | "error"
+  >("idle");
   const [routeEndpoints, setRouteEndpoints] = useState<RouteEndpoints | null>(null);
   const [nearbyRefuges, setNearbyRefuges] = useState<NearbyRefuge[]>([]);
   const [refugeSearchMode, setRefugeSearchMode] = useState<RefugeSearchMode>("current");
@@ -55,7 +68,9 @@ function App() {
       if (normalized.includes(defaultOrigin.toLowerCase()) && currentLocation) {
         return currentLocation;
       }
-      const match = cbdLocations.find((location) => normalized.includes(location.name.toLowerCase()));
+      const match = cbdLocations.find((location) =>
+        normalized.includes(location.name.toLowerCase())
+      );
       return match ?? null;
     },
     [currentLocation]
@@ -64,7 +79,9 @@ function App() {
     resolveLocal: resolveLocalPoint,
     geocode: (q) => journey.geocode(q),
     onValueEdited: (v) => {
-      if (v.trim().toLowerCase() !== defaultOrigin.toLowerCase()) setLocationStatus("idle");
+      if (v.trim().toLowerCase() !== defaultOrigin.toLowerCase()) {
+        setLocationStatus("idle");
+      }
     },
     skipDefaultOrigin: true,
   });
@@ -72,61 +89,92 @@ function App() {
     resolveLocal: resolveLocalPoint,
     geocode: (q) => journey.geocode(q),
   });
-  const needsCurrentLocation = originField.value.trim().toLowerCase() === defaultOrigin.toLowerCase();
+  const needsCurrentLocation =
+    originField.value.trim().toLowerCase() === defaultOrigin.toLowerCase();
   const canPlanJourney =
     originField.value.trim() !== "" &&
     destinationField.value.trim() !== "" &&
     originField.point !== null &&
     destinationField.point !== null &&
     (!needsCurrentLocation || locationStatus === "ready");
-  const selectedNearbyRefuge = nearbyRefuges.find((refuge) => refuge.id === selectedRefugeId);
+  const selectedNearbyRefuge = nearbyRefuges.find(
+    (refuge) => refuge.id === selectedRefugeId
+  );
   const selectedRefugeView: RefugeView = selectedNearbyRefuge
     ? refugeFromPlace(selectedNearbyRefuge, refugeSearchMode)
-    : refugeFromStatic(refuges.find((refuge) => refuge.id === selectedRefugeId) ?? refuges[0]);
+    : refugeFromStatic(
+        refuges.find((refuge) => refuge.id === selectedRefugeId) ?? refuges[0]
+      );
   const selectedRoute = routeOptions[selectedRouteIndex];
-  const selectedRoutePath = selectedRoute?.positions ?? plannedTrip?.allPositions ?? [];
-  const routeHighSensors = selectedRoutePath.length
-    ? highDensitySensorsNearRoute(selectedRoutePath, sensorPoints)
-    : [];
-  const predictiveAlertSensor = routeHighSensors[0];
+  const selectedRoutePath =
+    selectedRoute?.positions ?? plannedTrip?.allPositions ?? [];
+  const alternativeRoute =
+    routeOptions.find(
+      (route, index) =>
+        index !== selectedRouteIndex &&
+        selectedRoute != null &&
+        route.sensoryLoad < selectedRoute.sensoryLoad
+    ) ?? routeOptions.find((_, index) => index !== selectedRouteIndex);
 
+  const refreshSensors = useCallback(async () => {
+    if (!isBackendConfigured) return [];
+    const sensors = await journey.sensorReadings();
+    setSensorPoints(sensors);
+    return sensors;
+  }, [isBackendConfigured, journey]);
+
+  // Keep density fresh while the user is in the journey flow.
   useEffect(() => {
-    if (!isBackendConfigured || page !== "routes") return;
+    if (!isBackendConfigured || !sensorRefreshPages.includes(page)) return;
 
-    void journey.sensorReadings(12).then(setSensorPoints);
-  }, [isBackendConfigured, page, journey]);
+    void refreshSensors();
+    if (page !== "monitor") return;
+
+    const id = window.setInterval(() => {
+      void refreshSensors();
+    }, 60_000);
+    return () => window.clearInterval(id);
+  }, [isBackendConfigured, page, refreshSensors]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!canPlanJourney) return;
+    if (!canPlanJourney || isPlanning) return;
 
+    setIsPlanning(true);
     setRouteError("");
     setRouteOptions([]);
     setSelectedRouteIndex(0);
+    setPlannedTrip(null);
 
-    const from = originField.point;
-    const to = destinationField.point;
-    if (!from || !to) {
-      setRouteError("Address not recognised. Please choose one of the suggested locations.");
-      return;
+    try {
+      const from = originField.point;
+      const to = destinationField.point;
+      if (!from || !to) {
+        setRouteError(
+          "Address not recognised. Please choose one of the suggested locations."
+        );
+        return;
+      }
+      setRouteEndpoints({ from, to });
+
+      const sensors = await refreshSensors();
+      const { candidates, error, trip } = await journey.walkingRoutes(from, to);
+      if (trip) setPlannedTrip(trip);
+      if (error) setRouteError(error);
+
+      const planned = planJourney(candidates, sensors, { avoidCongestion });
+      setRouteOptions(planned);
+
+      if (!planned.length && !error) {
+        setRouteError(
+          "No walking routes found between these points. Try locations inside the Melbourne CBD."
+        );
+      }
+
+      setPage("routes");
+    } finally {
+      setIsPlanning(false);
     }
-    setRouteEndpoints({ from, to });
-    const sensors = await loadSensorPoints();
-
-    const { candidates, error, trip } = await journey.walkingRoutes(from, to);
-    if (trip) setPlannedTrip(trip);
-    if (error) setRouteError(error);
-    setRouteOptions(planJourney(candidates, sensors, { avoidCongestion }));
-
-    setPage("routes");
-  }
-
-  async function loadSensorPoints() {
-    if (!isBackendConfigured) return sensorPoints;
-
-    const sensors = await journey.sensorReadings(40);
-    setSensorPoints(sensors);
-    return sensors;
   }
 
   function selectRoute(route: PlannedRoute, index: number) {
@@ -153,7 +201,10 @@ function App() {
       },
       () => {
         setCurrentLocation(null);
-        originField.setResult(null, "Location was not allowed. Enter an origin manually.");
+        originField.setResult(
+          null,
+          "Location was not allowed. Enter an origin manually."
+        );
         setLocationStatus("error");
       }
     );
@@ -179,7 +230,10 @@ function App() {
     const refugesWithinRange = places
       .map((place) => ({
         ...place,
-        distanceMeters: distanceMeters(location, { lat: place.latitude, lng: place.longitude }),
+        distanceMeters: distanceMeters(location, {
+          lat: place.latitude,
+          lng: place.longitude,
+        }),
       }))
       .filter((place) => place.distanceMeters <= nearbyRefugeRadiusMeters)
       .sort((a, b) => a.distanceMeters - b.distanceMeters);
@@ -254,12 +308,15 @@ function App() {
           threshold={threshold}
           onThresholdChange={setThreshold}
           avoidCongestion={avoidCongestion}
-          onToggleAvoidCongestion={() => setAvoidCongestion((current) => !current)}
+          onToggleAvoidCongestion={() =>
+            setAvoidCongestion((current) => !current)
+          }
           canPlanJourney={canPlanJourney}
           needsCurrentLocation={needsCurrentLocation}
           locationStatus={locationStatus}
           routeError={routeError}
           isBackendConfigured={isBackendConfigured}
+          isPlanning={isPlanning}
           onSubmit={handleSubmit}
           onUseCurrentLocation={useCurrentLocation}
         />
@@ -278,13 +335,26 @@ function App() {
           threshold={threshold}
           avoidCongestion={avoidCongestion}
           routeError={routeError}
+          onBackToPlan={() => setPage("plan")}
         />
       )}
 
       {page === "warning" && (
         <WarningPage
+          selectedRoute={selectedRoute}
+          alternativeRoute={alternativeRoute}
+          sensors={sensorPoints}
+          threshold={threshold}
           onKeepRoute={() => setPage("routes")}
-          onSelectAlternative={() => setPage("confirm")}
+          onSelectAlternative={() => {
+            if (alternativeRoute) {
+              const index = routeOptions.findIndex(
+                (route) => route === alternativeRoute
+              );
+              if (index >= 0) setSelectedRouteIndex(index);
+            }
+            setPage("confirm");
+          }}
         />
       )}
 
@@ -314,7 +384,7 @@ function App() {
 
       {page === "predictive" && (
         <PredictivePage
-          alertSensor={predictiveAlertSensor}
+          sensors={sensorPoints}
           selectedRoute={selectedRoute}
           selectedRoutePath={selectedRoutePath}
           routeEndpoints={routeEndpoints}

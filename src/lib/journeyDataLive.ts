@@ -1,6 +1,7 @@
 import { getSupabase, hasSupabaseEnv } from "./supabase";
 import type { LatLng } from "./geo";
 import type { RouteCandidate } from "./journeyPlanning";
+import { planRoute } from "./planRoute";
 import {
   BACKEND_UNAVAILABLE_MESSAGE,
   type GeocodeResult,
@@ -36,15 +37,36 @@ async function fetchOsrmRouteOptions(from: LatLng, to: LatLng) {
   return body.routes ?? [];
 }
 
+function tripToCandidate(trip: {
+  label: string;
+  distanceMeters: number;
+  durationSeconds: number;
+  allPositions?: [number, number][];
+}): RouteCandidate | null {
+  const positions = trip.allPositions ?? [];
+  if (positions.length < 2) return null;
+  return {
+    label: trip.label,
+    distanceMeters: trip.distanceMeters,
+    durationSeconds: trip.durationSeconds,
+    positions,
+  };
+}
+
 export function createLiveJourneyData(): JourneyData {
   return {
-    async sensorReadings(limit: number): Promise<SensorReading[]> {
+    async sensorReadings(limit?: number): Promise<SensorReading[]> {
       if (!hasSupabaseEnv()) return [];
 
-      const { data } = await getSupabase()
+      let query = getSupabase()
         .from("sensor_density_current")
-        .select("location_id,sensor_name,latitude,longitude,density_level,total_count,sensing_datetime")
-        .limit(limit);
+        .select(
+          "location_id,sensor_name,latitude,longitude,density_level,total_count,sensing_datetime"
+        );
+      if (limit != null && limit > 0) {
+        query = query.limit(limit);
+      }
+      const { data } = await query;
       return (data ?? []) as SensorReading[];
     },
 
@@ -64,38 +86,60 @@ export function createLiveJourneyData(): JourneyData {
       let trip: PlannedTrip | null = null;
 
       try {
-        const [backendResponse, osrmRoutes] = await Promise.all([
-          fetch("/api/route/plan", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ from, to, mode: "walk" }),
-          }),
-          fetchOsrmRouteOptions(from, to),
-        ]);
+        // Same planner as Live map (browser Supabase + OSRM) — replaces retired
+        // Next.js POST /api/route/plan.
+        const result = await planRoute(from, to, "walk");
 
-        if (backendResponse.ok) {
-          const body = (await backendResponse.json()) as { trip: PlannedTrip };
-          trip = body.trip;
-          candidates = [
-            ...(body.trip.allPositions
-              ? [
-                  {
-                    label: body.trip.label,
-                    distanceMeters: body.trip.distanceMeters,
-                    durationSeconds: body.trip.durationSeconds,
-                    positions: body.trip.allPositions,
-                  },
-                ]
-              : []),
-            ...osrmRoutes.map((route, index) =>
-              osrmRouteToCandidate(route, index === 0 ? "Direct walking route" : `Walking alternative ${index + 1}`)
-            ),
-          ];
-        } else {
-          error = BACKEND_UNAVAILABLE_MESSAGE;
+        if (result.coverage?.blocking) {
+          return {
+            candidates: [],
+            error: result.coverage.message,
+            trip: null,
+          };
+        }
+
+        const trips = result.trips?.length
+          ? result.trips
+          : result.trip
+            ? [result.trip]
+            : [];
+
+        if (trips.length) {
+          const primary = trips[0];
+          trip = {
+            label: primary.label,
+            distanceMeters: primary.distanceMeters,
+            durationSeconds: primary.durationSeconds,
+            crowdScore: primary.crowdScore,
+            alternativesConsidered: primary.alternativesConsidered,
+            allPositions: primary.allPositions,
+          };
+          candidates = trips
+            .map(tripToCandidate)
+            .filter((c): c is RouteCandidate => c != null);
         }
       } catch {
-        error = BACKEND_UNAVAILABLE_MESSAGE;
+        // Fall through to plain OSRM alternatives below.
+      }
+
+      if (!candidates.length) {
+        try {
+          const osrmRoutes = await fetchOsrmRouteOptions(from, to);
+          candidates = osrmRoutes.map((route, index) =>
+            osrmRouteToCandidate(
+              route,
+              index === 0 ? "Direct walking route" : `Walking alternative ${index + 1}`
+            )
+          );
+          if (candidates.length) {
+            error =
+              "Density-aware planner unavailable. Showing OSRM walking alternatives.";
+          } else {
+            error = BACKEND_UNAVAILABLE_MESSAGE;
+          }
+        } catch {
+          error = BACKEND_UNAVAILABLE_MESSAGE;
+        }
       }
 
       return { candidates, error, trip };

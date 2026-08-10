@@ -423,6 +423,18 @@ a {
   position: relative;
 }
 
+.route-empty-state {
+  color: #3f4441;
+  display: grid;
+  gap: 14px;
+  padding: 12px 4px 24px;
+}
+
+.route-empty-state p {
+  line-height: 1.45;
+  margin: 0;
+}
+
 .route-list-top span {
   background: #ffffff;
   border: 1px solid #1f2120;

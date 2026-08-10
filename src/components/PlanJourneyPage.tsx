@@ -15,6 +15,7 @@ function PlanJourneyPage({
   locationStatus,
   routeError,
   isBackendConfigured,
+  isPlanning,
   onSubmit,
   onUseCurrentLocation,
 }: {
@@ -29,6 +30,7 @@ function PlanJourneyPage({
   locationStatus: "idle" | "loading" | "ready" | "error";
   routeError: string;
   isBackendConfigured: boolean;
+  isPlanning: boolean;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
   onUseCurrentLocation: () => void;
 }) {
@@ -127,14 +129,14 @@ function PlanJourneyPage({
           </div>
           <h3>Avoid highly congested corridors</h3>
           <p>
-            Uses pedestrian-density information to reduce crowd-related stress before route
-            generation. Factors: pedestrian volume, construction activity and events.
+            Uses live pedestrian-density readings from City of Melbourne sensors (via Supabase)
+            to prefer calmer walking corridors when generating and sorting routes.
           </p>
         </section>
 
         <div className="action-area">
-          <button className="primary-action" disabled={!canPlanJourney} type="submit">
-            Find sensory-aware routes
+          <button className="primary-action" disabled={!canPlanJourney || isPlanning} type="submit">
+            {isPlanning ? "Planning routes…" : "Find sensory-aware routes"}
           </button>
           {needsCurrentLocation && locationStatus === "loading" && (
             <p className="backend-note">Waiting for browser location permission.</p>
@@ -148,8 +150,13 @@ function PlanJourneyPage({
           {routeError && <p className="backend-note">{routeError}</p>}
           {!isBackendConfigured && (
             <p className="backend-note">
-              Supabase keys are not configured yet. Route generation can be wired once the
-              browser-safe anon key is available.
+              Supabase is not configured. Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY (or
+              NEXT_PUBLIC_ equivalents) to enable density-aware planning.
+            </p>
+          )}
+          {isBackendConfigured && (
+            <p className="backend-note">
+              Connected to Supabase. Routes use OSRM walking geometry plus live sensor density.
             </p>
           )}
         </div>

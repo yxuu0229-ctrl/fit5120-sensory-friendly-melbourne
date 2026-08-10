@@ -25,6 +25,44 @@ export function distanceToRouteMeters(point: LatLng, routePath: [number, number]
   );
 }
 
+/**
+ * Progress 0–100 along a [lat, lng] path, using the closest vertex as the
+ * traveller's position. Returns 0 when the path is too short or empty.
+ */
+export function progressAlongRoutePercent(
+  point: LatLng,
+  routePath: [number, number][]
+): number {
+  if (routePath.length < 2) return 0;
+
+  let closestIdx = 0;
+  let closestDist = Infinity;
+  for (let i = 0; i < routePath.length; i++) {
+    const d = distanceMeters(point, {
+      lat: routePath[i][0],
+      lng: routePath[i][1],
+    });
+    if (d < closestDist) {
+      closestDist = d;
+      closestIdx = i;
+    }
+  }
+
+  let total = 0;
+  let along = 0;
+  for (let i = 1; i < routePath.length; i++) {
+    const seg = distanceMeters(
+      { lat: routePath[i - 1][0], lng: routePath[i - 1][1] },
+      { lat: routePath[i][0], lng: routePath[i][1] }
+    );
+    total += seg;
+    if (i <= closestIdx) along += seg;
+  }
+
+  if (total <= 0) return 0;
+  return Math.max(0, Math.min(100, Math.round((along / total) * 100)));
+}
+
 /** Sample points along a [lng, lat] polyline roughly every `stepMeters`. */
 export function sampleLine(
   coords: [number, number][],
