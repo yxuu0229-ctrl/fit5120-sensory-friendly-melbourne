@@ -1,6 +1,7 @@
 const navItems = ["Plan journey", "Route options", "Journey monitor", "Quiet spaces", "Live map"];
 
 export type Page =
+  | "home"
   | "plan"
   | "routes"
   | "warning"

@@ -32,6 +32,7 @@ import RefugeDetailPage from "./components/RefugeDetailPage";
 import LiveMapPage from "./components/LiveMapPage";
 import DataStatusPage from "./components/DataStatusPage";
 import LandingPage from "./components/LandingPage";
+import HomeMap from "./components/HomeMap";
 
 const nearbyRefugeRadiusMeters = 1000;
 const sensorRefreshPages: Page[] = [
@@ -43,7 +44,7 @@ const sensorRefreshPages: Page[] = [
 ];
 
 function App() {
-  const [page, setPage] = useState<Page>("plan");
+  const [page, setPage] = useState<Page>("home");
   const [threshold, setThreshold] = useState(50);
   const [avoidCongestion, setAvoidCongestion] = useState(true);
   const [sensorPoints, setSensorPoints] = useState<SensorReading[]>([]);
@@ -334,8 +335,12 @@ function App() {
   }
 
   return (
-    <div className="app-shell">
-      <TopNav page={page} onNavigate={setPage} />
+    <div className={`app-shell ${page === "home" ? "home-active" : ""}`}>
+      {page !== "home" && <TopNav page={page} onNavigate={setPage} />}
+
+      {page === "home" && (
+        <HomeMap onNavigatePage={setPage} />
+      )}
 
       {page === "plan" && (
         <PlanJourneyPage
