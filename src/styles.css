@@ -3278,9 +3278,10 @@ body,
 }
 
 .mode-btn.active.navigate-active {
-  border: 1.5px solid #000000;
-  color: #000000;
-  box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.05), 0 0 10px rgba(0, 0, 0, 0.15);
+  background: rgba(212, 237, 218, 0.6) !important;
+  border: 1.5px solid #28a745 !important;
+  color: #155724 !important;
+  box-shadow: inset 0 0 4px rgba(40, 167, 69, 0.1), 0 0 12px rgba(40, 167, 69, 0.25) !important;
 }
 
 .mode-text {
@@ -3319,6 +3320,178 @@ body,
   justify-content: space-between;
   align-items: center;
   animation: slide-down 0.3s ease-out;
+}
+
+/* Stacked Search Inputs in Navigate Mode */
+.navigate-stacked-inputs {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.45);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: 20px;
+  padding: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+}
+
+.navigate-stacked-inputs .input-row {
+  background: rgba(255, 255, 255, 0.65) !important;
+  box-shadow: none !important;
+  border: 1px solid rgba(0, 0, 0, 0.05) !important;
+  border-radius: 12px !important;
+  height: 38px !important;
+  padding: 0 12px !important;
+}
+
+.input-dot-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 10px;
+  flex-shrink: 0;
+}
+
+.origin-dot {
+  background-color: #10b981; /* Green */
+  box-shadow: 0 0 6px #10b981;
+}
+
+.destination-dot {
+  background-color: #000000; /* Black */
+  box-shadow: 0 0 6px rgba(0, 0, 0, 0.5);
+}
+
+/* Offset suggestions in navigate mode */
+.search-suggestions-dropdown.navigate-mode {
+  top: 106px !important;
+}
+
+/* Routes List Card Overlay */
+.routes-list-card-overlay {
+  position: absolute;
+  top: 120px;
+  left: 12px;
+  right: 12px;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: 18px;
+  padding: 16px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  animation: slide-down 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.routes-list-header {
+  font-size: 13px;
+  font-weight: 700;
+  color: #555555;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding-bottom: 2px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.routes-list-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.route-option-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.5);
+  border: 1.5px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.route-option-row:hover {
+  background: rgba(255, 255, 255, 0.95);
+  transform: translateY(-1px);
+}
+
+.route-option-row.selected {
+  background: #ffffff;
+  border-color: #2563eb;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.08);
+}
+
+.route-option-row.selected:hover {
+  transform: none;
+}
+
+.route-option-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.route-color-indicator {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.route-name-container {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.route-name {
+  font-size: 14.5px;
+  font-weight: 600;
+  color: #111111;
+}
+
+.route-details-text {
+  font-size: 12px;
+  color: #666666;
+}
+
+.route-warning-badge {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 20px;
+}
+
+.route-warning-badge.no-warnings {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+}
+
+.route-warning-badge.has-warnings {
+  background-color: #ffebee;
+  color: #c62828;
+}
+
+.large-start-btn {
+  width: 100%;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14.5px !important;
+}
+
+.interactive-route-line {
+  cursor: pointer;
 }
 
 @keyframes slide-down {
