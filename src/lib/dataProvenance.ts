@@ -23,6 +23,12 @@ export type DataProvenance = {
   message: string;
 };
 
+/** CSS class for a provenance line — shared by the journey pages and live map. */
+export function provenanceClassName(provenance: DataProvenance): string {
+  if (provenance.source === "unavailable") return "data-age data-age-unavailable";
+  return provenance.isStale ? "data-age data-age-stale" : "data-age";
+}
+
 /** Human-readable age, coarse on purpose — precision here is false comfort. */
 export function describeAge(seconds: number): string {
   if (seconds < 90) return "less than a minute old";

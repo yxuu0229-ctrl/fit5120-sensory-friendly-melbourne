@@ -5,6 +5,8 @@ const cbdA: [number, number] = [-37.81, 144.96];
 const cbdB: [number, number] = [-37.815, 144.965];
 const cbdC: [number, number] = [-37.82, 144.97];
 
+const defaultPrefs = { avoidCongestion: true, tolerance: "Medium" } as const;
+
 function candidate(overrides: Partial<RouteCandidate> = {}): RouteCandidate {
   return {
     label: "Route",
@@ -21,7 +23,7 @@ describe("planJourney", () => {
     const duplicate = candidate({ label: "Duplicate", distanceMeters: 505, positions: [cbdA, cbdB] });
     const distinct = candidate({ label: "Distinct", distanceMeters: 500, positions: [cbdA, cbdC] });
 
-    const result = planJourney([first, duplicate, distinct], [], { avoidCongestion: true });
+    const result = planJourney([first, duplicate, distinct], [], defaultPrefs);
 
     expect(result).toHaveLength(2);
     expect(result.map((route) => route.label)).toContain("First");
@@ -34,7 +36,7 @@ describe("planJourney", () => {
     const empty = candidate({ label: "Empty", positions: [] });
     const valid = candidate({ label: "Valid", positions: [cbdA, cbdB] });
 
-    const result = planJourney([tooShort, empty, valid], [], { avoidCongestion: true });
+    const result = planJourney([tooShort, empty, valid], [], defaultPrefs);
 
     expect(result).toHaveLength(1);
     expect(result[0].label).toBe("Valid");
@@ -56,27 +58,60 @@ describe("planJourney", () => {
       { latitude: -38.5, longitude: 145.5, density_level: "High" },
     ];
 
-    const [highResult] = planJourney([candidate({ positions })], highSensors, { avoidCongestion: true });
-    const [lowResult] = planJourney([candidate({ positions })], lowSensors, { avoidCongestion: true });
-    const [farResult] = planJourney([candidate({ positions })], farSensors, { avoidCongestion: true });
+    const [highResult] = planJourney([candidate({ positions })], highSensors, defaultPrefs);
+    const [lowResult] = planJourney([candidate({ positions })], lowSensors, defaultPrefs);
+    const [farResult] = planJourney([candidate({ positions })], farSensors, defaultPrefs);
 
     expect(highResult.sensoryLevel).toBe("High");
     expect(lowResult.sensoryLoad).toBeLessThan(highResult.sensoryLoad);
     // Baseline: no sensors within 120m -> 0.4 per sample, well below the High-density case.
     expect(farResult.sensoryLoad).toBeLessThan(highResult.sensoryLoad);
+    // No sensor within 120m of any sample -> rated Low, not by the far sensor's band.
+    expect(farResult.sensoryLevel).toBe("Low");
   });
 
   it("returns sensoryLoad 20 (Low) for every route when sensors is empty", () => {
     const result = planJourney(
       [candidate({ positions: [cbdA, cbdB] }), candidate({ positions: [cbdA, cbdC] })],
       [],
-      { avoidCongestion: true }
+      defaultPrefs
     );
 
     for (const route of result) {
       expect(route.sensoryLoad).toBe(20);
       expect(route.sensoryLevel).toBe("Low");
+      expect(route.worstSegment).toBeNull();
     }
+  });
+
+  it("AC 1.1.3: takes the rating of the highest-sensory segment, not the average", () => {
+    const positions: [number, number][] = [cbdA, cbdB, cbdC];
+    const sensors: Sensor[] = [
+      { latitude: cbdA[0], longitude: cbdA[1], density_level: "Low" },
+      { latitude: cbdB[0], longitude: cbdB[1], density_level: "Low" },
+      { latitude: cbdC[0], longitude: cbdC[1], density_level: "High", sensor_name: "Bourke_St_Mall" },
+    ];
+
+    const [result] = planJourney([candidate({ positions })], sensors, defaultPrefs);
+
+    // Averaged load stays below the High band, but one High segment rates the route High.
+    expect(result.sensoryLoad).toBeLessThan(70);
+    expect(result.sensoryLevel).toBe("High");
+    expect(result.worstSegment).toEqual({ level: "High", sensorName: "Bourke_St_Mall" });
+  });
+
+  it("AC 1.2.5: reason names the busiest segment band, sensor and tolerance fit", () => {
+    const positions: [number, number][] = [cbdA, cbdB, cbdC];
+    const sensors: Sensor[] = [
+      { latitude: cbdC[0], longitude: cbdC[1], density_level: "High", sensor_name: "Bourke_St_Mall" },
+    ];
+
+    const [result] = planJourney([candidate({ positions })], sensors, defaultPrefs);
+
+    expect(result.exceedsTolerance).toBe(true);
+    expect(result.reason).toContain("High pedestrian volume");
+    expect(result.reason).toContain("Bourke St Mall");
+    expect(result.reason).toContain("exceeds your Medium crowd tolerance");
   });
 
   it("bands sensoryLoad into Low (<30), Medium (30-69), and High (>=70) with monotonic ordering", () => {
@@ -93,9 +128,9 @@ describe("planJourney", () => {
       { latitude: cbdC[0], longitude: cbdC[1], density_level: "High" },
     ];
 
-    const [lowResult] = planJourney([candidate({ positions })], lowSensors, { avoidCongestion: true });
-    const [mediumResult] = planJourney([candidate({ positions })], mediumSensors, { avoidCongestion: true });
-    const [highResult] = planJourney([candidate({ positions })], highSensors, { avoidCongestion: true });
+    const [lowResult] = planJourney([candidate({ positions })], lowSensors, defaultPrefs);
+    const [mediumResult] = planJourney([candidate({ positions })], mediumSensors, defaultPrefs);
+    const [highResult] = planJourney([candidate({ positions })], highSensors, defaultPrefs);
 
     expect(lowResult.sensoryLoad).toBeLessThan(30);
     expect(lowResult.sensoryLevel).toBe("Low");
@@ -108,28 +143,51 @@ describe("planJourney", () => {
     expect(mediumResult.sensoryLoad).toBeLessThan(highResult.sensoryLoad);
   });
 
-  it("flips ranking based on avoidCongestion: low-load-longer vs higher-load-shorter", () => {
-    const positions: [number, number][] = [cbdA, cbdB, cbdC];
+  it("flips within-tolerance ranking based on avoidCongestion", () => {
+    // X: long but Low-level (no sensor near); Y: short with a Medium segment.
+    // Both fit a Medium tolerance, so only the sort inside the partition flips.
     const sensors: Sensor[] = [
-      { latitude: cbdB[0], longitude: cbdB[1], density_level: "High" },
+      { latitude: cbdB[0], longitude: cbdB[1], density_level: "Medium" },
     ];
     const routeX = candidate({ label: "X", positions: [cbdA, [-37.9, 145.1]], distanceMeters: 3000 });
-    const routeY = candidate({ label: "Y", positions, distanceMeters: 500 });
+    const routeY = candidate({ label: "Y", positions: [cbdA, cbdB, cbdC], distanceMeters: 500 });
 
-    const avoidResult = planJourney([routeX, routeY], sensors, { avoidCongestion: true });
+    const avoidResult = planJourney([routeX, routeY], sensors, defaultPrefs);
     expect(avoidResult[0].label).toBe("X");
     expect(avoidResult[0].name).toBe("Route A");
 
-    const fastestResult = planJourney([routeX, routeY], sensors, { avoidCongestion: false });
-    expect(fastestResult[0].name).toBe("Route A");
-    expect(fastestResult[0].distanceMeters).toBeLessThanOrEqual(fastestResult[1].distanceMeters);
+    const fastestResult = planJourney([routeX, routeY], sensors, {
+      avoidCongestion: false,
+      tolerance: "Medium",
+    });
+    expect(fastestResult[0].label).toBe("Y");
+    expect(fastestResult[0].durationSeconds).toBeLessThanOrEqual(fastestResult[1].durationSeconds);
+  });
+
+  it("AC 1.2.3: routes exceeding the tolerance rank below fitting ones even when faster", () => {
+    const sensors: Sensor[] = [
+      { latitude: cbdB[0], longitude: cbdB[1], density_level: "Medium" },
+    ];
+    const fastButBusy = candidate({ label: "FastBusy", positions: [cbdA, cbdB, cbdC], distanceMeters: 500 });
+    const slowButCalm = candidate({ label: "SlowCalm", positions: [cbdA, [-37.9, 145.1]], distanceMeters: 3000 });
+
+    // Tolerance Low: the Medium-segment route exceeds it despite being faster.
+    const result = planJourney([fastButBusy, slowButCalm], sensors, {
+      avoidCongestion: false,
+      tolerance: "Low",
+    });
+
+    expect(result[0].label).toBe("SlowCalm");
+    expect(result[0].exceedsTolerance).toBe(false);
+    expect(result[1].label).toBe("FastBusy");
+    expect(result[1].exceedsTolerance).toBe(true);
   });
 
   it("falls back to duration then distance as tie-breakers", () => {
     const equalLoadA = candidate({ label: "EqualLoadFast", positions: [cbdA, cbdB], distanceMeters: 200 });
     const equalLoadB = candidate({ label: "EqualLoadSlow", positions: [cbdA, [-37.83, 144.98]], distanceMeters: 900 });
 
-    const avoidResult = planJourney([equalLoadA, equalLoadB], [], { avoidCongestion: true });
+    const avoidResult = planJourney([equalLoadA, equalLoadB], [], defaultPrefs);
     expect(avoidResult[0].sensoryLoad).toBe(avoidResult[1].sensoryLoad);
     expect(avoidResult[0].durationSeconds).toBeLessThanOrEqual(avoidResult[1].durationSeconds);
     expect(avoidResult[0].label).toBe("EqualLoadFast");
@@ -144,7 +202,10 @@ describe("planJourney", () => {
       positions: [cbdA, [-37.83, 144.99]],
       distanceMeters: 100,
     });
-    const fastestResult = planJourney([equalDurationA, equalDurationB], [], { avoidCongestion: false });
+    const fastestResult = planJourney([equalDurationA, equalDurationB], [], {
+      avoidCongestion: false,
+      tolerance: "Medium",
+    });
     expect(fastestResult[0].durationSeconds).toBe(fastestResult[1].durationSeconds);
     expect(fastestResult[0].distanceMeters).toBeLessThanOrEqual(fastestResult[1].distanceMeters);
   });
@@ -158,7 +219,7 @@ describe("planJourney", () => {
       candidate({ label: "Five", positions: [cbdC, cbdA], distanceMeters: 500 }),
     ];
 
-    const result = planJourney(candidates, [], { avoidCongestion: false });
+    const result = planJourney(candidates, [], { avoidCongestion: false, tolerance: "Medium" });
 
     expect(result).toHaveLength(3);
     expect(result.map((route) => route.name)).toEqual(["Route A", "Route B", "Route C"]);
@@ -171,7 +232,7 @@ describe("planJourney", () => {
     const [result] = planJourney(
       [candidate({ durationSeconds: 99999, distanceMeters: 800, positions: [cbdA, cbdB] })],
       [],
-      { avoidCongestion: true }
+      defaultPrefs
     );
 
     expect(result.durationSeconds).toBe(600);

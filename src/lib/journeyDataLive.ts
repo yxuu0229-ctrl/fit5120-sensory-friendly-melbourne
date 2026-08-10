@@ -1,4 +1,5 @@
 import { getSupabase, hasSupabaseEnv } from "./supabase";
+import { buildProvenance, type DataProvenance } from "./dataProvenance";
 import type { LatLng } from "./geo";
 import type { RouteCandidate } from "./journeyPlanning";
 import { planRoute } from "./planRoute";
@@ -84,17 +85,20 @@ export function createLiveJourneyData(): JourneyData {
       let candidates: RouteCandidate[] = [];
       let error: string | null = null;
       let trip: PlannedTrip | null = null;
+      let dataProvenance: DataProvenance | null = null;
 
       try {
         // Same planner as Live map (browser Supabase + OSRM) — replaces retired
         // Next.js POST /api/route/plan.
         const result = await planRoute(from, to, "walk");
+        dataProvenance = result.dataProvenance ?? null;
 
         if (result.coverage?.blocking) {
           return {
             candidates: [],
             error: result.coverage.message,
             trip: null,
+            dataProvenance,
           };
         }
 
@@ -124,6 +128,8 @@ export function createLiveJourneyData(): JourneyData {
 
       if (!candidates.length) {
         try {
+          // Plain OSRM fallback plans without crowd data — say so (AC 1.1.7).
+          dataProvenance = buildProvenance([], false);
           const osrmRoutes = await fetchOsrmRouteOptions(from, to);
           candidates = osrmRoutes.map((route, index) =>
             osrmRouteToCandidate(
@@ -142,7 +148,7 @@ export function createLiveJourneyData(): JourneyData {
         }
       }
 
-      return { candidates, error, trip };
+      return { candidates, error, trip, dataProvenance };
     },
 
     async geocode(query: string): Promise<GeocodeResult | null> {

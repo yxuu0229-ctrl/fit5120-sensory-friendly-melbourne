@@ -1,6 +1,7 @@
 import { CircleMarker, MapContainer, Polyline, Popup, TileLayer } from "react-leaflet";
 import { congestionAreas } from "../lib/congestion";
 import type { SensorReading } from "../lib/journeyData";
+import { transitStopsNearRoute } from "../lib/transitStops";
 import { densityColor, destinationMarkerColor, melbourneCenter, type RouteEndpoints } from "./mapShared";
 
 function RouteMap({
@@ -24,6 +25,8 @@ function RouteMap({
     routePath[routePath.length - 1]?.join(","),
   ].join("|");
   const densityAreas = congestionAreas(routePath, sensors);
+  // AC 1.1.5 — stations and tram stops within 150 m of the walking route.
+  const transitStops = transitStopsNearRoute(routePath);
 
   return (
     <div className="leaflet-route-map" aria-label="Melbourne CBD route map">
@@ -54,6 +57,20 @@ function RouteMap({
               <strong>{area.level} congestion area</strong>
               <br />
               {area.count} nearby route sensors
+            </Popup>
+          </CircleMarker>
+        ))}
+        {transitStops.map((stop) => (
+          <CircleMarker
+            center={[stop.latitude, stop.longitude]}
+            key={stop.id}
+            pathOptions={{ color: "#1d4ed8", fillColor: "#ffffff", fillOpacity: 1, weight: 3 }}
+            radius={6}
+          >
+            <Popup>
+              <strong>{stop.name}</strong>
+              <br />
+              {stop.kind} access point · {stop.distanceMeters} m from route
             </Popup>
           </CircleMarker>
         ))}

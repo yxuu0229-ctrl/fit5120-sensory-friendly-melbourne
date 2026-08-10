@@ -8,6 +8,7 @@ export const refugePageSize = 4;
 function QuietSpacesPage({
   refugeSearchMode,
   currentLocation,
+  usingDefaultReference,
   nearbyRefuges,
   refugePage,
   onRefugePageChange,
@@ -22,6 +23,8 @@ function QuietSpacesPage({
 }: {
   refugeSearchMode: RefugeSearchMode;
   currentLocation: LatLng | null;
+  /** AC 2.1.6 — location declined; distances use the documented default point. */
+  usingDefaultReference: boolean;
   nearbyRefuges: NearbyRefuge[];
   refugePage: number;
   onRefugePageChange: (page: number) => void;
@@ -72,11 +75,20 @@ function QuietSpacesPage({
             </button>
           </div>
 
-          {refugeSearchMode === "current" && !currentLocation && (
+          {refugeSearchMode === "current" && !currentLocation && usingDefaultReference && (
+            <p className="backend-note" role="status">
+              Location was not allowed — distances are measured from Melbourne CBD centre,
+              the documented default reference point.
+            </p>
+          )}
+          {refugeSearchMode === "current" && !currentLocation && !usingDefaultReference && (
             <p className="backend-note">Allow location access to find quiet spaces within 1km.</p>
           )}
-          {refugeSearchMode === "current" && currentLocation && nearbyRefuges.length === 0 && (
-            <p className="backend-note">No tagged quiet spaces found within 1km of your current location.</p>
+          {refugeSearchMode === "current" && (currentLocation || usingDefaultReference) && nearbyRefuges.length === 0 && (
+            <p className="backend-note">
+              No tagged quiet spaces found within 1km of{" "}
+              {usingDefaultReference ? "Melbourne CBD centre" : "your current location"}.
+            </p>
           )}
           {refugeSearchMode === "route" && selectedRoutePath.length < 2 && (
             <p className="backend-note">Select a route before searching for quiet spaces near it.</p>

@@ -1,3 +1,4 @@
+import type { DataProvenance } from "./dataProvenance";
 import type { LatLng } from "./geo";
 import type { RouteCandidate } from "./journeyPlanning";
 
@@ -37,6 +38,8 @@ export type WalkingRoutesResult = {
   candidates: RouteCandidate[];
   error: string | null; // only the backend-unavailable message, else null
   trip: PlannedTrip | null;
+  /** AC 1.1.7 / 1.3.6 — age and source of the crowd data behind the routes. */
+  dataProvenance: DataProvenance | null;
 };
 
 export const BACKEND_UNAVAILABLE_MESSAGE =

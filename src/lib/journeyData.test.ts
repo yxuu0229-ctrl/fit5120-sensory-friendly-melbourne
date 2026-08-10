@@ -45,7 +45,10 @@ describe("createPrototypeJourneyData", () => {
     expect(result.error).toBeNull();
     expect(result.trip).toBeNull();
 
-    const planned = planJourney(result.candidates, [], { avoidCongestion: true });
+    const planned = planJourney(result.candidates, [], {
+      avoidCongestion: true,
+      tolerance: "Medium",
+    });
     expect(planned.length).toBeGreaterThanOrEqual(1);
     expect(planned[0].name).toBe("Route A");
   });
