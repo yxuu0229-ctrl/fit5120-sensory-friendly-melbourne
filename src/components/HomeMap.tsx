@@ -490,11 +490,9 @@ export default function HomeMap({ onNavigatePage }: HomeMapProps) {
         if (res.trips && res.trips.length > 0) {
           setPlannedTrips(res.trips);
           setSelectedRouteIdx(0);
-          setMapCenter([destination.lat, destination.lng]);
         } else if (res.trip) {
           setPlannedTrips([res.trip]);
           setSelectedRouteIdx(0);
-          setMapCenter([destination.lat, destination.lng]);
         } else {
           setPlannedTrips([]);
         }
@@ -508,6 +506,29 @@ export default function HomeMap({ onNavigatePage }: HomeMapProps) {
 
     planNavigateRoutes();
   }, [origin, destination, activeMode]);
+
+  // Once routes are planned, pan so the start point sits centered in the
+  // visible map area below the suggested routes card
+  useEffect(() => {
+    if (activeMode !== "navigate" || !origin || rankedTrips.length === 0) return;
+
+    const wrapper = document.querySelector(".home-mockup-wrapper");
+    const card = document.querySelector(".routes-list-card-overlay");
+    if (!wrapper || !card) return;
+
+    const wrapperRect = wrapper.getBoundingClientRect();
+    const cardBottom = card.getBoundingClientRect().bottom - wrapperRect.top;
+    // Screen y where the start point should land: midpoint of the free space below the card
+    const targetY = (cardBottom + wrapperRect.height) / 2;
+    const offsetY = targetY - wrapperRect.height / 2;
+
+    const originPoint = L.CRS.EPSG3857.latLngToPoint(L.latLng(origin.lat, origin.lng), zoomLevel);
+    const shiftedCenter = L.CRS.EPSG3857.pointToLatLng(
+      L.point(originPoint.x, originPoint.y - offsetY),
+      zoomLevel
+    );
+    setMapCenter([shiftedCenter.lat, shiftedCenter.lng]);
+  }, [activeMode, origin, rankedTrips.length, zoomLevel]);
 
   const handleSelectSuggestion = (item: { name: string; lat: number; lng: number }) => {
     if (activeMode === "navigate") {

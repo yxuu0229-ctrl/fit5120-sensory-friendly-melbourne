@@ -3293,10 +3293,10 @@ body,
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08) !important;
 }
 
-/* Routes List Card Overlay */
+/* Routes List Card Overlay: sits just below the stacked inputs card */
 .routes-list-card-overlay {
   position: absolute;
-  top: 166px;
+  top: 114px;
   left: 12px;
   right: 12px;
   background: rgba(255, 255, 255, 0.65);
