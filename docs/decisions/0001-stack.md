@@ -1,6 +1,6 @@
 # ADR 0001: Initial Web Stack
 
-- Status: proposed for team approval
+- Status: superseded by ADR 0002
 - Date: 2026-08-08
 
 ## Context
@@ -10,6 +10,8 @@ The team needs a runnable web application with a database, reproducible data scr
 ## Decision
 
 Use React + Vite + TypeScript for the frontend, Supabase Postgres/Data API for the backend, Supabase Edge Functions only for protected server logic and GitHub for source control. Deployment is deferred. Vercel may be considered later only after the deployment readiness gate is satisfied.
+
+This proposed baseline was not adopted on `develop`; see ADR 0002 for the integrated repository stack.
 
 ## Consequences
 
