@@ -7,12 +7,17 @@ import {
   Marker,
   Polyline,
   Popup,
+  Rectangle,
   TileLayer,
   useMapEvents,
 } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
+import {
+  COVERAGE_RECTANGLE,
+  type CoverageNotice,
+} from "@/lib/coverage";
 import { filterPlacesAlongRoute, type LatLng } from "@/lib/geo";
 import type { PlannedTrip } from "@/lib/planTypes";
 import { getBrowserSupabase } from "@/lib/supabaseBrowser";
@@ -150,6 +155,7 @@ export default function RouteMap() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<PlannedTrip | null>(null);
+  const [coverage, setCoverage] = useState<CoverageNotice | null>(null);
   const [showDensity, setShowDensity] = useState(true);
   const [showRefuges, setShowRefuges] = useState(true);
   const [refuges, setRefuges] = useState<Place[]>([]);
@@ -253,13 +259,27 @@ export default function RouteMap() {
     }
     setLoading(true);
     setError(null);
+    setCoverage(null);
     try {
       const res = await fetch("/api/route/plan", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ from, to, mode: transportMode }),
       });
-      const data = (await res.json()) as { trip?: PlannedTrip; error?: string };
+      const data = (await res.json()) as {
+        trip?: PlannedTrip;
+        coverage?: CoverageNotice | null;
+        error?: string;
+      };
+
+      // A coverage gap is a normal outcome, not a failure — surface the notice
+      // and skip the error path entirely (AC 1.1.6).
+      if (data.coverage) setCoverage(data.coverage);
+      if (data.coverage?.blocking) {
+        setResult(null);
+        return;
+      }
+
       if (!res.ok || !data.trip) {
         throw new Error(data.error || "Routing failed");
       }
@@ -278,6 +298,7 @@ export default function RouteMap() {
     setResult(null);
     setPickMode("A");
     setError(null);
+    setCoverage(null);
   };
 
   return (
@@ -389,6 +410,13 @@ export default function RouteMap() {
           </li>
         </ul>
 
+        {coverage && (
+          <div className="coverage-notice" role="status">
+            <strong>Outside the covered area</strong>
+            <p>{coverage.message}</p>
+          </div>
+        )}
+
         {error && <div className="banner">{error}</div>}
 
         {result && (
@@ -499,6 +527,19 @@ export default function RouteMap() {
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
           <ClickPicker mode={pickMode} onPick={onPick} />
+
+          {/* Make "the highlighted area" in the coverage message literal. */}
+          {coverage && (
+            <Rectangle
+              bounds={COVERAGE_RECTANGLE}
+              pathOptions={{
+                color: "#0b5fff",
+                weight: 2,
+                dashArray: "6 4",
+                fillOpacity: 0.06,
+              }}
+            />
+          )}
 
           {showDensity &&
             sensors.map((s) => (

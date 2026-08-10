@@ -370,6 +370,28 @@ a {
   margin-bottom: 0.55rem;
 }
 
+/* Coverage-area notice (AC 1.1.6) — informational, deliberately not an error.
+   Distinct from .banner so a coverage gap never reads as a failure. */
+.coverage-notice {
+  border: 1px solid #b6d4fe;
+  border-left: 4px solid #0b5fff;
+  background: #eff6ff;
+  color: #1e3a5f;
+  padding: 0.7rem 0.85rem;
+  margin-bottom: 1rem;
+}
+
+.coverage-notice strong {
+  display: block;
+  margin-bottom: 0.25rem;
+}
+
+.coverage-notice p {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
 /* Typical-volume estimate inside a sensor popup (AC 2.2.6) */
 .quiet-note {
   margin-top: 0.5rem;

@@ -5,6 +5,7 @@ import {
 } from "@/lib/quietRoute";
 import { planPtvTransitTrip } from "@/lib/ptvTransitPlan";
 import { hasPtvCredentials } from "@/lib/ptvServer";
+import { checkCoverage } from "@/lib/coverage";
 import { getSupabase } from "@/lib/supabase";
 import {
   isTransitMode,
@@ -39,6 +40,14 @@ export async function POST(req: Request) {
       );
     }
 
+    // AC 1.1.6 — points outside the sensor footprint are a coverage limit, not
+    // an error. Only walking depends on that data, so only walking is blocked;
+    // every other mode still routes and carries the notice as context.
+    const coverage = checkCoverage(from, to, mode === "walk");
+    if (coverage?.blocking) {
+      return NextResponse.json({ coverage });
+    }
+
     if (isTransitMode(mode)) {
       if (!hasPtvCredentials()) {
         return NextResponse.json(
@@ -50,12 +59,12 @@ export async function POST(req: Request) {
         );
       }
       const trip = await planPtvTransitTrip(from, to, mode);
-      return NextResponse.json({ trip });
+      return NextResponse.json({ trip, coverage });
     }
 
     if (mode === "cycle" || mode === "drive") {
       const trip = await planOsrmModeRoute(mode, from, to);
-      return NextResponse.json({ trip });
+      return NextResponse.json({ trip, coverage });
     }
 
     // walk (default) — density-aware
@@ -68,7 +77,7 @@ export async function POST(req: Request) {
       sensors = [];
     }
     const trip = await planQuietWalkingRoute(from, to, sensors);
-    return NextResponse.json({ trip });
+    return NextResponse.json({ trip, coverage });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     return NextResponse.json({ error: message }, { status: 500 });
