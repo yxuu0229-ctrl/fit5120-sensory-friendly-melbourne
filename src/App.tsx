@@ -89,6 +89,7 @@ const cbdLocations = [
 const defaultOrigin = "Current location";
 const defaultDestination = "State Library Victoria, Melbourne CBD";
 const melbourneCenter: [number, number] = [-37.8136, 144.9631];
+const destinationMarkerColor = "#2563eb";
 const routeSensorRadiusMeters = 500;
 const nearbyRefugeRadiusMeters = 1000;
 const refugePageSize = 4;
@@ -311,7 +312,7 @@ function RouteMap({
             </CircleMarker>
             <CircleMarker
               center={[endpoints.to.lat, endpoints.to.lng]}
-              pathOptions={{ color: "#1f2120", fillColor: "#c8573f", fillOpacity: 1, weight: 2 }}
+              pathOptions={{ color: "#1f2120", fillColor: destinationMarkerColor, fillOpacity: 1, weight: 2 }}
               radius={8}
             >
               <Popup>Destination</Popup>
@@ -420,7 +421,7 @@ function ActiveJourneyMap({
         {endpoints && (
           <CircleMarker
             center={[endpoints.to.lat, endpoints.to.lng]}
-            pathOptions={{ color: "#1f2120", fillColor: "#c8573f", fillOpacity: 1, weight: 2 }}
+            pathOptions={{ color: "#1f2120", fillColor: destinationMarkerColor, fillOpacity: 1, weight: 2 }}
             radius={8}
           >
             <Popup>Destination</Popup>
@@ -433,6 +434,7 @@ function ActiveJourneyMap({
 
 function RefugeMap({
   currentLocation,
+  endpoints,
   focusMode,
   onSelectRefuge,
   refuges,
@@ -440,6 +442,7 @@ function RefugeMap({
   selectedRefugeId,
 }: {
   currentLocation: LatLng | null;
+  endpoints: { from: LatLng; to: LatLng } | null;
   focusMode: RefugeSearchMode;
   onSelectRefuge: (id: string) => void;
   refuges: NearbyRefuge[];
@@ -491,6 +494,15 @@ function RefugeMap({
               radius={70}
             />
           </>
+        )}
+        {endpoints && (
+          <CircleMarker
+            center={[endpoints.to.lat, endpoints.to.lng]}
+            pathOptions={{ color: "#1f2120", fillColor: destinationMarkerColor, fillOpacity: 1, weight: 2 }}
+            radius={8}
+          >
+            <Popup>Destination</Popup>
+          </CircleMarker>
         )}
         {refuges.map((refuge, index) => {
           const isSelected = refuge.id === selectedRefugeId;
@@ -630,26 +642,30 @@ function App() {
         const body = (await backendResponse.json()) as { trip: PlannedTrip };
         setPlannedTrip(body.trip);
         setRouteOptions(
-          buildRouteOptions([
-            ...(body.trip.allPositions
-              ? [
-                  {
-                    label: body.trip.label,
-                    distanceMeters: body.trip.distanceMeters,
-                    durationSeconds: body.trip.durationSeconds,
-                    positions: body.trip.allPositions,
-                  },
-                ]
-              : []),
-            ...osrmRoutes.map((route, index) => ({
-              label: index === 0 ? "Direct walking route" : `Walking alternative ${index + 1}`,
-              distanceMeters: route.distance,
-              durationSeconds: route.duration,
-              positions:
-                route.geometry?.coordinates?.map(([lng, lat]) => [lat, lng] as [number, number]) ??
-                [],
-            })),
-          ], sensors)
+          buildRouteOptions(
+            [
+              ...(body.trip.allPositions
+                ? [
+                    {
+                      label: body.trip.label,
+                      distanceMeters: body.trip.distanceMeters,
+                      durationSeconds: body.trip.durationSeconds,
+                      positions: body.trip.allPositions,
+                    },
+                  ]
+                : []),
+              ...osrmRoutes.map((route, index) => ({
+                label: index === 0 ? "Direct walking route" : `Walking alternative ${index + 1}`,
+                distanceMeters: route.distance,
+                durationSeconds: route.duration,
+                positions:
+                  route.geometry?.coordinates?.map(([lng, lat]) => [lat, lng] as [number, number]) ??
+                  [],
+              })),
+            ],
+            sensors,
+            avoidCongestion
+          )
         );
       } else {
         setRouteError("Backend route API is not available. Showing prototype route data.");
@@ -690,7 +706,8 @@ function App() {
       durationSeconds: number;
       positions: [number, number][];
     }>,
-    sensors: SensorPoint[]
+    sensors: SensorPoint[],
+    shouldAvoidCongestion: boolean
   ): RouteOption[] {
     return routes
       .filter((route) => route.positions.length > 1)
@@ -703,7 +720,11 @@ function App() {
         durationSeconds: walkingDurationSeconds(route.distanceMeters),
         sensoryLoad: sensoryLoad(route.positions, sensors),
       }))
-      .sort((a, b) => a.sensoryLoad - b.sensoryLoad)
+      .sort((a, b) =>
+        shouldAvoidCongestion
+          ? a.sensoryLoad - b.sensoryLoad || a.durationSeconds - b.durationSeconds
+          : a.durationSeconds - b.durationSeconds || a.distanceMeters - b.distanceMeters
+      )
       .slice(0, 3)
       .map((route, index) => ({
         ...route,
@@ -1191,7 +1212,7 @@ function App() {
           <section className="routes-layout">
             <aside className="route-list-panel" aria-label="Route options">
               <div className="route-list-top">
-                <span>Sort: Low sensory first</span>
+                <span>{avoidCongestion ? "Sort: Low sensory first" : "Sort: Fastest walk first"}</span>
               </div>
 
               {(routeOptions.length ? routeOptions : [
@@ -1643,6 +1664,7 @@ function App() {
               <h2 id="refuge-map-title">Refuge map</h2>
               <RefugeMap
                 currentLocation={currentLocation}
+                endpoints={routeEndpoints}
                 focusMode={refugeSearchMode}
                 onSelectRefuge={selectRefuge}
                 refuges={nearbyRefuges}
