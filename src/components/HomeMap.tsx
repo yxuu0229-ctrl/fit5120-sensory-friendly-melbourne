@@ -49,6 +49,38 @@ const warningIcon = typeof window !== "undefined" ? L.divIcon({
   iconAnchor: [14, 24],
 }) : null;
 
+// Custom Leaflet Route Start Icon (Green)
+const startMarkerIcon = typeof window !== "undefined" ? L.divIcon({
+  html: `
+    <div class="map-route-marker start-marker">
+      <svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="#10B981" stroke-width="2.5">
+        <path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 12 8 12s8-6.75 8-12a8 8 0 0 0-8-8z" fill="#D1FAE5" />
+        <circle cx="12" cy="10" r="3" fill="#10B981" />
+      </svg>
+      <span class="marker-label-tooltip start-tooltip">Start</span>
+    </div>
+  `,
+  className: "custom-route-marker-icon",
+  iconSize: [30, 45],
+  iconAnchor: [15, 30],
+}) : null;
+
+// Custom Leaflet Route End Icon (Red)
+const endMarkerIcon = typeof window !== "undefined" ? L.divIcon({
+  html: `
+    <div class="map-route-marker end-marker">
+      <svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="#EF4444" stroke-width="2.5">
+        <path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 12 8 12s8-6.75 8-12a8 8 0 0 0-8-8z" fill="#FEE2E2" />
+        <circle cx="12" cy="10" r="3" fill="#EF4444" />
+      </svg>
+      <span class="marker-label-tooltip end-tooltip">End</span>
+    </div>
+  `,
+  className: "custom-route-marker-icon",
+  iconSize: [30, 45],
+  iconAnchor: [15, 30],
+}) : null;
+
 interface HomeMapProps {
   onNavigatePage: (page: Page) => void;
 }
@@ -528,7 +560,11 @@ export default function HomeMap({ onNavigatePage }: HomeMapProps) {
           <div className="navigate-stacked-inputs">
             {/* From Input */}
             <div className="search-input-wrapper input-row">
-              <span className="input-dot-indicator origin-dot"></span>
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#10B981" stroke-width="2.5" style={{ marginRight: 6, flexShrink: 0 }}>
+                <path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 12 8 12s8-6.75 8-12a8 8 0 0 0-8-8z" fill="#D1FAE5" />
+                <circle cx="12" cy="10" r="3" fill="#10B981" />
+              </svg>
+              <span className="input-field-label start-label">Start</span>
               <input
                 type="text"
                 className="search-destination-input"
@@ -560,7 +596,11 @@ export default function HomeMap({ onNavigatePage }: HomeMapProps) {
 
             {/* To Input */}
             <div className="search-input-wrapper input-row">
-              <span className="input-dot-indicator destination-dot"></span>
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#EF4444" stroke-width="2.5" style={{ marginRight: 6, flexShrink: 0 }}>
+                <path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 12 8 12s8-6.75 8-12a8 8 0 0 0-8-8z" fill="#FEE2E2" />
+                <circle cx="12" cy="10" r="3" fill="#EF4444" />
+              </svg>
+              <span className="input-field-label end-label">End</span>
               <input
                 type="text"
                 className="search-destination-input"
@@ -618,8 +658,6 @@ export default function HomeMap({ onNavigatePage }: HomeMapProps) {
             src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=80&q=80"
             alt="Profile Avatar"
             className="user-profile-avatar"
-            onClick={() => onNavigatePage("plan")} // Click avatar to go back to developer planner dashboard
-            title="Go to Developer Panel"
           />
         </div>
 
@@ -724,7 +762,15 @@ export default function HomeMap({ onNavigatePage }: HomeMapProps) {
               <span>{routeDetails.distance}</span>
             </div>
           </div>
-          <button className="start-journey-btn" onClick={() => onNavigatePage("monitor")}>
+          <button
+            className="start-journey-btn"
+            onClick={() => {
+              if (destination) {
+                const url = `https://www.google.com/maps/dir/?api=1&origin=${userLocation.lat},${userLocation.lng}&destination=${destination.lat},${destination.lng}&travelmode=walking`;
+                window.open(url, "_blank");
+              }
+            }}
+          >
             Start
           </button>
         </div>
@@ -769,15 +815,12 @@ export default function HomeMap({ onNavigatePage }: HomeMapProps) {
           <button
             className="start-journey-btn large-start-btn"
             onClick={() => {
-              // Set the active route path and details for the monitor page
-              setRoutePath(rankedTrips[selectedRouteIdx].allPositions);
-              setRouteDetails({
-                distance: rankedTrips[selectedRouteIdx].distanceMeters < 1000 
-                  ? `${Math.round(rankedTrips[selectedRouteIdx].distanceMeters)} m`
-                  : `${(rankedTrips[selectedRouteIdx].distanceMeters / 1000).toFixed(2)} km`,
-                duration: `${Math.round(rankedTrips[selectedRouteIdx].durationSeconds / 60)} min`
-              });
-              onNavigatePage("monitor");
+              if (origin && destination) {
+                const trip = rankedTrips[selectedRouteIdx];
+                const waypointsParam = trip?.via ? `&waypoints=${trip.via.lat},${trip.via.lng}` : "";
+                const url = `https://www.google.com/maps/dir/?api=1&origin=${origin.lat},${origin.lng}&destination=${destination.lat},${destination.lng}${waypointsParam}&travelmode=walking`;
+                window.open(url, "_blank");
+              }
             }}
           >
             Start Journey
@@ -942,43 +985,31 @@ export default function HomeMap({ onNavigatePage }: HomeMapProps) {
           {activeMode === "navigate" ? (
             <>
               {/* Origin Pin */}
-              {origin && (
-                <CircleMarker
-                  center={[origin.lat, origin.lng]}
-                  pathOptions={{
-                    fillColor: "#10B981", // green for origin
-                    fillOpacity: 1,
-                    color: "#ffffff",
-                    weight: 2,
-                  }}
-                  radius={7}
+              {origin && startMarkerIcon && (
+                <Marker
+                  position={[origin.lat, origin.lng]}
+                  icon={startMarkerIcon}
                 >
                   <Popup>
                     <strong>{origin.name}</strong>
                     <br />
                     Start Location
                   </Popup>
-                </CircleMarker>
+                </Marker>
               )}
 
               {/* Destination Pin */}
-              {destination && (
-                <CircleMarker
-                  center={[destination.lat, destination.lng]}
-                  pathOptions={{
-                    fillColor: "#000000", // black for destination
-                    fillOpacity: 1,
-                    color: "#ffffff",
-                    weight: 2,
-                  }}
-                  radius={7}
+              {destination && endMarkerIcon && (
+                <Marker
+                  position={[destination.lat, destination.lng]}
+                  icon={endMarkerIcon}
                 >
                   <Popup>
                     <strong>{destination.name}</strong>
                     <br />
                     Destination
                   </Popup>
-                </CircleMarker>
+                </Marker>
               )}
 
               {/* Multiple walking path polylines */}

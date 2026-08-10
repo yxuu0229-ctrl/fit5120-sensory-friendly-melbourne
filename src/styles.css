@@ -3162,13 +3162,9 @@ body,
   overflow: hidden;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
   border: 2px solid #ffffff;
-  cursor: pointer;
+  cursor: default;
   transition: transform 0.2s ease;
   flex-shrink: 0;
-}
-
-.avatar-wrapper:hover {
-  transform: scale(1.05);
 }
 
 .user-profile-avatar {
@@ -3743,5 +3739,61 @@ body,
 }
 .heat-highlight-street:hover {
   opacity: 0.95;
+}
+
+/* Custom route markers (Start and End) on the Leaflet Map */
+.custom-route-marker-icon {
+  background: transparent !important;
+  border: none !important;
+}
+
+.map-route-marker {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.16));
+}
+
+.marker-label-tooltip {
+  position: absolute;
+  top: -24px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #111111;
+  white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.start-tooltip {
+  border-left: 3px solid #10b981;
+}
+
+.end-tooltip {
+  border-left: 3px solid #ef4444;
+}
+
+/* Stacked inputs inline field labels */
+.input-field-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  margin-right: 6px;
+  flex-shrink: 0;
+  user-select: none;
+}
+
+.start-label {
+  color: #10b981;
+}
+
+.end-label {
+  color: #ef4444;
 }
 
