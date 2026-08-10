@@ -46,5 +46,12 @@ jobs:
       - name: Build for Vercel
         run: vercel build --prod --token="${{ secrets.VERCEL_TOKEN }}"
 
+      - name: Prepare deployment package
+        run: |
+          mkdir -p /tmp/vercel-deploy/.vercel
+          cp -R .vercel/output /tmp/vercel-deploy/.vercel/output
+          cp .vercel/project.json /tmp/vercel-deploy/.vercel/project.json
+
       - name: Deploy to production
+        working-directory: /tmp/vercel-deploy
         run: vercel deploy --prebuilt --prod --token="${{ secrets.VERCEL_TOKEN }}"
