@@ -42,4 +42,5 @@ node scripts/verify/ac-114-routes-ordered-by-sensory.mjs --live
 | Comparison write-up | [`COMPARISON.md`](./COMPARISON.md) |
 | Latest test result | [`results/latest.json`](./results/latest.json) |
 | Google Drive PGP | see [`DRIVE_LINK.md`](./DRIVE_LINK.md) |
-| GitHub Pull Request | _filled after PR is opened_ |
+| GitHub Pull Request | https://github.com/Atharva-deep/melbourne-sensory-map/pull/3 |
+| Latest verification | **PASS** — 4/4 ordering + 4/4 wiring checks |
