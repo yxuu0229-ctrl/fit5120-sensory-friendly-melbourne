@@ -370,6 +370,28 @@ a {
   margin-bottom: 0.55rem;
 }
 
+/* Age and source of the crowd data behind a route (AC 1.1.7 / 1.3.6 / 2.1.3) */
+.data-age {
+  margin: 0.4rem 0 0;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  color: var(--muted);
+}
+
+/* Cache no longer refreshing — the route still stands, but say so. */
+.data-age-stale {
+  color: #5c4b00;
+  background: #fff3cd;
+  padding: 0.4rem 0.55rem;
+}
+
+/* No crowd data at all — the route is not a quiet-route recommendation. */
+.data-age-unavailable {
+  color: #7a271a;
+  background: #fee4e2;
+  padding: 0.4rem 0.55rem;
+}
+
 /* Coverage-area notice (AC 1.1.6) — informational, deliberately not an error.
    Distinct from .banner so a coverage gap never reads as a failure. */
 .coverage-notice {

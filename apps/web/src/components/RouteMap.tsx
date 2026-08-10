@@ -18,6 +18,7 @@ import {
   COVERAGE_RECTANGLE,
   type CoverageNotice,
 } from "@/lib/coverage";
+import type { DataProvenance } from "@/lib/dataProvenance";
 import { filterPlacesAlongRoute, type LatLng } from "@/lib/geo";
 import type { PlannedTrip } from "@/lib/planTypes";
 import { getBrowserSupabase } from "@/lib/supabaseBrowser";
@@ -156,6 +157,7 @@ export default function RouteMap() {
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<PlannedTrip | null>(null);
   const [coverage, setCoverage] = useState<CoverageNotice | null>(null);
+  const [provenance, setProvenance] = useState<DataProvenance | null>(null);
   const [showDensity, setShowDensity] = useState(true);
   const [showRefuges, setShowRefuges] = useState(true);
   const [refuges, setRefuges] = useState<Place[]>([]);
@@ -260,6 +262,7 @@ export default function RouteMap() {
     setLoading(true);
     setError(null);
     setCoverage(null);
+    setProvenance(null);
     try {
       const res = await fetch("/api/route/plan", {
         method: "POST",
@@ -269,8 +272,10 @@ export default function RouteMap() {
       const data = (await res.json()) as {
         trip?: PlannedTrip;
         coverage?: CoverageNotice | null;
+        dataProvenance?: DataProvenance | null;
         error?: string;
       };
+      if (data.dataProvenance) setProvenance(data.dataProvenance);
 
       // A coverage gap is a normal outcome, not a failure — surface the notice
       // and skip the error path entirely (AC 1.1.6).
@@ -299,6 +304,7 @@ export default function RouteMap() {
     setPickMode("A");
     setError(null);
     setCoverage(null);
+    setProvenance(null);
   };
 
   return (
@@ -435,6 +441,20 @@ export default function RouteMap() {
                 {result.alternativesConsidered != null
                   ? ` · ${result.alternativesConsidered} candidates`
                   : ""}
+              </p>
+            )}
+
+            {provenance && (
+              <p
+                className={
+                  provenance.source === "unavailable"
+                    ? "data-age data-age-unavailable"
+                    : provenance.isStale
+                      ? "data-age data-age-stale"
+                      : "data-age"
+                }
+              >
+                {provenance.message}
               </p>
             )}
 
