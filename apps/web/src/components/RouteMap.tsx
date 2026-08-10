@@ -19,8 +19,15 @@ import {
   type CoverageNotice,
 } from "@/lib/coverage";
 import type { DataProvenance } from "@/lib/dataProvenance";
+import {
+  CBD_CENTER,
+  densityColor,
+  DENSITY_BANDS,
+  inCbd,
+} from "@/lib/densityBands";
 import { filterPlacesAlongRoute, type LatLng } from "@/lib/geo";
 import type { PlannedTrip } from "@/lib/planTypes";
+import type { SensorDetailResult } from "@/lib/sensorDetail";
 import { getBrowserSupabase } from "@/lib/supabaseBrowser";
 import { MODE_OPTIONS, type TransportMode } from "@/lib/transportModes";
 import type {
@@ -29,7 +36,6 @@ import type {
   SensorDensityCurrent,
 } from "@/lib/types";
 
-const CBD_CENTER: LatLng = { lat: -37.8136, lng: 144.9631 };
 /** How close a refuge must be to the route to count as "along the journey" */
 const REFUGE_ALONG_ROUTE_METERS = 200;
 
@@ -40,12 +46,6 @@ function makePin(label: string, className: string, size = 28) {
     iconSize: [size, size],
     iconAnchor: [size / 2, size / 2],
   });
-}
-
-function densityColor(level: string) {
-  if (level === "Low") return "#1f7a4c";
-  if (level === "Medium") return "#b36b00";
-  return "#b42318";
 }
 
 function ClickPicker({
@@ -141,7 +141,11 @@ export default function RouteMap() {
   const [result, setResult] = useState<PlannedTrip | null>(null);
   const [coverage, setCoverage] = useState<CoverageNotice | null>(null);
   const [provenance, setProvenance] = useState<DataProvenance | null>(null);
+  const [trips, setTrips] = useState<PlannedTrip[]>([]);
+  const [selectedTripIndex, setSelectedTripIndex] = useState(0);
   const [showDensity, setShowDensity] = useState(true);
+  const [cbdOnly, setCbdOnly] = useState(true);
+  const [densityLoading, setDensityLoading] = useState(true);
   const [showRefuges, setShowRefuges] = useState(true);
   const [refuges, setRefuges] = useState<Place[]>([]);
   const [quietWindows, setQuietWindows] = useState<
@@ -150,6 +154,9 @@ export default function RouteMap() {
 
   /** Fixed for the lifetime of the view — the popup describes "right now". */
   const { dayName, hourday } = useMemo(() => melbourneDayHour(), []);
+  const [detail, setDetail] = useState<SensorDetailResult | null>(null);
+  const [detailLoading, setDetailLoading] = useState(false);
+  const [detailError, setDetailError] = useState<string | null>(null);
 
   const startIcon = useMemo(() => makePin("A", "pin-a"), []);
   const endIcon = useMemo(() => makePin("B", "pin-b"), []);
@@ -159,6 +166,7 @@ export default function RouteMap() {
   useEffect(() => {
     let cancelled = false;
     (async () => {
+      setDensityLoading(true);
       try {
         const sb = getBrowserSupabase();
         const [densityRes, placesRes, quietRes] = await Promise.all([
@@ -189,12 +197,31 @@ export default function RouteMap() {
             e instanceof Error ? e.message : "Failed to load map data"
           );
         }
+      } finally {
+        if (!cancelled) setDensityLoading(false);
       }
     })();
     return () => {
       cancelled = true;
     };
   }, [dayName, hourday]);
+
+  const densitySensors = useMemo(() => {
+    if (!cbdOnly) return sensors;
+    return sensors.filter(
+      (s) => s.in_cbd === true || inCbd(s.latitude, s.longitude)
+    );
+  }, [sensors, cbdOnly]);
+
+  const densityBandCounts = useMemo(() => {
+    const counts = { Low: 0, Medium: 0, High: 0 };
+    for (const s of densitySensors) {
+      if (s.density_level in counts) {
+        counts[s.density_level as keyof typeof counts] += 1;
+      }
+    }
+    return counts;
+  }, [densitySensors]);
 
   const refugesAlongJourney = useMemo(() => {
     if (!result?.allPositions?.length) return [];
@@ -211,10 +238,14 @@ export default function RouteMap() {
         setFrom(p);
         setPickMode("B");
         setResult(null);
+        setTrips([]);
+        setSelectedTripIndex(0);
       } else if (pickMode === "B") {
         setTo(p);
         setPickMode(null);
         setResult(null);
+        setTrips([]);
+        setSelectedTripIndex(0);
       }
     },
     [pickMode]
@@ -230,6 +261,8 @@ export default function RouteMap() {
         setFrom({ lat: pos.coords.latitude, lng: pos.coords.longitude });
         setPickMode("B");
         setResult(null);
+        setTrips([]);
+        setSelectedTripIndex(0);
         setError(null);
       },
       () =>
@@ -256,6 +289,7 @@ export default function RouteMap() {
         trip?: PlannedTrip;
         coverage?: CoverageNotice | null;
         dataProvenance?: DataProvenance | null;
+        trips?: PlannedTrip[];
         error?: string;
       };
       if (data.dataProvenance) setProvenance(data.dataProvenance);
@@ -265,15 +299,22 @@ export default function RouteMap() {
       if (data.coverage) setCoverage(data.coverage);
       if (data.coverage?.blocking) {
         setResult(null);
+        setTrips([]);
+        setSelectedTripIndex(0);
         return;
       }
-
       if (!res.ok || !data.trip) {
         throw new Error(data.error || "Routing failed");
       }
-      setResult(data.trip);
+      const listed =
+        data.trips && data.trips.length > 0 ? data.trips : [data.trip];
+      setTrips(listed);
+      setSelectedTripIndex(0);
+      setResult(listed[0]);
     } catch (e) {
       setResult(null);
+      setTrips([]);
+      setSelectedTripIndex(0);
       setError(e instanceof Error ? e.message : "Routing failed");
     } finally {
       setLoading(false);
@@ -284,10 +325,37 @@ export default function RouteMap() {
     setFrom(null);
     setTo(null);
     setResult(null);
+    setTrips([]);
+    setSelectedTripIndex(0);
     setPickMode("A");
     setError(null);
     setCoverage(null);
     setProvenance(null);
+  };
+
+  const openSensorDetail = async (locationId: number) => {
+    setDetailLoading(true);
+    setDetailError(null);
+    try {
+      const res = await fetch(`/api/sensors/${locationId}/detail`);
+      const data = (await res.json()) as SensorDetailResult & { error?: string };
+      if (!res.ok) {
+        throw new Error(data.error || "Detail query failed");
+      }
+      setDetail(data);
+    } catch (e) {
+      setDetail(null);
+      setDetailError(e instanceof Error ? e.message : "Detail query failed");
+    } finally {
+      setDetailLoading(false);
+    }
+  };
+
+  const selectTrip = (index: number) => {
+    const next = trips[index];
+    if (!next) return;
+    setSelectedTripIndex(index);
+    setResult(next);
   };
 
   return (
@@ -317,6 +385,8 @@ export default function RouteMap() {
                   onChange={() => {
                     setTransportMode(opt.id);
                     setResult(null);
+                    setTrips([]);
+                    setSelectedTripIndex(0);
                   }}
                 />
                 <span className="mode-label">{opt.label}</span>
@@ -355,8 +425,87 @@ export default function RouteMap() {
             checked={showDensity}
             onChange={(e) => setShowDensity(e.target.checked)}
           />
-          Show crowd density sensors
+          Show current pedestrian density
         </label>
+
+        <label className="check">
+          <input
+            type="checkbox"
+            checked={cbdOnly}
+            onChange={(e) => setCbdOnly(e.target.checked)}
+            disabled={!showDensity}
+          />
+          Covered CBD area only
+        </label>
+        <p className="meta">
+          Click a sensor marker for the past-hour detail view (AC 2.2.7).
+        </p>
+
+        {(detailLoading || detail || detailError) && (
+          <section className="detail-panel" aria-live="polite">
+            <div className="detail-panel-head">
+              <h2>Sensor detail</h2>
+              <button
+                type="button"
+                className="linkish"
+                onClick={() => {
+                  setDetail(null);
+                  setDetailError(null);
+                }}
+              >
+                Close
+              </button>
+            </div>
+            {detailLoading && <p className="meta">Loading detail…</p>}
+            {detailError && <p className="error">{detailError}</p>}
+            {detail && !detailLoading && (
+              <>
+                <p>
+                  <strong>
+                    {detail.sensor?.sensor_name ||
+                      `Sensor ${detail.locationId}`}
+                  </strong>
+                </p>
+                <p className="meta">
+                  {detail.sensor
+                    ? `${detail.sensor.density_level} · ${detail.sensor.total_count} peds (latest)`
+                    : "No current density row"}
+                  {" · "}
+                  {detail.series.length} past-hour points
+                </p>
+                <p
+                  className={
+                    detail.withinSla ? "detail-timing ok" : "detail-timing slow"
+                  }
+                >
+                  Query {detail.queryMs} ms (SLA ≤ {detail.slaMs} ms) —{" "}
+                  {detail.withinSla ? "within SLA" : "exceeded SLA"}
+                </p>
+                {detail.series.length > 0 && (
+                  <ul className="detail-series">
+                    {detail.series.slice(-8).map((p) => (
+                      <li key={p.sensing_datetime}>
+                        <span>
+                          {new Date(p.sensing_datetime).toLocaleTimeString(
+                            "en-AU",
+                            {
+                              timeZone: "Australia/Melbourne",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            }
+                          )}
+                        </span>
+                        <span>
+                          {p.total_count} · {p.density_level}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </>
+            )}
+          </section>
+        )}
 
         <label className="check">
           <input
@@ -366,6 +515,36 @@ export default function RouteMap() {
           />
           Show sensory refuges along journey
         </label>
+
+        <section className="density-legend" aria-label="Density bands">
+          <h2>Pedestrian density</h2>
+          <p className="meta">
+            {densityLoading
+              ? "Loading current density…"
+              : `${densitySensors.length} sensors · Low / Medium / High bands`}
+          </p>
+          <ul className="density-legend-list">
+            {DENSITY_BANDS.map((band) => (
+              <li key={band.level}>
+                <span
+                  className="density-swatch"
+                  style={{ background: band.color }}
+                  aria-hidden
+                />
+                <span>
+                  <strong>{band.label}</strong>
+                  <span className="meta">
+                    {" "}
+                    {band.description}
+                    {!densityLoading
+                      ? ` · ${densityBandCounts[band.level]} on map`
+                      : ""}
+                  </span>
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
 
         <p className="meta">
           Click mode:{" "}
@@ -400,9 +579,48 @@ export default function RouteMap() {
 
         {error && <div className="banner">{error}</div>}
 
+        {trips.length > 1 && (
+          <div className="route-list" aria-label="Routes by sensory load">
+            <h2>Route options</h2>
+            <p className="meta">
+              Ordered calmest → busiest (lowest sensory indicator first).
+            </p>
+            <ol className="route-options">
+              {trips.map((t, i) => {
+                const indicator = t.sensoryIndicator ?? t.crowdScore;
+                return (
+                  <li key={`${t.label}-${i}`}>
+                    <button
+                      type="button"
+                      className={
+                        i === selectedTripIndex
+                          ? "route-option active"
+                          : "route-option"
+                      }
+                      onClick={() => selectTrip(i)}
+                    >
+                      <span className="route-option-rank">#{i + 1}</span>
+                      <span className="route-option-body">
+                        <strong>{t.label}</strong>
+                        <span className="meta">
+                          {formatDistance(t.distanceMeters)} ·{" "}
+                          {formatDuration(t.durationSeconds)}
+                          {indicator != null
+                            ? ` · sensory ${indicator}`
+                            : ""}
+                        </span>
+                      </span>
+                    </button>
+                  </li>
+                );
+              })}
+            </ol>
+          </div>
+        )}
+
         {result && (
           <div className="route-card">
-            <h2>Selected route</h2>
+            <h2>{trips.length > 1 ? "Selected route" : "Route"}</h2>
             <p>
               <strong>{result.label}</strong>
             </p>
@@ -410,9 +628,11 @@ export default function RouteMap() {
               {formatDistance(result.distanceMeters)} ·{" "}
               {formatDuration(result.durationSeconds)}
             </p>
-            {result.crowdScore != null && (
+            {(result.sensoryIndicator != null || result.crowdScore != null) && (
               <p className="meta">
-                Crowd score {result.crowdScore} (lower is quieter)
+                Sensory indicator{" "}
+                {result.sensoryIndicator ?? result.crowdScore} (lower is
+                calmer)
                 {result.alternativesConsidered != null
                   ? ` · ${result.alternativesConsidered} candidates`
                   : ""}
@@ -526,7 +746,7 @@ export default function RouteMap() {
           )}
 
           {showDensity &&
-            sensors.map((s) => (
+            densitySensors.map((s) => (
               <CircleMarker
                 key={s.location_id}
                 center={[s.latitude, s.longitude]}
@@ -537,11 +757,20 @@ export default function RouteMap() {
                   fillOpacity: 0.55,
                   weight: 1,
                 }}
+                eventHandlers={{
+                  click: () => {
+                    void openSensorDetail(s.location_id);
+                  },
+                }}
               >
                 <Popup>
                   <strong>{s.sensor_name || `Sensor ${s.location_id}`}</strong>
                   <br />
                   {s.density_level} · {s.total_count} peds
+                  <br />
+                  <em>Agreed band: Low ≤50 · Medium ≤150 · High &gt;150</em>
+                  <br />
+                  <em>Detail loading in side panel…</em>
                   <QuietWindowEstimate
                     row={quietWindows.get(s.location_id)}
                     dayName={dayName}

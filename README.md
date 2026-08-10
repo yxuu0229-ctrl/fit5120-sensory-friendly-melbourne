@@ -109,6 +109,22 @@ npm run dev
 - Status: [http://localhost:3000](http://localhost:3000)
 - Map A→B routing: [http://localhost:3000/map](http://localhost:3000/map)
 
+### Map density layer (AC 2.1.1)
+
+On `/map` load, current `sensor_density_current` points are shown across the covered CBD in agreed bands:
+
+| Band | Threshold |
+|---|---|
+| Low | ≤ 50 |
+| Medium | 51–150 |
+| High | > 150 |
+
+```bash
+npm run verify:ac-211
+```
+
+Evidence (upload to team Google Drive PGP): [`pgp/evidence/AC-2.1.1/`](pgp/evidence/AC-2.1.1/). Owner: unassigned until claimed.
+
 ### Transport modes on `/map`
 
 | Mode | Engine |
@@ -118,6 +134,16 @@ npm run dev
 | Drive | OSRM `driving` |
 
 Routing API used by the map: `POST /api/route/plan` with `{ from, to, mode }`.
+
+### Route options ordering (AC 1.1.4)
+
+For walk mode, when multiple alternatives are returned, `trips` is ordered **lowest → highest sensory indicator** (calmest first). The selected/default `trip` is always `trips[0]`.
+
+```bash
+npm run verify:ac-114
+```
+
+Evidence pack (upload to the team Google Drive PGP): [`pgp/evidence/AC-1.1.4/`](pgp/evidence/AC-1.1.4/).
 
 ## Frontend table contract
 
@@ -183,6 +209,38 @@ Typical crowd by weekday + hour (from 2024+ hourly history).
 - `sensors` — static sensor metadata
 - `pedestrian_live` — past-hour time series (detail charts)
 - `sync_runs` — ETL audit (`status`, `rows_upserted`, `error`)
+
+### Historical trend validation (AC 2.2.5)
+
+Per-location day×hour trend from City of Melbourne hourly counts:
+
+```http
+GET /api/sensors/{locationId}/historical-trend
+```
+
+Validate the calculation against live CoM open data and write PGP evidence:
+
+```bash
+npm run verify:ac-225
+```
+
+Evidence pack (upload to the team **Google Drive PGP** folder): [`pgp/evidence/AC-2.2.5/`](pgp/evidence/AC-2.2.5/).
+
+### Sensor detail view (AC 2.2.7)
+
+Click a density sensor on `/map`, or call:
+
+```http
+GET /api/sensors/{locationId}/detail
+```
+
+Agreed response time: **≤ 2000 ms** for the Supabase detail queries. Verify:
+
+```bash
+npm run verify:ac-227
+```
+
+Evidence pack: [`pgp/evidence/AC-2.2.7/`](pgp/evidence/AC-2.2.7/).
 
 ## Open data sources
 

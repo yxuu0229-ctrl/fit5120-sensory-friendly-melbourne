@@ -2,6 +2,7 @@ import { haversineMeters, midpoint, sampleLine, type LatLng } from "./geo";
 import { fetchOsrmRoutes, type OsrmRoute } from "./osrm";
 import type { PlannedTrip, RouteLeg } from "./planTypes";
 import { legColor } from "./planTypes";
+import { orderRoutesBySensoryIndicator } from "./routeOrdering";
 import type { OsrmProfile, TransportMode } from "./transportModes";
 import type { DensityLevel, SensorDensityCurrent } from "./types";
 
@@ -11,7 +12,8 @@ const DENSITY_WEIGHT: Record<DensityLevel, number> = {
   High: 5,
 };
 
-function scoreRoute(
+/** Sensory load for a path geometry against live density sensors (lower = calmer). */
+export function scoreRoute(
   route: OsrmRoute,
   sensors: SensorDensityCurrent[],
   radiusMeters = 90
@@ -103,12 +105,19 @@ function tripFromOsrm(
   };
 }
 
-/** Walk with quieter alternatives (density-aware). */
+export type QuietWalkPlanResult = {
+  /** Calmest route (first in `trips`). */
+  trip: PlannedTrip;
+  /** All alternatives ordered lowest → highest sensory indicator (AC 1.1.4). */
+  trips: PlannedTrip[];
+};
+
+/** Walk with quieter alternatives (density-aware), listed calmest-first. */
 export async function planQuietWalkingRoute(
   from: LatLng,
   to: LatLng,
   sensors: SensorDensityCurrent[]
-): Promise<PlannedTrip> {
+): Promise<QuietWalkPlanResult> {
   const direct = await fetchOsrmRoutes(from, to, "foot");
   const via = pickQuietWaypoint(from, to, sensors);
 
@@ -140,21 +149,31 @@ export async function planQuietWalkingRoute(
     }
   }
 
-  let best = candidates[0];
-  let bestScore = scoreRoute(best.route, sensors);
-  for (let i = 1; i < candidates.length; i++) {
-    const score = scoreRoute(candidates[i].route, sensors);
-    if (score < bestScore) {
-      best = candidates[i];
-      bestScore = score;
-    }
-  }
-
-  return tripFromOsrm("walk", "foot", best.route, best.label, {
-    crowdScore: Number(bestScore.toFixed(3)),
-    alternativesConsidered: candidates.length,
-    via: best.via,
+  const scored = candidates.map((c) => {
+    const sensoryIndicator = Number(scoreRoute(c.route, sensors).toFixed(3));
+    return {
+      ...tripFromOsrm("walk", "foot", c.route, c.label, {
+        sensoryIndicator,
+        crowdScore: sensoryIndicator,
+        alternativesConsidered: candidates.length,
+        via: c.via,
+      }),
+      sensoryIndicator,
+    };
   });
+
+  const trips = orderRoutesBySensoryIndicator(scored).map((trip, index) => ({
+    ...trip,
+    rank: index + 1,
+    notes: [
+      ...(trip.notes || []),
+      index === 0
+        ? "Calmest option (lowest sensory indicator)."
+        : `Sensory rank ${index + 1} of ${scored.length}.`,
+    ],
+  }));
+
+  return { trip: trips[0], trips };
 }
 
 /** Cycle or drive via OSRM (shortest/fastest alternative). */

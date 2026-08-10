@@ -20,8 +20,15 @@ export type PlannedTrip = {
   label: string;
   distanceMeters: number;
   durationSeconds: number;
+  /**
+   * Sensory load indicator (AC 1.1.4). Lower = calmer.
+   * Alias of crowdScore for listing/sorting.
+   */
+  sensoryIndicator?: number;
+  /** @deprecated prefer sensoryIndicator — kept for existing UI copy */
   crowdScore?: number;
   alternativesConsidered?: number;
+  rank?: number;
   via?: LatLng | null;
   legs: RouteLeg[];
   /** Flattened path for fitBounds */
