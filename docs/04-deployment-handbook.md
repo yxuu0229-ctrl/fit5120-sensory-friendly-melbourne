@@ -12,13 +12,13 @@ Assignment: **Unassigned — future deployment work must be claimed in LeanKit**
 
 ## Current decision
 
-Do not configure Vercel, Netlify, Cloudflare Pages or another hosting provider yet. The current target is a React website that runs locally and connects safely to the agreed Supabase development environment.
+Do not configure Vercel, Netlify, Cloudflare Pages or another hosting provider yet. The current target is the Next.js application under `apps/web`, running locally and connecting safely to the agreed Supabase development environment.
 
 ## Current local-run baseline
 
 1. Install the agreed Node.js version and package manager.
 2. Copy browser-safe variable names from `.env.example` into a local `.env` file ignored by Git.
-3. Install dependencies and start the React development server.
+3. Install dependencies and start the Next.js development server.
 4. Confirm the home route loads without a mentor-visible error.
 5. Connect to the Supabase development project and verify one permitted data request.
 6. Run the build, type-check and tests; record actual commands and results in the Pull Request and LeanKit card.
@@ -36,14 +36,14 @@ Do not configure Vercel, Netlify, Cloudflare Pages or another hosting provider y
 
 ## Future provider decision criteria
 
-1. Supports a React/Vite static build and a stable HTTPS URL.
+1. Supports the current Next.js application and provides a stable HTTPS URL.
 2. Integrates with the agreed GitHub repository.
 3. Provides preview deployments if possible.
 4. Separates development, preview and production environment values.
 5. Fits the team's access, cost, availability and evidence needs.
 6. Keeps the submitted release stable during mentor review.
 
-Vercel is likely to be the simplest later option for a Vite frontend because it can connect to GitHub and deploy static builds. It should still be selected only after the readiness gate is satisfied and the team records the decision.
+Vercel may be a simple later option for the current Next.js application because it integrates with GitHub and supports preview deployments. It should still be selected only after the readiness gate is satisfied and the team records the decision.
 
 ## Future release sequence
 

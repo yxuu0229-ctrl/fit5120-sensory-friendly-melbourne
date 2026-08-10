@@ -14,7 +14,7 @@ Assignment: **Unassigned — implementation work must be claimed in LeanKit**
 
 | Layer | Proposed choice | Purpose |
 |---|---|---|
-| Frontend | React + Vite + TypeScript | Build a small, typed website with a simple local workflow |
+| Web application | Next.js + React + TypeScript | Provide the current frontend and server-side application baseline |
 | Backend | Supabase Data API | Support normal database reads and writes without a separate server |
 | Database | Supabase PostgreSQL | Store relational data with migrations and Row Level Security |
 | Protected logic | Supabase Edge Functions, only when required | Protect secrets or privileged operations |
@@ -27,15 +27,13 @@ The first target is a website that runs locally and connects safely to Supabase.
 
 ```text
 team-te37-project/
-├── src/
-│   ├── app/              # Routing and app-level providers
-│   ├── components/       # Reusable UI components
-│   ├── features/         # Work grouped by confirmed User Story
-│   ├── pages/            # Route-level screens
-│   ├── services/         # Supabase and approved open-data adapters
-│   ├── styles/           # Design tokens and global styles
-│   ├── test/             # Shared test setup and fixtures
-│   └── types/            # Shared and generated TypeScript types
+├── apps/
+│   └── web/              # Current Next.js application
+│       ├── src/app/      # Routes, layouts and server endpoints
+│       ├── src/components/ # Reusable UI components
+│       └── public/       # Static web assets
+├── scripts/                  # Reproducible data-processing tools
+├── data/                     # Approved source and generated data
 ├── supabase/
 │   ├── migrations/       # Schema, indexes, grants and RLS policies
 │   ├── functions/        # Protected logic only when justified
@@ -50,7 +48,7 @@ team-te37-project/
 
 ## What the initial repository should contain
 
-1. A minimal React + Vite + TypeScript application that starts locally.
+1. A Next.js + React + TypeScript application under `apps/web` that starts locally.
 2. The folder structure above, with empty folders added only when immediately useful.
 3. A `README.md` containing the actual install, run, build, type-check and test commands.
 4. A safe `.env.example` containing variable names but no credential values.
