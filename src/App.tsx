@@ -31,6 +31,7 @@ import QuietSpacesPage, { refugePageSize } from "./components/QuietSpacesPage";
 import RefugeDetailPage from "./components/RefugeDetailPage";
 import LiveMapPage from "./components/LiveMapPage";
 import DataStatusPage from "./components/DataStatusPage";
+import LandingPage from "./components/LandingPage";
 
 const nearbyRefugeRadiusMeters = 1000;
 const sensorRefreshPages: Page[] = [
@@ -135,6 +136,41 @@ function App() {
     }, 60_000);
     return () => window.clearInterval(id);
   }, [isBackendConfigured, page, refreshSensors]);
+
+  const isEmbedded = useMemo(() => {
+    try {
+      return window.self !== window.top;
+    } catch (e) {
+      return true;
+    }
+  }, []);
+
+  const [isMobile, setIsMobile] = useState(() => {
+    if (typeof window !== "undefined") {
+      return window.innerWidth < 768;
+    }
+    return false;
+  });
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  useEffect(() => {
+    if (isEmbedded) {
+      document.body.classList.add("embedded");
+    } else {
+      document.body.classList.remove("embedded");
+    }
+  }, [isEmbedded]);
+
+  if (!isMobile && !isEmbedded) {
+    return <LandingPage />;
+  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
