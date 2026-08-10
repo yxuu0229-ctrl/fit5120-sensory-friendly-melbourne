@@ -51,4 +51,5 @@ The official PGP location is the **team Google Drive folder**.
 | Comparison write-up | [`COMPARISON.md`](./COMPARISON.md) |
 | Latest test result | [`results/latest.json`](./results/latest.json) |
 | Google Drive PGP | see [`DRIVE_LINK.md`](./DRIVE_LINK.md) |
-| GitHub Pull Request | _filled after PR is opened_ |
+| GitHub Pull Request | https://github.com/Atharva-deep/melbourne-sensory-map/pull/2 |
+| Latest verification | **PASS** — 168/168 buckets, 25/25 CoM spot-checks (location_id=3) |
