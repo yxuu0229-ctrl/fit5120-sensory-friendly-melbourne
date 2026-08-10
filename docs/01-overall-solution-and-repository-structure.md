@@ -14,7 +14,8 @@ Assignment: **Unassigned — implementation work must be claimed in LeanKit**
 
 | Layer | Proposed choice | Purpose |
 |---|---|---|
-| Web application | Next.js + React + TypeScript | Provide the current frontend and server-side application baseline |
+| Product frontend | React + Vite + TypeScript | Provide the current team-built multi-page UI at the repository root |
+| Integration application | Next.js + React + TypeScript | Provide server endpoints and the integrated map under `apps/web` |
 | Backend | Supabase Data API | Support normal database reads and writes without a separate server |
 | Database | Supabase PostgreSQL | Store relational data with migrations and Row Level Security |
 | Protected logic | Supabase Edge Functions, only when required | Protect secrets or privileged operations |
@@ -27,8 +28,11 @@ The first target is a website that runs locally and connects safely to Supabase.
 
 ```text
 team-te37-project/
+├── src/                       # Team-built Vite product frontend
+├── index.html                # Vite application entry document
+├── vite.config.ts            # Vite build configuration
 ├── apps/
-│   └── web/              # Current Next.js application
+│   └── web/              # Next.js integration application
 │       ├── src/app/      # Routes, layouts and server endpoints
 │       ├── src/components/ # Reusable UI components
 │       └── public/       # Static web assets
@@ -48,7 +52,7 @@ team-te37-project/
 
 ## What the initial repository should contain
 
-1. A Next.js + React + TypeScript application under `apps/web` that starts locally.
+1. The team-built Vite frontend at the repository root and the Next.js integration application under `apps/web`, both of which must remain runnable until the team approves consolidation.
 2. The folder structure above, with empty folders added only when immediately useful.
 3. A `README.md` containing the actual install, run, build, type-check and test commands.
 4. A safe `.env.example` containing variable names but no credential values.
@@ -63,5 +67,6 @@ team-te37-project/
 3. Confirm private repository visibility unless the team and mentor approve public release.
 4. Confirm the package manager and supported Node.js version.
 5. Confirm the first database schema and approved open-data source.
+6. Decide whether the two current web entrypoints will be consolidated before deployment.
 
 This baseline does not configure deployment, Supabase projects or other external services.
