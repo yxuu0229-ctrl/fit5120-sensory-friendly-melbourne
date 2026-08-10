@@ -124,7 +124,7 @@ function checkBandThresholds() {
 function checkImplementationWired(root) {
   const checks = [];
   const bands = readFileSync(
-    resolve(root, "apps/web/src/lib/densityBands.ts"),
+    resolve(root, "src/lib/densityBands.ts"),
     "utf8"
   );
   checks.push({
@@ -138,7 +138,7 @@ function checkImplementationWired(root) {
   });
 
   const map = readFileSync(
-    resolve(root, "apps/web/src/components/RouteMap.tsx"),
+    resolve(root, "src/components/LiveMapPage.tsx"),
     "utf8"
   );
   checks.push({
@@ -153,13 +153,9 @@ function checkImplementationWired(root) {
     pass: /useState\(true\)/.test(map) && map.includes("showDensity"),
   });
 
-  const api = readFileSync(
-    resolve(root, "apps/web/src/app/api/density/current/route.ts"),
-    "utf8"
-  );
   checks.push({
-    name: "GET /api/density/current exposes CBD density layer",
-    pass: api.includes("2.1.1") && api.includes("bandCounts"),
+    name: "density summary validates agreed bands (buildDensitySummary)",
+    pass: bands.includes("2.1.1") && bands.includes("bandCounts"),
   });
 
   const sync = readFileSync(
@@ -226,21 +222,55 @@ async function checkLiveData(supabaseUrl, anonKey) {
   };
 }
 
-async function checkLiveApi(baseUrl) {
+/**
+ * Mirrors src/lib/densityBands.ts#buildDensitySummary — the density layer now
+ * runs in the browser, so the live check reproduces the summary from the same
+ * Supabase rows instead of calling an API server.
+ */
+async function checkLiveSummary(supabaseUrl, anonKey) {
   try {
-    const body = await httpGetJson(
-      `${baseUrl.replace(/\/$/, "")}/api/density/current`
+    const endpoint =
+      `${supabaseUrl.replace(/\/$/, "")}/rest/v1/sensor_density_current` +
+      `?select=location_id,latitude,longitude,total_count,density_level,in_cbd`;
+    const rows =
+      (await httpGetJson(endpoint, {
+        apikey: anonKey,
+        Authorization: `Bearer ${anonKey}`,
+      })) || [];
+    const cbd = rows.filter(
+      (r) => r.in_cbd === true || inCbd(r.latitude, r.longitude)
     );
-    const summary = body.summary || {};
+    const bandCounts = { Low: 0, Medium: 0, High: 0 };
+    let invalidLevel = 0;
+    let bandMismatch = 0;
+    for (const r of cbd) {
+      if (!(r.density_level in AGREED)) {
+        invalidLevel += 1;
+        continue;
+      }
+      bandCounts[r.density_level] += 1;
+      if (densityLevelFromCount(r.total_count) !== r.density_level) {
+        bandMismatch += 1;
+      }
+    }
+    const summary = {
+      totalSensors: rows.length,
+      cbdSensors: cbd.length,
+      bandCounts,
+      invalidLevel,
+      bandMismatch,
+      coversCbd: cbd.length > 0,
+      bandsValid: invalidLevel === 0 && bandMismatch === 0 && cbd.length > 0,
+    };
     return {
-      name: "GET /api/density/current bandsValid",
+      name: "density summary bandsValid (buildDensitySummary mirror)",
       pass: Boolean(summary.bandsValid && summary.coversCbd),
       summary,
       bandCounts: summary.bandCounts,
     };
   } catch (e) {
     return {
-      name: "GET /api/density/current",
+      name: "density summary (buildDensitySummary mirror)",
       pass: false,
       error: e instanceof Error ? e.message : String(e),
     };
@@ -282,7 +312,7 @@ function toMarkdown(result) {
 |---|---|
 | Offline / wiring | ${result.offline.passed}/${result.offline.checks.length} |
 | Live Supabase data | ${data ? (data.pass ? "PASS" : "FAIL") : "skipped"} |
-| Live API | ${live?.ran ? (live.pass ? "PASS" : "FAIL") : "skipped"} |
+| Live density summary | ${live?.ran ? (live.pass ? "PASS" : "FAIL") : "skipped"} |
 | Verified at (UTC) | ${result.verifiedAt} |
 
 ${data ? `### Live data\n\n- CBD sensors: ${data.cbdSensors}\n- Band counts: Low ${data.bandCounts?.Low ?? 0}, Medium ${data.bandCounts?.Medium ?? 0}, High ${data.bandCounts?.High ?? 0}\n- Invalid levels: ${data.invalidLevel ?? 0}\n- Band mismatches: ${data.bandMismatch ?? 0}\n` : ""}
@@ -309,13 +339,9 @@ async function main() {
   const here = dirname(fileURLToPath(import.meta.url));
   const root = resolve(here, "../..");
   loadEnvFile(resolve(root, ".env"));
-  loadEnvFile(resolve(root, "apps/web/.env.local"));
+  loadEnvFile(resolve(root, ".env.local"));
 
   const liveApi = process.argv.includes("--live");
-  const baseUrl =
-    process.env.AC211_BASE_URL ||
-    process.argv.find((a) => a.startsWith("--base-url="))?.split("=")[1] ||
-    "http://localhost:3000";
 
   const thresholdCheck = checkBandThresholds();
   const wiring = checkImplementationWired(root);
@@ -323,8 +349,12 @@ async function main() {
 
   let dataCheck = null;
   const url =
-    process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
+    process.env.VITE_SUPABASE_URL ||
+    process.env.NEXT_PUBLIC_SUPABASE_URL ||
+    process.env.SUPABASE_URL;
   const key =
+    process.env.VITE_SUPABASE_ANON_KEY ||
+    process.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
     process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (url && key) {
@@ -338,17 +368,24 @@ async function main() {
   }
 
   let liveApiResult = { ran: false, pass: true };
-  if (liveApi) {
+  if (liveApi && url && key) {
     try {
-      liveApiResult = { ran: true, ...(await checkLiveApi(baseUrl)) };
+      liveApiResult = { ran: true, ...(await checkLiveSummary(url, key)) };
     } catch (e) {
       liveApiResult = {
         ran: true,
         pass: false,
-        name: "GET /api/density/current",
+        name: "density summary (buildDensitySummary mirror)",
         error: e instanceof Error ? e.message : String(e),
       };
     }
+  } else if (liveApi) {
+    liveApiResult = {
+      ran: true,
+      pass: false,
+      name: "density summary (buildDensitySummary mirror)",
+      error: "Missing Supabase env",
+    };
   }
 
   const pass =
@@ -382,9 +419,9 @@ async function main() {
     googleDrivePgpNote:
       "Upload pgp/evidence/AC-2.1.1/ into the team Google Drive PGP folder and paste the Drive URL into DRIVE_LINK.md",
     implementation: {
-      bands: "apps/web/src/lib/densityBands.ts",
-      map: "apps/web/src/components/RouteMap.tsx",
-      api: "GET /api/density/current",
+      bands: "src/lib/densityBands.ts",
+      map: "src/components/LiveMapPage.tsx",
+      summary: "src/lib/densityBands.ts#buildDensitySummary",
       etl: "scripts/sync/src/config.js#densityLevel",
     },
   };

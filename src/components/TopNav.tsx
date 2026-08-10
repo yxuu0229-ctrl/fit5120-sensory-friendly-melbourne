@@ -1,4 +1,4 @@
-const navItems = ["Plan journey", "Route options", "Journey monitor", "Quiet spaces"];
+const navItems = ["Plan journey", "Route options", "Journey monitor", "Quiet spaces", "Live map"];
 
 export type Page =
   | "plan"
@@ -8,7 +8,9 @@ export type Page =
   | "monitor"
   | "predictive"
   | "quiet"
-  | "refugeDetail";
+  | "refugeDetail"
+  | "livemap"
+  | "datastatus";
 
 function TopNav({ page, onNavigate }: { page: Page; onNavigate: (page: Page) => void }) {
   return (
@@ -24,7 +26,8 @@ function TopNav({ page, onNavigate }: { page: Page; onNavigate: (page: Page) => 
               ((page === "routes" || page === "warning" || page === "confirm") &&
                 item === "Route options") ||
               ((page === "monitor" || page === "predictive") && item === "Journey monitor") ||
-              ((page === "quiet" || page === "refugeDetail") && item === "Quiet spaces")
+              ((page === "quiet" || page === "refugeDetail") && item === "Quiet spaces") ||
+              ((page === "livemap" || page === "datastatus") && item === "Live map")
                 ? "nav-link nav-link-active"
                 : "nav-link"
             }
@@ -34,6 +37,7 @@ function TopNav({ page, onNavigate }: { page: Page; onNavigate: (page: Page) => 
               if (item === "Route options") onNavigate("routes");
               if (item === "Journey monitor") onNavigate("monitor");
               if (item === "Quiet spaces") onNavigate("quiet");
+              if (item === "Live map") onNavigate("livemap");
             }}
             type="button"
           >

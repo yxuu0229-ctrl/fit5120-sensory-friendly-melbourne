@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { DensityLevel, SensorDensityCurrent } from "@/lib/types";
+import type { DensityLevel, SensorDensityCurrent } from "./types";
 
 /** Agreed interactive SLA for sensor detail queries (AC 2.2.7). */
 export const DETAIL_VIEW_SLA_MS = 2000;

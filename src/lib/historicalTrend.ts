@@ -100,9 +100,10 @@ export async function calculateLocationHistoricalTrendFromCom(
   trend: HistoricalTrendPoint[];
 }> {
   const since = options?.since ?? "2024-01-01";
+  const env = import.meta.env as Record<string, string | undefined>;
   const dataBaseUrl = (
     options?.dataBaseUrl ||
-    process.env.MELBOURNE_DATA_BASE_URL ||
+    env.VITE_MELBOURNE_DATA_BASE_URL ||
     "https://data.melbourne.vic.gov.au/api/v2/catalog/datasets"
   ).replace(/\/$/, "");
 

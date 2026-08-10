@@ -1,6 +1,6 @@
 # Team TE37 Melbourne Sensory Map
 
-Team TE37's shared source of truth for the Supabase-backed open-data pipeline and Next.js sensory-aware Melbourne CBD travel map.
+Team TE37's shared source of truth for the Supabase-backed open-data pipeline and the React (Vite) sensory-aware Melbourne CBD travel map.
 
 Every implementation change must map to a LeanKit Epic, User Story and Acceptance Criterion. Development is reviewed through Pull Requests; protected or privileged values must never be committed.
 
@@ -11,7 +11,7 @@ Every implementation change must map to a LeanKit Epic, User Story and Acceptanc
 | Schema + RLS | [`supabase/migrations/`](supabase/migrations/) |
 | Open-data ETL | [`scripts/sync/`](scripts/sync/) |
 | GitHub Actions sync | [`.github/workflows/sync-open-data.yml`](.github/workflows/sync-open-data.yml) |
-| Next.js status page and route map | [`apps/web/`](apps/web/) |
+| React app (journey planner, live map, data status) | [`src/`](src/) |
 | Env template | [`.env.example`](.env.example) |
 
 ## Team governance
@@ -30,7 +30,7 @@ Every implementation change must map to a LeanKit Epic, User Story and Acceptanc
 ```
 City of Melbourne Open Data  →  GitHub Actions (every 15 min)  →  Supabase
                                                                       ↓
-                                              apps/web (status) + other FE map
+                                          src/ (single React app: planner + live map + status)
 ```
 
 ## 1. Create a Supabase project
@@ -47,20 +47,19 @@ City of Melbourne Open Data  →  GitHub Actions (every 15 min)  →  Supabase
 
 ```bash
 cp .env.example .env
-cp .env.example apps/web/.env.local
 ```
 
-Fill both files:
+Fill it in:
 
 ```env
-NEXT_PUBLIC_SUPABASE_URL=https://YOUR_PROJECT.supabase.co
+VITE_SUPABASE_URL=https://YOUR_PROJECT.supabase.co
+VITE_SUPABASE_ANON_KEY=your_anon_key
 SUPABASE_URL=https://YOUR_PROJECT.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
 SUPABASE_SERVICE_ROLE_KEY=
 MELBOURNE_DATA_BASE_URL=https://data.melbourne.vic.gov.au/api/v2/catalog/datasets
 ```
 
-- Browser / Next.js: only `NEXT_PUBLIC_*`
+- Browser (Vite): only `VITE_*` (legacy `NEXT_PUBLIC_*` names still accepted)
 - Sync scripts / GitHub Actions: `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY`
 
 ## 3. Install and run first sync
@@ -100,18 +99,20 @@ Workflow [`.github/workflows/sync-open-data.yml`](.github/workflows/sync-open-da
 - Places weekly (Sunday UTC 00:00 window)
 - Manual **Run workflow** with `full` for a complete refresh
 
-## 5. Status shell + quieter route map (local)
+## 5. Run the app (local)
 
 ```bash
 npm run dev
 ```
 
-- Status: [http://localhost:3000](http://localhost:3000)
-- Map A→B routing: [http://localhost:3000/map](http://localhost:3000/map)
+One React app at [http://localhost:5173](http://localhost:5173). The top nav covers the journey planner pages plus:
+
+- **Live map** — A→B routing with density layer, sensor detail and refuges
+- **Data status** — backend smoke-test page (reachable from the Live map panel)
 
 ### Map density layer (AC 2.1.1)
 
-On `/map` load, current `sensor_density_current` points are shown across the covered CBD in agreed bands:
+When the Live map loads, current `sensor_density_current` points are shown across the covered CBD in agreed bands:
 
 | Band | Threshold |
 |---|---|
@@ -125,7 +126,7 @@ npm run verify:ac-211
 
 Evidence (upload to team Google Drive PGP): [`pgp/evidence/AC-2.1.1/`](pgp/evidence/AC-2.1.1/). Owner: unassigned until claimed.
 
-### Transport modes on `/map`
+### Transport modes on the Live map
 
 | Mode | Engine |
 |---|---|
@@ -133,7 +134,7 @@ Evidence (upload to team Google Drive PGP): [`pgp/evidence/AC-2.1.1/`](pgp/evide
 | Cycle | OSRM `bike` |
 | Drive | OSRM `driving` |
 
-Routing API used by the map: `POST /api/route/plan` with `{ from, to, mode }`.
+Planner used by the map: `planRoute(from, to, mode)` in [`src/lib/planRoute.ts`](src/lib/planRoute.ts) (runs in the browser against Supabase + OSRM).
 
 ### Route options ordering (AC 1.1.4)
 
@@ -213,10 +214,7 @@ Typical crowd by weekday + hour (from 2024+ hourly history).
 ### Historical trend validation (AC 2.2.5)
 
 Per-location day×hour trend from City of Melbourne hourly counts:
-
-```http
-GET /api/sensors/{locationId}/historical-trend
-```
+`calculateLocationHistoricalTrendFromCom(locationId)` in [`src/lib/historicalTrend.ts`](src/lib/historicalTrend.ts) — surfaced in the Live map sensor detail panel ("Load historical trend").
 
 Validate the calculation against live CoM open data and write PGP evidence:
 
@@ -228,11 +226,7 @@ Evidence pack (upload to the team **Google Drive PGP** folder): [`pgp/evidence/A
 
 ### Sensor detail view (AC 2.2.7)
 
-Click a density sensor on `/map`, or call:
-
-```http
-GET /api/sensors/{locationId}/detail
-```
+Click a density sensor on the Live map — `fetchSensorDetail` in [`src/lib/sensorDetail.ts`](src/lib/sensorDetail.ts) runs the timed Supabase queries.
 
 Agreed response time: **≤ 2000 ms** for the Supabase detail queries. Verify:
 

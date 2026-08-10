@@ -1,5 +1,3 @@
-"use client";
-
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   CircleMarker,
@@ -14,27 +12,30 @@ import {
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
+import { COVERAGE_RECTANGLE, type CoverageNotice } from "../lib/coverage";
+import type { DataProvenance } from "../lib/dataProvenance";
 import {
-  COVERAGE_RECTANGLE,
-  type CoverageNotice,
-} from "@/lib/coverage";
-import type { DataProvenance } from "@/lib/dataProvenance";
-import {
+  buildDensitySummary,
   CBD_CENTER,
   densityColor,
   DENSITY_BANDS,
   inCbd,
-} from "@/lib/densityBands";
-import { filterPlacesAlongRoute, type LatLng } from "@/lib/geo";
-import type { PlannedTrip } from "@/lib/planTypes";
-import type { SensorDetailResult } from "@/lib/sensorDetail";
-import { getBrowserSupabase } from "@/lib/supabaseBrowser";
-import { MODE_OPTIONS, type TransportMode } from "@/lib/transportModes";
+} from "../lib/densityBands";
+import { filterPlacesAlongRoute, type LatLng } from "../lib/geo";
+import {
+  calculateLocationHistoricalTrendFromCom,
+  type HistoricalTrendPoint,
+} from "../lib/historicalTrend";
+import type { PlannedTrip } from "../lib/planTypes";
+import { planRoute } from "../lib/planRoute";
+import { fetchSensorDetail, type SensorDetailResult } from "../lib/sensorDetail";
+import { getSupabase, hasSupabaseEnv } from "../lib/supabase";
+import { MODE_OPTIONS, type TransportMode } from "../lib/transportModes";
 import type {
   LocationQuietWindow,
   Place,
   SensorDensityCurrent,
-} from "@/lib/types";
+} from "../lib/types";
 
 /** How close a refuge must be to the route to count as "along the journey" */
 const REFUGE_ALONG_ROUTE_METERS = 200;
@@ -130,7 +131,18 @@ function QuietWindowEstimate({
   );
 }
 
-export default function RouteMap() {
+type TrendState = {
+  locationId: number;
+  bucketCount: number;
+  usedRowCount: number;
+  quietest: HistoricalTrendPoint[];
+};
+
+export default function LiveMapPage({
+  onShowDataStatus,
+}: {
+  onShowDataStatus?: () => void;
+}) {
   const [sensors, setSensors] = useState<SensorDensityCurrent[]>([]);
   const [from, setFrom] = useState<LatLng | null>(null);
   const [to, setTo] = useState<LatLng | null>(null);
@@ -157,18 +169,26 @@ export default function RouteMap() {
   const [detail, setDetail] = useState<SensorDetailResult | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
   const [detailError, setDetailError] = useState<string | null>(null);
+  const [trend, setTrend] = useState<TrendState | null>(null);
+  const [trendLoading, setTrendLoading] = useState(false);
+  const [trendError, setTrendError] = useState<string | null>(null);
 
+  const isBackendConfigured = useMemo(() => hasSupabaseEnv(), []);
   const startIcon = useMemo(() => makePin("A", "pin-a"), []);
   const endIcon = useMemo(() => makePin("B", "pin-b"), []);
   const viaIcon = useMemo(() => makePin("Q", "pin-via-dot", 24), []);
   const refugeIcon = useMemo(() => makePin("R", "pin-refuge", 26), []);
 
   useEffect(() => {
+    if (!isBackendConfigured) {
+      setDensityLoading(false);
+      return;
+    }
     let cancelled = false;
     (async () => {
       setDensityLoading(true);
       try {
-        const sb = getBrowserSupabase();
+        const sb = getSupabase();
         const [densityRes, placesRes, quietRes] = await Promise.all([
           sb.from("sensor_density_current").select("*"),
           sb.from("places").select("*").eq("is_sensory_refuge", true),
@@ -204,7 +224,7 @@ export default function RouteMap() {
     return () => {
       cancelled = true;
     };
-  }, [dayName, hourday]);
+  }, [isBackendConfigured, dayName, hourday]);
 
   const densitySensors = useMemo(() => {
     if (!cbdOnly) return sensors;
@@ -222,6 +242,9 @@ export default function RouteMap() {
     }
     return counts;
   }, [densitySensors]);
+
+  /** AC 2.1.1 — agreed-band validation over the covered CBD area. */
+  const densitySummary = useMemo(() => buildDensitySummary(sensors), [sensors]);
 
   const refugesAlongJourney = useMemo(() => {
     if (!result?.allPositions?.length) return [];
@@ -270,7 +293,7 @@ export default function RouteMap() {
     );
   };
 
-  const planRoute = async () => {
+  const runPlanRoute = async () => {
     if (!from || !to) {
       setError("Set both A and B first");
       return;
@@ -280,18 +303,7 @@ export default function RouteMap() {
     setCoverage(null);
     setProvenance(null);
     try {
-      const res = await fetch("/api/route/plan", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ from, to, mode: transportMode }),
-      });
-      const data = (await res.json()) as {
-        trip?: PlannedTrip;
-        coverage?: CoverageNotice | null;
-        dataProvenance?: DataProvenance | null;
-        trips?: PlannedTrip[];
-        error?: string;
-      };
+      const data = await planRoute(from, to, transportMode);
       if (data.dataProvenance) setProvenance(data.dataProvenance);
 
       // A coverage gap is a normal outcome, not a failure — surface the notice
@@ -303,8 +315,8 @@ export default function RouteMap() {
         setSelectedTripIndex(0);
         return;
       }
-      if (!res.ok || !data.trip) {
-        throw new Error(data.error || "Routing failed");
+      if (!data.trip) {
+        throw new Error("Routing failed");
       }
       const listed =
         data.trips && data.trips.length > 0 ? data.trips : [data.trip];
@@ -336,18 +348,44 @@ export default function RouteMap() {
   const openSensorDetail = async (locationId: number) => {
     setDetailLoading(true);
     setDetailError(null);
+    setTrend(null);
+    setTrendError(null);
     try {
-      const res = await fetch(`/api/sensors/${locationId}/detail`);
-      const data = (await res.json()) as SensorDetailResult & { error?: string };
-      if (!res.ok) {
-        throw new Error(data.error || "Detail query failed");
-      }
+      const data = await fetchSensorDetail(getSupabase(), locationId);
       setDetail(data);
     } catch (e) {
       setDetail(null);
       setDetailError(e instanceof Error ? e.message : "Detail query failed");
     } finally {
       setDetailLoading(false);
+    }
+  };
+
+  /**
+   * AC 2.2.5 — historical trend calculated from City of Melbourne open data,
+   * summarised as the quietest weekday-hours for this location.
+   */
+  const loadHistoricalTrend = async (locationId: number) => {
+    setTrendLoading(true);
+    setTrendError(null);
+    try {
+      const result = await calculateLocationHistoricalTrendFromCom(locationId);
+      const quietest = [...result.trend]
+        .sort((a, b) => a.mean - b.mean)
+        .slice(0, 3);
+      setTrend({
+        locationId,
+        bucketCount: result.bucketCount,
+        usedRowCount: result.usedRowCount,
+        quietest,
+      });
+    } catch (e) {
+      setTrend(null);
+      setTrendError(
+        e instanceof Error ? e.message : "Historical trend calculation failed"
+      );
+    } finally {
+      setTrendLoading(false);
     }
   };
 
@@ -359,13 +397,20 @@ export default function RouteMap() {
   };
 
   return (
-    <div className="map-app">
-      <aside className="map-panel">
+    <div className="live-map">
+      <aside className="live-panel">
         <h1>Melbourne travel map</h1>
         <p className="lead">
           Choose a transport mode, set A and B, then plan a route. Walk uses
           quieter-path bias from pedestrian sensors.
         </p>
+
+        {!isBackendConfigured && (
+          <div className="banner">
+            Supabase env is not configured — density, refuges and quieter-walk
+            bias are unavailable. Cycle and drive routing still work.
+          </div>
+        )}
 
         <fieldset className="mode-field">
           <legend>Transport mode</legend>
@@ -409,7 +454,7 @@ export default function RouteMap() {
           <button
             type="button"
             className="primary"
-            onClick={planRoute}
+            onClick={runPlanRoute}
             disabled={!from || !to || loading}
           >
             {loading ? "Planning…" : "Plan route"}
@@ -451,6 +496,8 @@ export default function RouteMap() {
                 onClick={() => {
                   setDetail(null);
                   setDetailError(null);
+                  setTrend(null);
+                  setTrendError(null);
                 }}
               >
                 Close
@@ -502,6 +549,38 @@ export default function RouteMap() {
                     ))}
                   </ul>
                 )}
+                <div className="trend-block">
+                  {!trend && !trendLoading && (
+                    <button
+                      type="button"
+                      className="linkish"
+                      onClick={() => void loadHistoricalTrend(detail.locationId)}
+                    >
+                      Load historical trend (City of Melbourne)
+                    </button>
+                  )}
+                  {trendLoading && <p className="meta">Calculating trend…</p>}
+                  {trendError && <p className="error">{trendError}</p>}
+                  {trend && (
+                    <>
+                      <p className="meta">
+                        Historical trend (AC 2.2.5): {trend.bucketCount}{" "}
+                        day×hour buckets from {trend.usedRowCount} CoM rows.
+                        Quietest hours:
+                      </p>
+                      <ul className="detail-series">
+                        {trend.quietest.map((t) => (
+                          <li key={`${t.day_name}-${t.hourday}`}>
+                            <span>
+                              {t.day_name} {formatHour(t.hourday)}
+                            </span>
+                            <span>~{Math.round(t.mean)} people</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </>
+                  )}
+                </div>
               </>
             )}
           </section>
@@ -544,6 +623,13 @@ export default function RouteMap() {
               </li>
             ))}
           </ul>
+          {!densityLoading && densitySummary.cbdSensors > 0 && (
+            <p className="meta">
+              {densitySummary.bandsValid
+                ? `All ${densitySummary.cbdSensors} covered-CBD sensors match the agreed bands.`
+                : `${densitySummary.bandMismatch + densitySummary.invalidLevel} of ${densitySummary.cbdSensors} covered-CBD sensors are outside the agreed bands.`}
+            </p>
+          )}
         </section>
 
         <p className="meta">
@@ -619,7 +705,7 @@ export default function RouteMap() {
         )}
 
         {result && (
-          <div className="route-card">
+          <div className="live-route-card">
             <h2>{trips.length > 1 ? "Selected route" : "Route"}</h2>
             <p>
               <strong>{result.label}</strong>
@@ -687,7 +773,7 @@ export default function RouteMap() {
                   this route.
                 </p>
               ) : (
-                <ul className="refuge-list">
+                <ul className="live-refuge-list">
                   {refugesAlongJourney.slice(0, 12).map((p) => (
                     <li key={p.id}>
                       <strong>{p.name}</strong>
@@ -714,12 +800,16 @@ export default function RouteMap() {
           </a>{" "}
           · Density: City of Melbourne Open Data
         </p>
-        <p className="meta">
-          <a href="/">← Data status</a>
-        </p>
+        {onShowDataStatus && (
+          <p className="meta">
+            <button type="button" className="linkish" onClick={onShowDataStatus}>
+              ← Data status
+            </button>
+          </p>
+        )}
       </aside>
 
-      <div className="map-stage">
+      <div className="live-stage">
         <MapContainer
           center={[CBD_CENTER.lat, CBD_CENTER.lng]}
           zoom={14}
@@ -797,10 +887,6 @@ export default function RouteMap() {
                   color: leg.color,
                   weight: leg.mode === "walk" ? 4 : 6,
                   opacity: 0.9,
-                  dashArray:
-                    leg.mode === "walk" || leg.mode === "cycle"
-                      ? undefined
-                      : undefined,
                 }}
               />
             ) : null
