@@ -75,3 +75,56 @@ export function bandMatchesCount(
 ): boolean {
   return densityLevelFromCount(totalCount) === densityLevel;
 }
+
+export type DensitySummary = {
+  totalSensors: number;
+  cbdSensors: number;
+  bandCounts: Record<DensityLevel, number>;
+  invalidLevel: number;
+  bandMismatch: number;
+  coversCbd: boolean;
+  bandsValid: boolean;
+};
+
+/**
+ * AC 2.1.1 — validate current readings against the agreed bands and count
+ * sensors per band for the map legend. Formerly the density API's summary.
+ */
+export function buildDensitySummary(
+  sensors: Array<{
+    latitude: number;
+    longitude: number;
+    in_cbd: boolean | null;
+    total_count: number;
+    density_level: string;
+  }>
+): DensitySummary {
+  const cbdSensors = sensors.filter(
+    (s) => s.in_cbd === true || inCbd(s.latitude, s.longitude)
+  );
+
+  const bandCounts: Record<DensityLevel, number> = { Low: 0, Medium: 0, High: 0 };
+  let invalidLevel = 0;
+  let bandMismatch = 0;
+
+  for (const s of cbdSensors) {
+    if (!isAgreedDensityLevel(s.density_level)) {
+      invalidLevel += 1;
+      continue;
+    }
+    bandCounts[s.density_level] += 1;
+    if (!bandMatchesCount(s.total_count, s.density_level)) {
+      bandMismatch += 1;
+    }
+  }
+
+  return {
+    totalSensors: sensors.length,
+    cbdSensors: cbdSensors.length,
+    bandCounts,
+    invalidLevel,
+    bandMismatch,
+    coversCbd: cbdSensors.length > 0,
+    bandsValid: invalidLevel === 0 && bandMismatch === 0 && cbdSensors.length > 0,
+  };
+}

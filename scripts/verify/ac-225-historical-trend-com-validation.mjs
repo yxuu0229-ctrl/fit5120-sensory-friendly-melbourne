@@ -179,7 +179,7 @@ async function main() {
   const here = dirname(fileURLToPath(import.meta.url));
   const root = resolve(here, "../..");
   loadEnvFile(resolve(root, ".env"));
-  loadEnvFile(resolve(root, "apps/web/.env.local"));
+  loadEnvFile(resolve(root, ".env.local"));
 
   const args = parseArgs(process.argv.slice(2));
   const dataBaseUrl = (

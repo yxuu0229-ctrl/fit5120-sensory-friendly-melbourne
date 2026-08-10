@@ -26,6 +26,8 @@ import MonitorPage from "./components/MonitorPage";
 import PredictivePage from "./components/PredictivePage";
 import QuietSpacesPage, { refugePageSize } from "./components/QuietSpacesPage";
 import RefugeDetailPage from "./components/RefugeDetailPage";
+import LiveMapPage from "./components/LiveMapPage";
+import DataStatusPage from "./components/DataStatusPage";
 
 const nearbyRefugeRadiusMeters = 1000;
 
@@ -346,6 +348,12 @@ function App() {
           onOptionalDirections={() => setPage("quiet")}
         />
       )}
+
+      {page === "livemap" && (
+        <LiveMapPage onShowDataStatus={() => setPage("datastatus")} />
+      )}
+
+      {page === "datastatus" && <DataStatusPage />}
     </div>
   );
 }

@@ -11,9 +11,9 @@ export type OsrmRoute = {
 const DEFAULT_OSRM = "https://router.project-osrm.org";
 
 function baseUrl() {
-  return (
-    process.env.NEXT_PUBLIC_OSRM_URL?.replace(/\/$/, "") || DEFAULT_OSRM
-  );
+  const env = import.meta.env as Record<string, string | undefined>;
+  const configured = env.VITE_OSRM_URL || env.NEXT_PUBLIC_OSRM_URL;
+  return configured?.replace(/\/$/, "") || DEFAULT_OSRM;
 }
 
 /**

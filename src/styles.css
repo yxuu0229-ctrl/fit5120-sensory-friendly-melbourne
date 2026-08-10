@@ -2161,3 +2161,599 @@ a {
     grid-template-columns: 1fr;
   }
 }
+
+/* ==== Live map + data status (ported from the retired Next.js app) ==== */
+
+.live-map,
+.data-status {
+  --lm-bg: #f6f4ef;
+  --lm-ink: #1c1b19;
+  --lm-muted: #5c574e;
+  --lm-line: #d9d2c5;
+  --lm-panel: #fffdf8;
+  --lm-low: #1f7a4c;
+  --lm-medium: #b36b00;
+  --lm-high: #b42318;
+  --lm-mono: ui-monospace, "Cascadia Code", "Segoe UI Mono", Consolas, monospace;
+  color: var(--lm-ink);
+  line-height: 1.45;
+}
+
+.live-map {
+  display: grid;
+  grid-template-columns: minmax(280px, 360px) 1fr;
+  min-height: calc(100vh - 72px);
+  background: var(--lm-bg);
+}
+
+.live-panel {
+  padding: 1.25rem 1.1rem 2rem;
+  border-right: 1px solid var(--lm-line);
+  background: var(--lm-panel);
+  overflow: auto;
+}
+
+.live-panel h1 {
+  margin: 0 0 0.35rem;
+  font-size: 1.35rem;
+  font-weight: 650;
+}
+
+.live-map .lead,
+.data-status .lead {
+  margin: 0 0 1.5rem;
+  color: var(--lm-muted);
+  max-width: 60ch;
+}
+
+.live-map .meta,
+.data-status .meta {
+  color: var(--lm-muted);
+  font-size: 0.9rem;
+}
+
+.live-map .error {
+  color: var(--lm-high);
+  font-size: 0.9rem;
+}
+
+.live-map .banner,
+.data-status .banner {
+  border: 1px solid var(--lm-line);
+  background: #fff3cd;
+  color: #5c4b00;
+  padding: 0.85rem 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.live-panel .actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  margin: 1rem 0;
+}
+
+.live-panel button {
+  appearance: none;
+  border: 1px solid var(--lm-line);
+  background: #fff;
+  color: var(--lm-ink);
+  padding: 0.55rem 0.75rem;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.live-panel button.primary {
+  background: #12324d;
+  border-color: #12324d;
+  color: #fff;
+}
+
+.live-panel button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.live-panel .check {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  margin: 0.5rem 0 0.75rem;
+  font-size: 0.95rem;
+}
+
+.live-panel .mode-field {
+  border: 1px solid var(--lm-line);
+  margin: 0 0 1rem;
+  padding: 0.65rem 0.7rem 0.75rem;
+}
+
+.live-panel .mode-field legend {
+  padding: 0 0.35rem;
+  font-size: 0.85rem;
+  color: var(--lm-muted);
+}
+
+.live-panel .mode-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.4rem;
+}
+
+.live-panel .mode-option {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-rows: auto auto;
+  column-gap: 0.4rem;
+  row-gap: 0.1rem;
+  border: 1px solid var(--lm-line);
+  padding: 0.4rem 0.45rem;
+  cursor: pointer;
+  background: #fff;
+}
+
+.live-panel .mode-option.active {
+  border-color: #12324d;
+  background: #eef4f8;
+}
+
+.live-panel .mode-option input {
+  grid-row: 1 / span 2;
+  margin-top: 0.2rem;
+}
+
+.live-panel .mode-label {
+  font-weight: 650;
+  font-size: 0.92rem;
+}
+
+.live-panel .mode-hint {
+  grid-column: 2;
+  font-size: 0.72rem;
+  color: var(--lm-muted);
+  line-height: 1.25;
+}
+
+.live-panel .legs {
+  list-style: none;
+  padding: 0;
+  margin: 0.75rem 0 0;
+}
+
+.live-panel .legs li {
+  display: flex;
+  gap: 0.55rem;
+  margin-bottom: 0.55rem;
+}
+
+.live-panel .density-legend {
+  margin: 0.85rem 0 1rem;
+  padding: 0.85rem 0.9rem;
+  border: 1px solid var(--lm-line);
+  background: #fff;
+}
+
+.live-panel .density-legend h2 {
+  margin: 0 0 0.25rem;
+  font-size: 1rem;
+}
+
+.live-panel .density-legend-list {
+  list-style: none;
+  padding: 0;
+  margin: 0.55rem 0 0;
+}
+
+.live-panel .density-legend-list li {
+  display: flex;
+  gap: 0.55rem;
+  align-items: flex-start;
+  margin-bottom: 0.4rem;
+  font-size: 0.88rem;
+}
+
+.live-panel .density-swatch {
+  width: 12px;
+  height: 12px;
+  min-width: 12px;
+  margin-top: 0.25rem;
+  border-radius: 999px;
+}
+
+.live-panel .leg-swatch {
+  width: 10px;
+  min-width: 10px;
+  border-radius: 99px;
+  margin-top: 0.2rem;
+}
+
+.live-panel .notes {
+  margin: 0.75rem 0 0;
+  padding-left: 1.1rem;
+  color: var(--lm-muted);
+  font-size: 0.85rem;
+}
+
+.live-panel .coords {
+  padding-left: 1.1rem;
+  margin: 0.5rem 0 1rem;
+}
+
+.live-route-card {
+  border: 1px solid var(--lm-line);
+  padding: 0.85rem 0.9rem;
+  margin: 0.75rem 0 1rem;
+  background: #fff;
+}
+
+.live-route-card h2 {
+  margin-top: 0;
+  font-size: 1rem;
+}
+
+.live-panel .route-list {
+  border: 1px solid var(--lm-line);
+  padding: 0.85rem 0.9rem;
+  margin: 0.75rem 0 1rem;
+  background: #fff;
+}
+
+.live-panel .route-list h2 {
+  margin: 0 0 0.35rem;
+  font-size: 1rem;
+}
+
+.live-panel .route-options {
+  list-style: none;
+  padding: 0;
+  margin: 0.55rem 0 0;
+}
+
+.live-panel .route-options li {
+  margin-bottom: 0.4rem;
+}
+
+.live-panel .route-option {
+  width: 100%;
+  display: flex;
+  gap: 0.65rem;
+  align-items: flex-start;
+  text-align: left;
+  border: 1px solid var(--lm-line);
+  background: var(--lm-bg);
+  padding: 0.55rem 0.65rem;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+}
+
+.live-panel .route-option.active {
+  border-color: var(--lm-ink);
+  background: #fff;
+}
+
+.live-panel .route-option-rank {
+  font-family: var(--lm-mono);
+  font-size: 0.8rem;
+  color: var(--lm-muted);
+  min-width: 1.6rem;
+}
+
+.live-panel .route-option-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.live-stage {
+  min-height: calc(100vh - 72px);
+  position: relative;
+}
+
+.live-map .pin {
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font: 700 12px/1 "Segoe UI", system-ui, sans-serif;
+  color: #fff;
+  border: 2px solid #fff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
+}
+
+.live-map .pin-a {
+  background: #12324d;
+}
+
+.live-map .pin-b {
+  background: #7a1f1f;
+}
+
+.live-map .pin-via-dot {
+  width: 24px;
+  height: 24px;
+  background: #1f7a4c;
+  font-size: 11px;
+}
+
+.live-map .pin-refuge {
+  background: #0f6b5c;
+  font-size: 11px;
+}
+
+.live-panel .detail-panel {
+  margin: 0.85rem 0 1rem;
+  padding: 0.85rem 0.9rem;
+  border: 1px solid var(--lm-line);
+  background: #fff;
+}
+
+.live-panel .detail-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.35rem;
+}
+
+.live-panel .detail-panel h2 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.live-map button.linkish {
+  border: 0;
+  background: transparent;
+  color: var(--lm-muted);
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 0;
+  font: inherit;
+}
+
+.live-panel .detail-timing {
+  font-family: var(--lm-mono);
+  font-size: 0.82rem;
+  margin: 0.45rem 0;
+}
+
+.live-panel .detail-timing.ok {
+  color: var(--lm-low);
+}
+
+.live-panel .detail-timing.slow {
+  color: var(--lm-high);
+}
+
+.live-panel .detail-series {
+  list-style: none;
+  padding: 0;
+  margin: 0.5rem 0 0;
+  font-size: 0.82rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.live-panel .detail-series li {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.2rem 0;
+  border-top: 1px solid var(--lm-line);
+}
+
+.live-panel .trend-block {
+  margin-top: 0.6rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--lm-line);
+}
+
+.live-panel .refuge-block {
+  margin-top: 1rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--lm-line);
+}
+
+.live-panel .refuge-block h3 {
+  margin: 0 0 0.45rem;
+  font-size: 1rem;
+}
+
+.live-refuge-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.live-refuge-list li {
+  margin-bottom: 0.55rem;
+}
+
+/* Age and source of the crowd data behind a route (AC 1.1.7 / 1.3.6 / 2.1.3) */
+.live-panel .data-age {
+  margin: 0.4rem 0 0;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  color: var(--lm-muted);
+}
+
+/* Cache no longer refreshing — the route still stands, but say so. */
+.live-panel .data-age-stale {
+  color: #5c4b00;
+  background: #fff3cd;
+  padding: 0.4rem 0.55rem;
+}
+
+/* No crowd data at all — the route is not a quiet-route recommendation. */
+.live-panel .data-age-unavailable {
+  color: #7a271a;
+  background: #fee4e2;
+  padding: 0.4rem 0.55rem;
+}
+
+/* Coverage-area notice (AC 1.1.6) — informational, deliberately not an error.
+   Distinct from .banner so a coverage gap never reads as a failure. */
+.live-panel .coverage-notice {
+  border: 1px solid #b6d4fe;
+  border-left: 4px solid #0b5fff;
+  background: #eff6ff;
+  color: #1e3a5f;
+  padding: 0.7rem 0.85rem;
+  margin-bottom: 1rem;
+}
+
+.live-panel .coverage-notice strong {
+  display: block;
+  margin-bottom: 0.25rem;
+}
+
+.live-panel .coverage-notice p {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+/* Typical-volume estimate inside a sensor popup (AC 2.2.6) */
+.live-map .quiet-note {
+  margin-top: 0.5rem;
+  padding-top: 0.45rem;
+  border-top: 1px solid var(--lm-line);
+  font-size: 0.85rem;
+  line-height: 1.35;
+}
+
+/* Insufficient history: stated plainly, not styled as an alarm. */
+.live-map .quiet-note-insufficient {
+  color: #5c4b00;
+  background: #fff3cd;
+  border-top: 0;
+  padding: 0.45rem 0.55rem;
+}
+
+@media (max-width: 860px) {
+  .live-map {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 70vh;
+  }
+
+  .live-panel {
+    border-right: 0;
+    border-bottom: 1px solid var(--lm-line);
+  }
+
+  .live-stage {
+    min-height: 70vh;
+  }
+}
+
+/* ---- Data status page ---- */
+
+.data-status {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 2rem 1.25rem 3rem;
+  background: transparent;
+}
+
+.data-status h1 {
+  margin: 0 0 0.35rem;
+  font-size: 1.75rem;
+  font-weight: 650;
+}
+
+.data-status h2 {
+  margin: 0 0 0.65rem;
+  font-size: 1.15rem;
+}
+
+.data-status section {
+  margin-bottom: 1.75rem;
+}
+
+.status-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.status-card {
+  background: var(--lm-panel);
+  border: 1px solid var(--lm-line);
+  padding: 0.9rem 1rem;
+}
+
+.status-card .label {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--lm-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.status-card .value {
+  font-size: 1.6rem;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+}
+
+.data-status pre,
+.data-status table {
+  width: 100%;
+  background: var(--lm-panel);
+  border: 1px solid var(--lm-line);
+}
+
+.data-status pre {
+  margin: 0;
+  padding: 1rem;
+  overflow: auto;
+  font-family: var(--lm-mono);
+  font-size: 0.82rem;
+}
+
+.data-status table {
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.data-status th,
+.data-status td {
+  border-bottom: 1px solid var(--lm-line);
+  text-align: left;
+  padding: 0.55rem 0.7rem;
+  vertical-align: top;
+}
+
+.data-status th {
+  color: var(--lm-muted);
+  font-weight: 600;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.data-status .density-Low {
+  color: var(--lm-low);
+  font-weight: 650;
+}
+
+.data-status .density-Medium {
+  color: var(--lm-medium);
+  font-weight: 650;
+}
+
+.data-status .density-High {
+  color: var(--lm-high);
+  font-weight: 650;
+}
+
+.data-status footer {
+  margin-top: 2rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--lm-line);
+  color: var(--lm-muted);
+  font-size: 0.85rem;
+}
