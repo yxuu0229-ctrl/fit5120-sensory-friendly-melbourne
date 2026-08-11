@@ -1,5 +1,7 @@
+import { provenanceClassName, type DataProvenance } from "../lib/dataProvenance";
 import type { SensorReading } from "../lib/journeyData";
 import type { PlannedRoute } from "../lib/journeyPlanning";
+import type { CrowdTolerance } from "../lib/tolerance";
 import { highDensitySensorsNearRoute } from "../lib/congestion";
 
 function formatDistance(meters: number) {
@@ -35,14 +37,16 @@ function WarningPage({
   selectedRoute,
   alternativeRoute,
   sensors,
-  threshold,
+  tolerance,
+  provenance,
   onKeepRoute,
   onSelectAlternative,
 }: {
   selectedRoute: PlannedRoute | undefined;
   alternativeRoute: PlannedRoute | undefined;
   sensors: SensorReading[];
-  threshold: number;
+  tolerance: CrowdTolerance;
+  provenance: DataProvenance | null;
   onKeepRoute: () => void;
   onSelectAlternative: () => void;
 }) {
@@ -51,13 +55,18 @@ function WarningPage({
     ? highDensitySensorsNearRoute(path, sensors)
     : [];
   const hotspot = highSensors[0];
-  const locationLabel = hotspot
-    ? formatSensorName(hotspot.sensor_name)
-    : "Sections near busy pedestrian sensors";
+  // AC 1.3.4 — the segment that triggered the alternative, from the route's
+  // own worst-segment scoring; nearby High sensors are the fallback.
+  const trigger = selectedRoute?.worstSegment ?? null;
+  const locationLabel = trigger?.sensorName
+    ? formatSensorName(trigger.sensorName)
+    : hotspot
+      ? formatSensorName(hotspot.sensor_name)
+      : "Sections near busy pedestrian sensors";
 
   const impactLabel = selectedRoute
-    ? `${selectedRoute.sensoryLevel} sensory load (${selectedRoute.sensoryLoad}) above your threshold of ${threshold}`
-    : `Sensory load above your threshold of ${threshold}`;
+    ? `${selectedRoute.sensoryLevel} busiest segment — above your ${tolerance} crowd tolerance`
+    : `Busiest segment above your ${tolerance} crowd tolerance`;
 
   const expectedWindow = selectedRoute
     ? melbourneTimeWindow(selectedRoute.durationSeconds)
@@ -76,7 +85,7 @@ function WarningPage({
   return (
     <main className="warning-page">
       <section className="intro warning-intro" aria-labelledby="warning-title">
-        <h1 id="warning-title">Route exceeds your threshold</h1>
+        <h1 id="warning-title">Route exceeds your tolerance</h1>
         <p>
           Explain the affected section and present a lower-stimulation alternative without
           changing the route automatically.
@@ -89,10 +98,20 @@ function WarningPage({
           <div>
             <h2 id="threshold-warning-title">
               {selectedRoute
-                ? `${selectedRoute.name} exceeds your crowd threshold`
-                : "Selected route exceeds your crowd threshold"}
+                ? `${selectedRoute.name} exceeds your ${tolerance} crowd tolerance`
+                : `Selected route exceeds your ${tolerance} crowd tolerance`}
             </h2>
             <dl className="warning-details">
+              <div>
+                <dt>Trigger</dt>
+                <dd>
+                  {trigger
+                    ? `${trigger.level} pedestrian volume near ${
+                        formatSensorName(trigger.sensorName) || "a route sensor"
+                      }`
+                    : "Busiest segment above your tolerance"}
+                </dd>
+              </div>
               <div>
                 <dt>Location</dt>
                 <dd>{locationLabel}</dd>
@@ -151,9 +170,10 @@ function WarningPage({
                   </div>
                 </div>
                 <p className="alternative-factors">
-                  Factors: lower sensory load than {selectedRoute?.name ?? "your current choice"}
+                  Factors: busiest segment is {alt.sensoryLevel} — within your {tolerance}{" "}
+                  crowd tolerance
                   {highSensors.length
-                    ? `, avoids ${highSensors.length} high-density sensor${highSensors.length === 1 ? "" : "s"} on the current path`
+                    ? `; avoids ${highSensors.length} high-density sensor${highSensors.length === 1 ? "" : "s"} on the current path`
                     : ""}
                 </p>
               </article>
@@ -177,9 +197,12 @@ function WarningPage({
             </>
           ) : (
             <p className="alternative-copy">
-              No calmer alternative was returned for this journey. Keep your route or go back
-              to compare options.
+              No alternative within your {tolerance} crowd tolerance was found for this
+              journey. Keep your route or go back to compare options.
             </p>
+          )}
+          {provenance && (
+            <p className={provenanceClassName(provenance)}>{provenance.message}</p>
           )}
           <div className="alternative-actions">
             <button className="secondary-button" onClick={onKeepRoute} type="button">

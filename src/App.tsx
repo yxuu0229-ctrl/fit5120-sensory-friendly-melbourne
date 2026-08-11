@@ -6,11 +6,23 @@ import {
   distanceToRouteMeters,
   type LatLng,
 } from "./lib/geo";
-import { planJourney, type PlannedRoute } from "./lib/journeyPlanning";
+import {
+  planJourney,
+  type PlannedRoute,
+  type RouteCandidate,
+} from "./lib/journeyPlanning";
 import { createLiveJourneyData } from "./lib/journeyDataLive";
 import type { PlannedTrip, SensorReading } from "./lib/journeyData";
+import type { DataProvenance } from "./lib/dataProvenance";
+import {
+  DEFAULT_TOLERANCE,
+  loadStoredTolerance,
+  storeTolerance,
+  type CrowdTolerance,
+} from "./lib/tolerance";
 import { useAddressField } from "./lib/useAddressField";
 import {
+  DEFAULT_REFERENCE_POINT,
   refuges,
   refugeFromPlace,
   refugeFromStatic,
@@ -45,11 +57,18 @@ const sensorRefreshPages: Page[] = [
 
 function App() {
   const [page, setPage] = useState<Page>("home");
-  const [threshold, setThreshold] = useState(50);
+  // AC 1.2.1 / 1.2.2 — explicit choice retained for the session; null means
+  // the documented default applies and the UI says so.
+  const [tolerance, setTolerance] = useState<CrowdTolerance | null>(() =>
+    loadStoredTolerance()
+  );
   const [avoidCongestion, setAvoidCongestion] = useState(true);
   const [sensorPoints, setSensorPoints] = useState<SensorReading[]>([]);
   const [plannedTrip, setPlannedTrip] = useState<PlannedTrip | null>(null);
   const [routeOptions, setRouteOptions] = useState<PlannedRoute[]>([]);
+  const [lastPlanCandidates, setLastPlanCandidates] = useState<RouteCandidate[] | null>(null);
+  const [provenance, setProvenance] = useState<DataProvenance | null>(null);
+  const [usingDefaultReference, setUsingDefaultReference] = useState(false);
   const [selectedRouteIndex, setSelectedRouteIndex] = useState(0);
   const [routeError, setRouteError] = useState("");
   const [isPlanning, setIsPlanning] = useState(false);
@@ -103,20 +122,29 @@ function App() {
     (refuge) => refuge.id === selectedRefugeId
   );
   const selectedRefugeView: RefugeView = selectedNearbyRefuge
-    ? refugeFromPlace(selectedNearbyRefuge, refugeSearchMode)
+    ? refugeFromPlace(
+        selectedNearbyRefuge,
+        refugeSearchMode === "current" && usingDefaultReference
+          ? "default"
+          : refugeSearchMode
+      )
     : refugeFromStatic(
         refuges.find((refuge) => refuge.id === selectedRefugeId) ?? refuges[0]
       );
+  const effectiveTolerance = tolerance ?? DEFAULT_TOLERANCE;
   const selectedRoute = routeOptions[selectedRouteIndex];
   const selectedRoutePath =
     selectedRoute?.positions ?? plannedTrip?.allPositions ?? [];
-  const alternativeRoute =
-    routeOptions.find(
-      (route, index) =>
-        index !== selectedRouteIndex &&
-        selectedRoute != null &&
-        route.sensoryLoad < selectedRoute.sensoryLoad
-    ) ?? routeOptions.find((_, index) => index !== selectedRouteIndex);
+  // AC 1.3.1 / 1.3.2 — only offer an alternative that stays within the
+  // tolerance; none found means WarningPage states that explicitly.
+  const alternativeRoute = routeOptions.find(
+    (route, index) => index !== selectedRouteIndex && !route.exceedsTolerance
+  );
+
+  function chooseTolerance(next: CrowdTolerance) {
+    setTolerance(next);
+    storeTolerance(next);
+  }
 
   const refreshSensors = useCallback(async () => {
     if (!isBackendConfigured) return [];
@@ -137,6 +165,32 @@ function App() {
     }, 60_000);
     return () => window.clearInterval(id);
   }, [isBackendConfigured, page, refreshSensors]);
+
+  // AC 1.2.4 / 1.3.5 — re-rank the displayed routes when the preference
+  // changes or sensor data refreshes, without a fresh search. The selection
+  // follows its route (matched by label + distance) across re-ordering.
+  useEffect(() => {
+    if (!lastPlanCandidates) return;
+
+    const replanned = planJourney(lastPlanCandidates, sensorPoints, {
+      avoidCongestion,
+      tolerance: effectiveTolerance,
+    });
+    const keyOf = (route: PlannedRoute) =>
+      `${route.label}|${Math.round(route.distanceMeters)}`;
+    const selectedKey = routeOptions[selectedRouteIndex]
+      ? keyOf(routeOptions[selectedRouteIndex])
+      : null;
+
+    setRouteOptions(replanned);
+    if (selectedKey) {
+      const nextIndex = replanned.findIndex((route) => keyOf(route) === selectedKey);
+      setSelectedRouteIndex(nextIndex >= 0 ? nextIndex : 0);
+    }
+    // routeOptions/selectedRouteIndex are read for selection continuity only;
+    // including them would re-run the effect on its own updates.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lastPlanCandidates, sensorPoints, avoidCongestion, effectiveTolerance]);
 
   const isEmbedded = useMemo(() => {
     try {
@@ -180,6 +234,7 @@ function App() {
     setIsPlanning(true);
     setRouteError("");
     setRouteOptions([]);
+    setLastPlanCandidates(null);
     setSelectedRouteIndex(0);
     setPlannedTrip(null);
 
@@ -195,12 +250,18 @@ function App() {
       setRouteEndpoints({ from, to });
 
       const sensors = await refreshSensors();
-      const { candidates, error, trip } = await journey.walkingRoutes(from, to);
+      const { candidates, error, trip, dataProvenance } =
+        await journey.walkingRoutes(from, to);
       if (trip) setPlannedTrip(trip);
       if (error) setRouteError(error);
+      setProvenance(dataProvenance);
 
-      const planned = planJourney(candidates, sensors, { avoidCongestion });
+      const planned = planJourney(candidates, sensors, {
+        avoidCongestion,
+        tolerance: effectiveTolerance,
+      });
       setRouteOptions(planned);
+      setLastPlanCandidates(candidates.length ? candidates : null);
 
       if (!planned.length && !error) {
         setRouteError(
@@ -216,7 +277,8 @@ function App() {
 
   function selectRoute(route: PlannedRoute, index: number) {
     setSelectedRouteIndex(index);
-    if (route.sensoryLoad > threshold) {
+    // AC 1.3.1 — warn when the busiest segment exceeds the crowd tolerance.
+    if (route.exceedsTolerance) {
       setPage("warning");
     } else {
       setPage("confirm");
@@ -308,13 +370,16 @@ function App() {
           lat: position.coords.latitude,
           lng: position.coords.longitude,
         };
+        setUsingDefaultReference(false);
         setCurrentLocation(location);
         void loadNearbyRefugesFromLocation(location);
         setPage("quiet");
       },
       () => {
-        setNearbyRefuges([]);
-        setRefugePage(1);
+        // AC 2.1.6 — location declined: keep the feature working by measuring
+        // distances from the documented default reference point.
+        setUsingDefaultReference(true);
+        void loadNearbyRefugesFromLocation(DEFAULT_REFERENCE_POINT);
         setPage("quiet");
       }
     );
@@ -346,8 +411,8 @@ function App() {
         <PlanJourneyPage
           originField={originField}
           destinationField={destinationField}
-          threshold={threshold}
-          onThresholdChange={setThreshold}
+          tolerance={tolerance}
+          onToleranceChange={chooseTolerance}
           avoidCongestion={avoidCongestion}
           onToggleAvoidCongestion={() =>
             setAvoidCongestion((current) => !current)
@@ -373,8 +438,10 @@ function App() {
           selectedRoutePath={selectedRoutePath}
           routeEndpoints={routeEndpoints}
           sensors={sensorPoints}
-          threshold={threshold}
+          tolerance={tolerance}
+          onToleranceChange={chooseTolerance}
           avoidCongestion={avoidCongestion}
+          provenance={provenance}
           routeError={routeError}
           onBackToPlan={() => setPage("plan")}
         />
@@ -385,7 +452,8 @@ function App() {
           selectedRoute={selectedRoute}
           alternativeRoute={alternativeRoute}
           sensors={sensorPoints}
-          threshold={threshold}
+          tolerance={effectiveTolerance}
+          provenance={provenance}
           onKeepRoute={() => setPage("routes")}
           onSelectAlternative={() => {
             if (alternativeRoute) {
@@ -405,7 +473,7 @@ function App() {
           selectedRoutePath={selectedRoutePath}
           routeEndpoints={routeEndpoints}
           sensors={sensorPoints}
-          threshold={threshold}
+          tolerance={effectiveTolerance}
           onStartJourney={startJourney}
         />
       )}
@@ -417,7 +485,8 @@ function App() {
           routeEndpoints={routeEndpoints}
           currentLocation={currentLocation}
           sensors={sensorPoints}
-          threshold={threshold}
+          tolerance={effectiveTolerance}
+          provenance={provenance}
           onShowForecast={() => setPage("predictive")}
           onFindQuietSpace={findQuietSpacesByCurrentLocation}
         />
@@ -438,6 +507,7 @@ function App() {
         <QuietSpacesPage
           refugeSearchMode={refugeSearchMode}
           currentLocation={currentLocation}
+          usingDefaultReference={usingDefaultReference}
           nearbyRefuges={nearbyRefuges}
           refugePage={refugePage}
           onRefugePageChange={setRefugePage}

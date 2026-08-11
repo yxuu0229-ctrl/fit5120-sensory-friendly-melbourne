@@ -3708,3 +3708,113 @@ body,
 }
 
 
+
+/* Crowd tolerance selector (AC 1.2.1 / 1.2.2) */
+.tolerance-options {
+  display: flex;
+  gap: 14px;
+  margin-top: 18px;
+}
+
+.tolerance-option {
+  background: #ffffff;
+  border: 2px solid #9c9e9c;
+  border-radius: 12px;
+  cursor: pointer;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px 16px;
+  position: relative;
+}
+
+.tolerance-option-active {
+  background: #eef6ea;
+  border-color: #35890e;
+}
+
+.tolerance-option input {
+  height: 1px;
+  opacity: 0;
+  position: absolute;
+  width: 1px;
+}
+
+.tolerance-option:has(input:focus-visible) {
+  outline: 3px solid #35890e;
+  outline-offset: 2px;
+}
+
+.tolerance-label {
+  color: #131414;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.tolerance-hint {
+  color: #454747;
+  font-size: 14px;
+  line-height: 1.25;
+}
+
+.tolerance-default-note {
+  color: #454747;
+  font-size: 14px;
+  margin: 12px 0 0;
+}
+
+/* Compact tolerance switcher on the results list (AC 1.2.4) */
+.tolerance-inline {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  font-size: 13px;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.tolerance-inline button {
+  background: #ffffff;
+  border: 1px solid #9c9e9c;
+  border-radius: 999px;
+  color: #131414;
+  cursor: pointer;
+  font-size: 13px;
+  padding: 3px 14px;
+}
+
+.tolerance-inline button[aria-pressed="true"] {
+  background: #35890e;
+  border-color: #35890e;
+  color: #ffffff;
+}
+
+/* Public transport access point in the route-map legend (AC 1.1.5) */
+.legend-transit {
+  background: #ffffff;
+  border: 3px solid #1d4ed8;
+}
+
+/* Age and source of crowd data on the journey pages (AC 1.1.7 / 1.3.6) —
+   mirrors the .live-panel variants above. */
+.data-age {
+  color: #454747;
+  font-size: 13px;
+  line-height: 1.4;
+  margin: 10px 0 0;
+}
+
+.data-age-stale {
+  background: #fff3cd;
+  border-radius: 6px;
+  color: #5c4b00;
+  padding: 6px 9px;
+}
+
+.data-age-unavailable {
+  background: #fee4e2;
+  border-radius: 6px;
+  color: #7a271a;
+  padding: 6px 9px;
+}

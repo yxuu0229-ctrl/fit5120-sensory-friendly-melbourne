@@ -1,6 +1,16 @@
+import type { LatLng } from "./geo";
 import type { RefugePlace } from "./journeyData";
 
 export type RefugeSearchMode = "current" | "route";
+
+/**
+ * AC 2.1.6 — documented default reference point used for distances when the
+ * commuter declines location permission (see
+ * docs/decisions/0003-sensory-tolerance-and-defaults.md): Melbourne CBD
+ * centre, the same centre point the map views use.
+ */
+export const DEFAULT_REFERENCE_POINT: LatLng = { lat: -37.8136, lng: 144.9631 };
+export const DEFAULT_REFERENCE_LABEL = "Melbourne CBD centre";
 
 export type NearbyRefuge = RefugePlace & {
   distanceMeters: number;
@@ -118,15 +128,19 @@ function refugeImageForPlace(place: NearbyRefuge) {
 
 export function refugeFromPlace(
   place: NearbyRefuge,
-  searchMode: "current" | "route"
+  searchMode: "current" | "route" | "default"
 ): RefugeView {
+  const referenceLabel =
+    searchMode === "route"
+      ? "selected route"
+      : searchMode === "default"
+        ? `${DEFAULT_REFERENCE_LABEL} (default reference point)`
+        : "current location";
   return {
     id: place.id,
     name: place.name,
     kind: place.category ?? place.source,
-    distanceText: `${Math.round(place.distanceMeters)} m from ${
-      searchMode === "route" ? "selected route" : "current location"
-    }`,
+    distanceText: `${Math.round(place.distanceMeters)} m from ${referenceLabel}`,
     source: place.source,
     quietness: "Tagged as sensory refuge in places table",
     // Current JSX falls through to selectedRefuge.note, which always resolves to
