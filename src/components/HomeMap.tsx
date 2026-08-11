@@ -266,11 +266,9 @@ export default function HomeMap({ onNavigatePage }: HomeMapProps) {
         if (res.trips && res.trips.length > 0) {
           setPlannedTrips(res.trips);
           setSelectedRouteIdx(0);
-          setMapCenter([destination.lat, destination.lng]);
         } else if (res.trip) {
           setPlannedTrips([res.trip]);
           setSelectedRouteIdx(0);
-          setMapCenter([destination.lat, destination.lng]);
         } else {
           setPlannedTrips([]);
         }
@@ -285,7 +283,30 @@ export default function HomeMap({ onNavigatePage }: HomeMapProps) {
     planNavigateRoutes();
   }, [origin, destination, activeMode]);
 
-  const handleSelectSuggestion = (item: LocationPoint) => {
+  // Once routes are planned, pan so the start point sits centered in the
+  // visible map area below the suggested routes card
+  useEffect(() => {
+    if (activeMode !== "navigate" || !origin || rankedTrips.length === 0) return;
+
+    const wrapper = document.querySelector(".home-mockup-wrapper");
+    const card = document.querySelector(".routes-list-card-overlay");
+    if (!wrapper || !card) return;
+
+    const wrapperRect = wrapper.getBoundingClientRect();
+    const cardBottom = card.getBoundingClientRect().bottom - wrapperRect.top;
+    // Screen y where the start point should land: midpoint of the free space below the card
+    const targetY = (cardBottom + wrapperRect.height) / 2;
+    const offsetY = targetY - wrapperRect.height / 2;
+
+    const originPoint = L.CRS.EPSG3857.latLngToPoint(L.latLng(origin.lat, origin.lng), zoomLevel);
+    const shiftedCenter = L.CRS.EPSG3857.pointToLatLng(
+      L.point(originPoint.x, originPoint.y - offsetY),
+      zoomLevel
+    );
+    setMapCenter([shiftedCenter.lat, shiftedCenter.lng]);
+  }, [activeMode, origin, rankedTrips.length, zoomLevel]);
+
+  const handleSelectSuggestion = (item: { name: string; lat: number; lng: number }) => {
     if (activeMode === "navigate") {
       if (focusedInput === "origin") {
         setOrigin(item);
@@ -379,23 +400,136 @@ export default function HomeMap({ onNavigatePage }: HomeMapProps) {
   return (
     <div className="home-mockup-wrapper">
       {/* Search Header Overlay */}
-      <SearchHeader
-        activeMode={activeMode}
-        searchQuery={searchQuery}
-        originQuery={originQuery}
-        destinationQuery={destinationQuery}
-        showSuggestions={showSuggestions}
-        suggestions={suggestions}
-        onToggleThresholds={() => setShowThresholdCard(!showThresholdCard)}
-        onSearchQueryChange={handleSearchQueryChange}
-        onOriginQueryChange={handleOriginQueryChange}
-        onDestinationQueryChange={handleDestinationQueryChange}
-        onFocusInput={handleFocusInput}
-        onClearSearch={handleClearRoute}
-        onClearOrigin={handleClearOrigin}
-        onClearDestination={handleClearDestination}
-        onSelectSuggestion={handleSelectSuggestion}
-      />
+      <div className={`search-header-overlay ${activeMode === "navigate" ? "navigate-mode" : ""}`}>
+        {activeMode === "heat" ? (
+          <div
+            className="thresholds-header-pill"
+            onClick={() => setShowThresholdCard(!showThresholdCard)}
+          >
+            <div className="thresholds-title-container">
+              <SettingsIcon size={18} fill="#111111" />
+              <span className="thresholds-title-text">Thresholds</span>
+            </div>
+          </div>
+        ) : activeMode === "navigate" ? (
+          <div className="navigate-stacked-inputs">
+            {/* From Input */}
+            <div className="search-input-wrapper input-row">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#10B981" stroke-width="2.5" style={{ marginRight: 8, flexShrink: 0 }}>
+                <path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 12 8 12s8-6.75 8-12a8 8 0 0 0-8-8z" fill="#D1FAE5" />
+                <circle cx="12" cy="10" r="3" fill="#10B981" />
+              </svg>
+              <input
+                type="text"
+                className="search-destination-input"
+                placeholder="Search start location..."
+                value={originQuery}
+                onChange={(e) => {
+                  setOriginQuery(e.target.value);
+                  setFocusedInput("origin");
+                  setShowSuggestions(true);
+                }}
+                onFocus={() => {
+                  setFocusedInput("origin");
+                  setShowSuggestions(true);
+                }}
+              />
+              {originQuery && (
+                <button
+                  className="clear-search-btn"
+                  onClick={() => {
+                    setOrigin(null);
+                    setOriginQuery("");
+                    setPlannedTrips([]);
+                  }}
+                >
+                  &times;
+                </button>
+              )}
+            </div>
+
+            {/* To Input */}
+            <div className="search-input-wrapper input-row">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#EF4444" stroke-width="2.5" style={{ marginRight: 8, flexShrink: 0 }}>
+                <path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 12 8 12s8-6.75 8-12a8 8 0 0 0-8-8z" fill="#FEE2E2" />
+                <circle cx="12" cy="10" r="3" fill="#EF4444" />
+              </svg>
+              <input
+                type="text"
+                className="search-destination-input"
+                placeholder="Search destination..."
+                value={destinationQuery}
+                onChange={(e) => {
+                  setDestinationQuery(e.target.value);
+                  setFocusedInput("destination");
+                  setShowSuggestions(true);
+                }}
+                onFocus={() => {
+                  setFocusedInput("destination");
+                  setShowSuggestions(true);
+                }}
+              />
+              {destinationQuery && (
+                <button
+                  className="clear-search-btn"
+                  onClick={() => {
+                    setDestination(null);
+                    setDestinationQuery("");
+                    setPlannedTrips([]);
+                  }}
+                >
+                  &times;
+                </button>
+              )}
+            </div>
+          </div>
+        ) : (
+          <div className="search-input-wrapper">
+            <div className="search-icon-btn">
+              <SearchIcon size={20} fill="#777777" />
+            </div>
+            <input
+              type="text"
+              className="search-destination-input"
+              placeholder="Search destination..."
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setShowSuggestions(true);
+              }}
+              onFocus={() => setShowSuggestions(true)}
+            />
+            {searchQuery && (
+              <button className="clear-search-btn" onClick={handleClearRoute}>
+                &times;
+              </button>
+            )}
+          </div>
+        )}
+        <div className="avatar-wrapper">
+          <img
+            src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=80&q=80"
+            alt="Profile Avatar"
+            className="user-profile-avatar"
+          />
+        </div>
+
+        {/* Suggestion Dropdown */}
+        {activeMode !== "heat" && showSuggestions && suggestions.length > 0 && (
+          <ul className={`search-suggestions-dropdown ${activeMode === "navigate" ? "navigate-mode" : ""}`}>
+            {suggestions.map((item, idx) => (
+              <li
+                key={idx}
+                className="suggestion-item"
+                onClick={() => handleSelectSuggestion(item)}
+              >
+                <div className="suggestion-icon-pin">📍</div>
+                <div className="suggestion-name">{item.name}</div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
 
       {/* Thresholds Card Overlay */}
       {activeMode === "heat" && showThresholdCard && (

@@ -1,13 +1,25 @@
-import { type CSSProperties, type FormEvent, useEffect, useState } from "react";
+import { type FormEvent, useEffect, useState } from "react";
 import { cbdLocations, defaultDestination, defaultOrigin } from "../lib/cbdLocations";
+import { DEFAULT_TOLERANCE, type CrowdTolerance } from "../lib/tolerance";
 import type { AddressField } from "../lib/useAddressField";
 import LocationInput from "./LocationInput";
+
+const toleranceOptions: Array<{ value: CrowdTolerance; hint: string }> = [
+  {
+    value: "Low",
+    hint: "Only routes whose busiest segment has Low pedestrian volume.",
+  },
+  {
+    value: "Medium",
+    hint: "Accept Low or Medium segments; High-volume segments trigger a warning.",
+  },
+];
 
 function PlanJourneyPage({
   originField,
   destinationField,
-  threshold,
-  onThresholdChange,
+  tolerance,
+  onToleranceChange,
   avoidCongestion,
   onToggleAvoidCongestion,
   canPlanJourney,
@@ -21,8 +33,9 @@ function PlanJourneyPage({
 }: {
   originField: AddressField;
   destinationField: AddressField;
-  threshold: number;
-  onThresholdChange: (value: number) => void;
+  /** null = no explicit choice yet; the documented default applies. */
+  tolerance: CrowdTolerance | null;
+  onToleranceChange: (value: CrowdTolerance) => void;
   avoidCongestion: boolean;
   onToggleAvoidCongestion: () => void;
   canPlanJourney: boolean;
@@ -51,7 +64,7 @@ function PlanJourneyPage({
       <section className="intro" aria-labelledby="page-title">
         <h1 id="page-title">Plan a sensory-aware journey</h1>
         <p>
-          Enter a Melbourne CBD destination, set a crowd-density threshold, and choose whether
+          Enter a Melbourne CBD destination, choose your crowd tolerance, and choose whether
           to avoid highly congested pedestrian corridors.
         </p>
       </section>
@@ -91,27 +104,40 @@ function PlanJourneyPage({
           }}
         />
 
-        <section className="card threshold-card" aria-labelledby="threshold-title">
-          <h2 id="threshold-title">Preferred crowd-density threshold</h2>
-          <p>Routes above this limit trigger a warning and lower-stimulation alternatives.</p>
-          <div className="range-wrap">
-            <input
-              aria-label="Preferred crowd-density threshold"
-              className="threshold-range"
-              max="100"
-              min="0"
-              onChange={(event) => onThresholdChange(Number(event.target.value))}
-              style={{ "--threshold": `${threshold}%` } as CSSProperties}
-              type="range"
-              value={threshold}
-            />
-            <output
-              className="range-value"
-              style={{ left: `calc(${threshold}% + ${19 - threshold * 0.38}px)` }}
-            >
-              {threshold}
-            </output>
+        <section className="card threshold-card" aria-labelledby="tolerance-title">
+          <h2 id="tolerance-title">Crowd tolerance</h2>
+          <p>
+            Routes whose busiest segment exceeds your tolerance are ranked below calmer
+            options and trigger a warning with a lower-stimulation alternative.
+          </p>
+          <div className="tolerance-options">
+            {toleranceOptions.map((option) => (
+              <label
+                className={
+                  tolerance === option.value
+                    ? "tolerance-option tolerance-option-active"
+                    : "tolerance-option"
+                }
+                key={option.value}
+              >
+                <input
+                  checked={tolerance === option.value}
+                  name="crowdTolerance"
+                  onChange={() => onToleranceChange(option.value)}
+                  type="radio"
+                  value={option.value}
+                />
+                <span className="tolerance-label">{option.value}</span>
+                <span className="tolerance-hint">{option.hint}</span>
+              </label>
+            ))}
           </div>
+          {tolerance === null && (
+            <p className="tolerance-default-note" role="status">
+              No tolerance set — using the documented default ({DEFAULT_TOLERANCE}) until
+              you choose. Your choice is kept for this session.
+            </p>
+          )}
         </section>
 
         <section className="card preferences-card" aria-labelledby="preferences-title">
@@ -129,8 +155,9 @@ function PlanJourneyPage({
           </div>
           <h3>Avoid highly congested corridors</h3>
           <p>
-            Uses live pedestrian-density readings from City of Melbourne sensors (via Supabase)
-            to prefer calmer walking corridors when generating and sorting routes.
+            Uses cached pedestrian-density readings from City of Melbourne sensors (via
+            Supabase, refreshed about every 15 minutes) to prefer calmer walking corridors
+            when generating and sorting routes.
           </p>
         </section>
 

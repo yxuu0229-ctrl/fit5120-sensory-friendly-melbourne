@@ -1,5 +1,6 @@
 import type { SensorReading } from "../lib/journeyData";
 import type { PlannedRoute } from "../lib/journeyPlanning";
+import type { CrowdTolerance } from "../lib/tolerance";
 import type { RouteEndpoints } from "./mapShared";
 import RouteMap from "./RouteMap";
 
@@ -8,26 +9,26 @@ function ConfirmPage({
   selectedRoutePath,
   routeEndpoints,
   sensors,
-  threshold,
+  tolerance,
   onStartJourney,
 }: {
   selectedRoute: PlannedRoute | undefined;
   selectedRoutePath: [number, number][];
   routeEndpoints: RouteEndpoints | null;
   sensors: SensorReading[];
-  threshold: number;
+  tolerance: CrowdTolerance;
   onStartJourney: () => void;
 }) {
   const load = selectedRoute?.sensoryLoad ?? 0;
-  const withinThreshold = load <= threshold;
+  const withinTolerance = !selectedRoute?.exceedsTolerance;
 
   return (
     <main className="confirm-page">
       <section className="intro confirm-intro" aria-labelledby="confirm-title">
         <h1 id="confirm-title">Confirm selected route</h1>
         <p>
-          Confirm the walking route after reviewing sensory load from live sensors and how it
-          matches your preferences.
+          Confirm the walking route after reviewing its sensory indicator from cached sensor
+          readings and how it matches your preferences.
         </p>
       </section>
 
@@ -53,7 +54,10 @@ function ConfirmPage({
 
           <section className="route-preview-panel" aria-labelledby="route-preview-title">
             <h3 id="route-preview-title">Route preview</h3>
-            <p>Walking route preview from OSRM with live density sensors near the path.</p>
+            <p>
+              Walking route preview from OSRM with density sensors and public transport
+              access points near the path.
+            </p>
             <RouteMap
               endpoints={routeEndpoints}
               routePath={selectedRoutePath}
@@ -73,12 +77,13 @@ function ConfirmPage({
             <h2 id="match-title">Why this route matches</h2>
             <ol>
               <li>
-                {selectedRoute?.sensoryLevel ?? "—"} sensory based on nearby Supabase density
-                sensors
+                {selectedRoute?.reason ??
+                  "Sensory rating based on nearby Supabase density sensors"}
               </li>
               <li>
-                Sensory load {load}/100 is {withinThreshold ? "within" : "above"} your threshold of{" "}
-                {threshold}
+                {selectedRoute?.sensoryLevel ?? "—"} busiest segment is{" "}
+                {withinTolerance ? "within" : "above"} your {tolerance} crowd tolerance
+                (sensory load {load}/100)
               </li>
               <li>{Math.round(selectedRoute?.distanceMeters ?? 0)} m walking distance</li>
               <li>

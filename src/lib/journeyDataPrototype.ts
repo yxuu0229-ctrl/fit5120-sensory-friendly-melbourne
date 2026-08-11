@@ -27,6 +27,10 @@ export const prototypeRouteOptions: PlannedRoute[] = [
     durationSeconds: 31 * 60,
     sensoryLoad: 12,
     positions: [],
+    worstSegment: { level: "Low", sensorName: "Flagstaff_Station" },
+    exceedsTolerance: false,
+    reason:
+      "Busiest segment: Low pedestrian volume near Flagstaff Station. Within your Medium crowd tolerance.",
   },
   {
     name: "Route B",
@@ -36,6 +40,10 @@ export const prototypeRouteOptions: PlannedRoute[] = [
     durationSeconds: 35 * 60,
     sensoryLoad: 48,
     positions: [],
+    worstSegment: { level: "Medium", sensorName: "Parliament_Station" },
+    exceedsTolerance: false,
+    reason:
+      "Busiest segment: Medium pedestrian volume near Parliament Station. Within your Medium crowd tolerance.",
   },
   {
     name: "Route C",
@@ -45,6 +53,10 @@ export const prototypeRouteOptions: PlannedRoute[] = [
     durationSeconds: 24 * 60,
     sensoryLoad: 84,
     positions: [],
+    worstSegment: { level: "High", sensorName: "Swanston_St" },
+    exceedsTolerance: true,
+    reason:
+      "Busiest segment: High pedestrian volume near Swanston St. Ranked below calmer options because it exceeds your Medium crowd tolerance.",
   },
 ];
 
@@ -109,7 +121,7 @@ export function createPrototypeJourneyData(): JourneyData {
         },
       ];
 
-      return { candidates, error: null, trip: null };
+      return { candidates, error: null, trip: null, dataProvenance: null };
     },
 
     async geocode(query: string): Promise<GeocodeResult | null> {

@@ -2904,87 +2904,6 @@ a {
   opacity: 0.85;
 }
 
-.landing-footer {
-  position: absolute;
-  bottom: 40px;
-  left: 0;
-  width: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 0;
-  z-index: 10;
-}
-
-.download-badges {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-}
-
-.badge-separator {
-  color: #e0e0e0;
-  font-size: 1.5rem;
-  font-weight: 300;
-  user-select: none;
-}
-
-.download-btn {
-  display: flex;
-  align-items: center;
-  background: #000000;
-  color: #ffffff;
-  border: 1px solid #222222;
-  border-radius: 7px;
-  padding: 6px 14px;
-  width: 160px;
-  height: 48px;
-  text-decoration: none;
-  box-sizing: border-box;
-  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s;
-  cursor: pointer;
-}
-
-.download-btn:hover {
-  transform: scale(1.03);
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
-}
-
-.download-btn:active {
-  transform: scale(0.98);
-}
-
-.badge-icon {
-  display: flex;
-  align-items: center;
-  margin-right: 10px;
-  flex-shrink: 0;
-}
-
-.badge-text {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  line-height: 1.15;
-}
-
-.badge-sub {
-  font-size: 8px;
-  text-transform: uppercase;
-  font-weight: 500;
-  letter-spacing: 0.2px;
-  color: #d1d1d1;
-}
-
-.badge-main {
-  font-size: 14px;
-  font-weight: 600;
-  letter-spacing: -0.2px;
-  color: #ffffff;
-  margin-top: 1px;
-}
-
 /* Animations for premium feel */
 @keyframes fadeIn {
   from {
@@ -2999,8 +2918,7 @@ a {
 
 .landing-header,
 .hint-container,
-.mockup-container,
-.landing-footer {
+.mockup-container {
   animation: fadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
@@ -3012,9 +2930,6 @@ a {
 }
 .mockup-container {
   animation-delay: 0.3s;
-}
-.landing-footer {
-  animation-delay: 0.4s;
 }
 
 /* Hide scrollbars when embedded in the phone mockup to preserve native look */
@@ -3119,10 +3034,10 @@ body,
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-radius: 24px;
-  padding: 8px 14px;
+  padding: 10px 16px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.5);
-  height: 42px;
+  height: 48px;
   position: relative;
 }
 
@@ -3136,7 +3051,7 @@ body,
   border: none;
   background: transparent;
   width: 100%;
-  font-size: 14px;
+  font-size: 15.5px;
   color: #111111;
   font-weight: 500;
   outline: none;
@@ -3176,7 +3091,7 @@ body,
 /* Suggestions Dropdown */
 .search-suggestions-dropdown {
   position: absolute;
-  top: 48px;
+  top: 54px;
   left: 0;
   right: 50px;
   background: rgba(255, 255, 255, 0.95);
@@ -3319,26 +3234,34 @@ body,
 }
 
 /* Stacked Search Inputs in Navigate Mode */
+.search-header-overlay.navigate-mode {
+  align-items: flex-start !important;
+}
+
+.search-header-overlay.navigate-mode .avatar-wrapper {
+  margin-top: 18px;
+}
+
 .navigate-stacked-inputs {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  background: rgba(255, 255, 255, 0.45);
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.65);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-radius: 20px;
-  padding: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.35);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+  padding: 16px 20px;
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
 }
 
 .navigate-stacked-inputs .input-row {
-  background: rgba(255, 255, 255, 0.65) !important;
+  background: rgba(255, 255, 255, 0.75) !important;
   box-shadow: none !important;
-  border: 1px solid rgba(0, 0, 0, 0.05) !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
   border-radius: 12px !important;
-  height: 38px !important;
+  height: 46px !important;
   padding: 0 12px !important;
 }
 
@@ -3360,24 +3283,29 @@ body,
   box-shadow: 0 0 6px rgba(0, 0, 0, 0.5);
 }
 
-/* Offset suggestions in navigate mode */
+/* Offset suggestions in navigate mode: sit just below the stacked inputs card */
 .search-suggestions-dropdown.navigate-mode {
-  top: 106px !important;
+  top: calc(100% + 8px) !important;
+  right: 50px !important;
+  border-radius: 20px !important;
+  background: rgba(255, 255, 255, 0.65) !important;
+  border: 1px solid rgba(255, 255, 255, 0.45) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08) !important;
 }
 
-/* Routes List Card Overlay */
+/* Routes List Card Overlay: sits just below the stacked inputs card */
 .routes-list-card-overlay {
   position: absolute;
-  top: 120px;
+  top: 114px;
   left: 12px;
   right: 12px;
-  background: rgba(255, 255, 255, 0.85);
+  background: rgba(255, 255, 255, 0.65);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border-radius: 18px;
-  padding: 16px;
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 20px;
+  padding: 16px 20px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.45);
   z-index: 1000;
   display: flex;
   flex-direction: column;
@@ -3779,21 +3707,114 @@ body,
   border-left: 3px solid #ef4444;
 }
 
-/* Stacked inputs inline field labels */
-.input-field-label {
-  font-size: 11px;
+
+
+/* Crowd tolerance selector (AC 1.2.1 / 1.2.2) */
+.tolerance-options {
+  display: flex;
+  gap: 14px;
+  margin-top: 18px;
+}
+
+.tolerance-option {
+  background: #ffffff;
+  border: 2px solid #9c9e9c;
+  border-radius: 12px;
+  cursor: pointer;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px 16px;
+  position: relative;
+}
+
+.tolerance-option-active {
+  background: #eef6ea;
+  border-color: #35890e;
+}
+
+.tolerance-option input {
+  height: 1px;
+  opacity: 0;
+  position: absolute;
+  width: 1px;
+}
+
+.tolerance-option:has(input:focus-visible) {
+  outline: 3px solid #35890e;
+  outline-offset: 2px;
+}
+
+.tolerance-label {
+  color: #131414;
+  font-size: 18px;
   font-weight: 700;
-  text-transform: uppercase;
-  margin-right: 6px;
-  flex-shrink: 0;
-  user-select: none;
 }
 
-.start-label {
-  color: #10b981;
+.tolerance-hint {
+  color: #454747;
+  font-size: 14px;
+  line-height: 1.25;
 }
 
-.end-label {
-  color: #ef4444;
+.tolerance-default-note {
+  color: #454747;
+  font-size: 14px;
+  margin: 12px 0 0;
 }
 
+/* Compact tolerance switcher on the results list (AC 1.2.4) */
+.tolerance-inline {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  font-size: 13px;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.tolerance-inline button {
+  background: #ffffff;
+  border: 1px solid #9c9e9c;
+  border-radius: 999px;
+  color: #131414;
+  cursor: pointer;
+  font-size: 13px;
+  padding: 3px 14px;
+}
+
+.tolerance-inline button[aria-pressed="true"] {
+  background: #35890e;
+  border-color: #35890e;
+  color: #ffffff;
+}
+
+/* Public transport access point in the route-map legend (AC 1.1.5) */
+.legend-transit {
+  background: #ffffff;
+  border: 3px solid #1d4ed8;
+}
+
+/* Age and source of crowd data on the journey pages (AC 1.1.7 / 1.3.6) —
+   mirrors the .live-panel variants above. */
+.data-age {
+  color: #454747;
+  font-size: 13px;
+  line-height: 1.4;
+  margin: 10px 0 0;
+}
+
+.data-age-stale {
+  background: #fff3cd;
+  border-radius: 6px;
+  color: #5c4b00;
+  padding: 6px 9px;
+}
+
+.data-age-unavailable {
+  background: #fee4e2;
+  border-radius: 6px;
+  color: #7a271a;
+  padding: 6px 9px;
+}

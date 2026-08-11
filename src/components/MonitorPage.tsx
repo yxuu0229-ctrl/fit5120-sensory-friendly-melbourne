@@ -1,9 +1,11 @@
 import { useMemo } from "react";
+import { provenanceClassName, type DataProvenance } from "../lib/dataProvenance";
 import type { LatLng } from "../lib/geo";
 import { progressAlongRoutePercent } from "../lib/geo";
 import { highDensitySensorsNearRoute } from "../lib/congestion";
 import type { SensorReading } from "../lib/journeyData";
 import type { PlannedRoute } from "../lib/journeyPlanning";
+import type { CrowdTolerance } from "../lib/tolerance";
 import type { RouteEndpoints } from "./mapShared";
 import ActiveJourneyMap from "./ActiveJourneyMap";
 
@@ -13,7 +15,8 @@ function MonitorPage({
   routeEndpoints,
   currentLocation,
   sensors,
-  threshold,
+  tolerance,
+  provenance,
   onShowForecast,
   onFindQuietSpace,
 }: {
@@ -22,7 +25,8 @@ function MonitorPage({
   routeEndpoints: RouteEndpoints | null;
   currentLocation: LatLng | null;
   sensors: SensorReading[];
-  threshold: number;
+  tolerance: CrowdTolerance;
+  provenance: DataProvenance | null;
   onShowForecast: () => void;
   onFindQuietSpace: () => void;
 }) {
@@ -102,10 +106,13 @@ function MonitorPage({
           <p className="active-alert-copy">
             {highNearby.length > 0
               ? `${highNearby.length} high-density sensor${highNearby.length === 1 ? "" : "s"} within 500 m of this route.`
-              : selectedRoute && selectedRoute.sensoryLoad > threshold
-                ? "This route’s sensory load is above your preferred threshold."
+              : selectedRoute?.exceedsTolerance
+                ? `This route’s busiest segment now exceeds your ${tolerance} crowd tolerance — check the routes list for a calmer alternative.`
                 : "No high-density warning on the selected route right now."}
           </p>
+          {provenance && (
+            <p className={provenanceClassName(provenance)}>{provenance.message}</p>
+          )}
           <button className="secondary-button" onClick={onShowForecast} type="button">
             Next-hour forecast
           </button>
