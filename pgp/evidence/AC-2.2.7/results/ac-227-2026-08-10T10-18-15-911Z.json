@@ -1,0 +1,52 @@
+{
+  "acceptanceCriterion": "2.2.7",
+  "description": "Detail view query returns within the agreed response time",
+  "agreedSlaMs": 2000,
+  "locationId": 20,
+  "runs": 5,
+  "samples": [
+    {
+      "run": 1,
+      "queryMs": 94,
+      "seriesCount": 120,
+      "hasSensor": true,
+      "withinSla": true
+    },
+    {
+      "run": 2,
+      "queryMs": 78,
+      "seriesCount": 120,
+      "hasSensor": true,
+      "withinSla": true
+    },
+    {
+      "run": 3,
+      "queryMs": 42,
+      "seriesCount": 120,
+      "hasSensor": true,
+      "withinSla": true
+    },
+    {
+      "run": 4,
+      "queryMs": 41,
+      "seriesCount": 120,
+      "hasSensor": true,
+      "withinSla": true
+    },
+    {
+      "run": 5,
+      "queryMs": 43,
+      "seriesCount": 120,
+      "hasSensor": true,
+      "withinSla": true
+    }
+  ],
+  "summary": {
+    "avgMs": 60,
+    "maxMs": 94,
+    "pass": true
+  },
+  "verifiedAt": "2026-08-10T10:18:15.909Z",
+  "reproducibleCommand": "node scripts/verify/ac-227-detail-response-time.mjs --runs 5",
+  "evidencePath": "pgp/evidence/AC-2.2.7/"
+}

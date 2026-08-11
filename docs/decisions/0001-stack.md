@@ -1,6 +1,6 @@
 # ADR 0001: Initial Web Stack
 
-- Status: proposed for team approval
+- Status: adopted for the product frontend; extended by ADR 0002
 - Date: 2026-08-08
 
 ## Context
@@ -10,6 +10,8 @@ The team needs a runnable web application with a database, reproducible data scr
 ## Decision
 
 Use React + Vite + TypeScript for the frontend, Supabase Postgres/Data API for the backend, Supabase Edge Functions only for protected server logic and GitHub for source control. Deployment is deferred. Vercel may be considered later only after the deployment readiness gate is satisfied.
+
+The product frontend was later integrated at the repository root. A temporary second Next.js application existed under `apps/web`; it was consolidated back into the root Vite application on 2026-08-10 (see ADR 0002).
 
 ## Consequences
 

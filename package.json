@@ -1,0 +1,41 @@
+{
+  "name": "melbourne-sensory-map",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "workspaces": [
+    "scripts/*"
+  ],
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "sync": "npm run sync --workspace=@melbourne-sensory/sync",
+    "sync:full": "npm run sync:full --workspace=@melbourne-sensory/sync",
+    "verify:ac-114": "node scripts/verify/ac-114-routes-ordered-by-sensory.mjs",
+    "verify:ac-211": "node scripts/verify/ac-211-map-density-bands.mjs",
+    "verify:ac-225": "node scripts/verify/ac-225-historical-trend-com-validation.mjs --location-id 3",
+    "verify:ac-227": "node scripts/verify/ac-227-detail-response-time.mjs --runs 5"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.49.1",
+    "leaflet": "^1.9.4",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-leaflet": "^5.0.0"
+  },
+  "devDependencies": {
+    "@types/leaflet": "^1.9.22",
+    "@types/node": "^22.20.1",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.0.4",
+    "@vitejs/plugin-react": "^4.3.4",
+    "typescript": "^5.8.2",
+    "vite": "^6.2.0",
+    "vitest": "^4.1.10"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

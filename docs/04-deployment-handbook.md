@@ -12,14 +12,14 @@ Assignment: **Unassigned — future deployment work must be claimed in LeanKit**
 
 ## Current decision
 
-Do not configure Vercel, Netlify, Cloudflare Pages or another hosting provider yet. The current target is a React website that runs locally and connects safely to the agreed Supabase development environment.
+Do not configure Vercel, Netlify, Cloudflare Pages or another hosting provider yet. The repository contains a single team-built Vite product frontend at the root (the former `apps/web` Next.js application was consolidated into it; see ADR 0002). It must remain locally reviewable until the team approves the readiness gates below.
 
 ## Current local-run baseline
 
 1. Install the agreed Node.js version and package manager.
 2. Copy browser-safe variable names from `.env.example` into a local `.env` file ignored by Git.
-3. Install dependencies and start the React development server.
-4. Confirm the home route loads without a mentor-visible error.
+3. Install dependencies; use `npm run dev` for the Vite frontend.
+4. Confirm the relevant application route loads without a mentor-visible error.
 5. Connect to the Supabase development project and verify one permitted data request.
 6. Run the build, type-check and tests; record actual commands and results in the Pull Request and LeanKit card.
 
@@ -36,14 +36,14 @@ Do not configure Vercel, Netlify, Cloudflare Pages or another hosting provider y
 
 ## Future provider decision criteria
 
-1. Supports a React/Vite static build and a stable HTTPS URL.
+1. Supports the team-approved deployable application and provides a stable HTTPS URL.
 2. Integrates with the agreed GitHub repository.
 3. Provides preview deployments if possible.
 4. Separates development, preview and production environment values.
 5. Fits the team's access, cost, availability and evidence needs.
 6. Keeps the submitted release stable during mentor review.
 
-Vercel is likely to be the simplest later option for a Vite frontend because it can connect to GitHub and deploy static builds. It should still be selected only after the readiness gate is satisfied and the team records the decision.
+Vercel may be a simple later option because it integrates with GitHub and supports Vite projects. The team must first satisfy the readiness gate and record the decision.
 
 ## Future release sequence
 
