@@ -14,7 +14,7 @@ Assignment: **Unassigned — implementation work must be claimed in LeanKit**
 
 | Layer | Proposed choice | Purpose |
 |---|---|---|
-| Frontend | React + Vite + TypeScript | Build a small, typed website with a simple local workflow |
+| Product frontend | React + Vite + TypeScript | Single app at the repository root: journey planner pages, live map (A→B routing, density layer, sensor detail) and data-status page |
 | Backend | Supabase Data API | Support normal database reads and writes without a separate server |
 | Database | Supabase PostgreSQL | Store relational data with migrations and Row Level Security |
 | Protected logic | Supabase Edge Functions, only when required | Protect secrets or privileged operations |
@@ -27,15 +27,13 @@ The first target is a website that runs locally and connects safely to Supabase.
 
 ```text
 team-te37-project/
-├── src/
-│   ├── app/              # Routing and app-level providers
-│   ├── components/       # Reusable UI components
-│   ├── features/         # Work grouped by confirmed User Story
-│   ├── pages/            # Route-level screens
-│   ├── services/         # Supabase and approved open-data adapters
-│   ├── styles/           # Design tokens and global styles
-│   ├── test/             # Shared test setup and fixtures
-│   └── types/            # Shared and generated TypeScript types
+├── src/                       # Team-built Vite product frontend (single app)
+│   ├── components/           # Pages and reusable UI components
+│   └── lib/                  # Domain modules (planning, density, detail, trend)
+├── index.html                # Vite application entry document
+├── vite.config.ts            # Vite build configuration
+├── scripts/                  # Reproducible data-processing tools
+├── data/                     # Approved source and generated data
 ├── supabase/
 │   ├── migrations/       # Schema, indexes, grants and RLS policies
 │   ├── functions/        # Protected logic only when justified
@@ -50,7 +48,7 @@ team-te37-project/
 
 ## What the initial repository should contain
 
-1. A minimal React + Vite + TypeScript application that starts locally.
+1. The team-built Vite frontend at the repository root — the single web application (the former Next.js integration app under `apps/web` was consolidated into it; see ADR 0002).
 2. The folder structure above, with empty folders added only when immediately useful.
 3. A `README.md` containing the actual install, run, build, type-check and test commands.
 4. A safe `.env.example` containing variable names but no credential values.

@@ -1,0 +1,511 @@
+{
+  "acceptanceCriterion": "2.2.5",
+  "description": "Historical trend for a location validated against City of Melbourne data",
+  "locationId": 3,
+  "since": "2024-01-01",
+  "sourceDataset": "pedestrian-counting-system-monthly-counts-per-hour",
+  "sourceUrl": "https://data.melbourne.vic.gov.au/api/v2/catalog/datasets/pedestrian-counting-system-monthly-counts-per-hour/exports/csv?delimiter=%2C&where=location_id%3D3%20AND%20sensing_date%3E%3D'2024-01-01'",
+  "rawRowCount": 17498,
+  "usedRowCount": 17498,
+  "skippedRowCount": 0,
+  "calculatedTrendBucketCount": 168,
+  "quietestBuckets": [
+    {
+      "day_name": "Tuesday",
+      "hourday": 4,
+      "mean": 23.6442,
+      "median": 21.5,
+      "count": 104
+    },
+    {
+      "day_name": "Thursday",
+      "hourday": 4,
+      "mean": 28.8365,
+      "median": 25,
+      "count": 104
+    },
+    {
+      "day_name": "Tuesday",
+      "hourday": 3,
+      "mean": 29.7981,
+      "median": 27,
+      "count": 104
+    },
+    {
+      "day_name": "Monday",
+      "hourday": 4,
+      "mean": 36.3846,
+      "median": 30,
+      "count": 104
+    },
+    {
+      "day_name": "Tuesday",
+      "hourday": 5,
+      "mean": 36.7404,
+      "median": 36,
+      "count": 104
+    }
+  ],
+  "comparison": {
+    "bucketCount": 168,
+    "mismatches": 0,
+    "maxAbsMeanDiff": 0,
+    "pass": true,
+    "rows": [
+      {
+        "key": "Friday|0",
+        "status": "match",
+        "meanPrimary": 280.9326923076923,
+        "meanIndependent": 280.9326923076923,
+        "meanDiff": 0,
+        "medianDiff": 0,
+        "countPrimary": 104,
+        "countIndependent": 104,
+        "countMatch": true
+      },
+      {
+        "key": "Friday|1",
+        "status": "match",
+        "meanPrimary": 160.51923076923077,
+        "meanIndependent": 160.51923076923077,
+        "meanDiff": 0,
+        "medianDiff": 0,
+        "countPrimary": 104,
+        "countIndependent": 104,
+        "countMatch": true
+      },
+      {
+        "key": "Friday|10",
+        "status": "match",
+        "meanPrimary": 868.9711538461538,
+        "meanIndependent": 868.9711538461538,
+        "meanDiff": 0,
+        "medianDiff": 0,
+        "countPrimary": 104,
+        "countIndependent": 104,
+        "countMatch": true
+      },
+      {
+        "key": "Friday|11",
+        "status": "match",
+        "meanPrimary": 1329.4807692307693,
+        "meanIndependent": 1329.4807692307693,
+        "meanDiff": 0,
+        "medianDiff": 0,
+        "countPrimary": 104,
+        "countIndependent": 104,
+        "countMatch": true
+      },
+      {
+        "key": "Friday|12",
+        "status": "match",
+        "meanPrimary": 2014.6346153846155,
+        "meanIndependent": 2014.6346153846155,
+        "meanDiff": 0,
+        "medianDiff": 0,
+        "countPrimary": 104,
+        "countIndependent": 104,
+        "countMatch": true
+      },
+      {
+        "key": "Friday|13",
+        "status": "match",
+        "meanPrimary": 2156.6346153846152,
+        "meanIndependent": 2156.6346153846152,
+        "meanDiff": 0,
+        "medianDiff": 0,
+        "countPrimary": 104,
+        "countIndependent": 104,
+        "countMatch": true
+      },
+      {
+        "key": "Friday|14",
+        "status": "match",
+        "meanPrimary": 2119.0673076923076,
+        "meanIndependent": 2119.0673076923076,
+        "meanDiff": 0,
+        "medianDiff": 0,
+        "countPrimary": 104,
+        "countIndependent": 104,
+        "countMatch": true
+      },
+      {
+        "key": "Friday|15",
+        "status": "match",
+        "meanPrimary": 2213.4326923076924,
+        "meanIndependent": 2213.4326923076924,
+        "meanDiff": 0,
+        "medianDiff": 0,
+        "countPrimary": 104,
+        "countIndependent": 104,
+        "countMatch": true
+      },
+      {
+        "key": "Friday|16",
+        "status": "match",
+        "meanPrimary": 2339.375,
+        "meanIndependent": 2339.375,
+        "meanDiff": 0,
+        "medianDiff": 0,
+        "countPrimary": 104,
+        "countIndependent": 104,
+        "countMatch": true
+      },
+      {
+        "key": "Friday|17",
+        "status": "match",
+        "meanPrimary": 2577.894230769231,
+        "meanIndependent": 2577.894230769231,
+        "meanDiff": 0,
+        "medianDiff": 0,
+        "countPrimary": 104,
+        "countIndependent": 104,
+        "countMatch": true
+      },
+      {
+        "key": "Friday|18",
+        "status": "match",
+        "meanPrimary": 2583.423076923077,
+        "meanIndependent": 2583.423076923077,
+        "meanDiff": 0,
+        "medianDiff": 0,
+        "countPrimary": 104,
+        "countIndependent": 104,
+        "countMatch": true
+      },
+      {
+        "key": "Friday|19",
+        "status": "match",
+        "meanPrimary": 2346.7403846153848,
+        "meanIndependent": 2346.7403846153848,
+        "meanDiff": 0,
+        "medianDiff": 0,
+        "countPrimary": 104,
+        "countIndependent": 104,
+        "countMatch": true
+      },
+      {
+        "key": "Friday|2",
+        "status": "match",
+        "meanPrimary": 97,
+        "meanIndependent": 97,
+        "meanDiff": 0,
+        "medianDiff": 0,
+        "countPrimary": 104,
+        "countIndependent": 104,
+        "countMatch": true
+      },
+      {
+        "key": "Friday|20",
+        "status": "match",
+        "meanPrimary": 2180.9903846153848,
+        "meanIndependent": 2180.9903846153848,
+        "meanDiff": 0,
+        "medianDiff": 0,
+        "countPrimary": 104,
+        "countIndependent": 104,
+        "countMatch": true
+      },
+      {
+        "key": "Friday|21",
+        "status": "match",
+        "meanPrimary": 2036.9807692307693,
+        "meanIndependent": 2036.9807692307693,
+        "meanDiff": 0,
+        "medianDiff": 0,
+        "countPrimary": 104,
+        "countIndependent": 104,
+        "countMatch": true
+      },
+      {
+        "key": "Friday|22",
+        "status": "match",
+        "meanPrimary": 1584.2692307692307,
+        "meanIndependent": 1584.2692307692307,
+        "meanDiff": 0,
+        "medianDiff": 0,
+        "countPrimary": 104,
+        "countIndependent": 104,
+        "countMatch": true
+      },
+      {
+        "key": "Friday|23",
+        "status": "match",
+        "meanPrimary": 1124.1442307692307,
+        "meanIndependent": 1124.1442307692307,
+        "meanDiff": 0,
+        "medianDiff": 0,
+        "countPrimary": 104,
+        "countIndependent": 104,
+        "countMatch": true
+      },
+      {
+        "key": "Friday|3",
+        "status": "match",
+        "meanPrimary": 66.29807692307692,
+        "meanIndependent": 66.29807692307692,
+        "meanDiff": 0,
+        "medianDiff": 0,
+        "countPrimary": 104,
+        "countIndependent": 104,
+        "countMatch": true
+      },
+      {
+        "key": "Friday|4",
+        "status": "match",
+        "meanPrimary": 50.39423076923077,
+        "meanIndependent": 50.39423076923077,
+        "meanDiff": 0,
+        "medianDiff": 0,
+        "countPrimary": 104,
+        "countIndependent": 104,
+        "countMatch": true
+      },
+      {
+        "key": "Friday|5",
+        "status": "match",
+        "meanPrimary": 46.81730769230769,
+        "meanIndependent": 46.81730769230769,
+        "meanDiff": 0,
+        "medianDiff": 0,
+        "countPrimary": 104,
+        "countIndependent": 104,
+        "countMatch": true
+      },
+      {
+        "key": "Friday|6",
+        "status": "match",
+        "meanPrimary": 97.13461538461539,
+        "meanIndependent": 97.13461538461539,
+        "meanDiff": 0,
+        "medianDiff": 0,
+        "countPrimary": 104,
+        "countIndependent": 104,
+        "countMatch": true
+      },
+      {
+        "key": "Friday|7",
+        "status": "match",
+        "meanPrimary": 176,
+        "meanIndependent": 176,
+        "meanDiff": 0,
+        "medianDiff": 0,
+        "countPrimary": 104,
+        "countIndependent": 104,
+        "countMatch": true
+      },
+      {
+        "key": "Friday|8",
+        "status": "match",
+        "meanPrimary": 412.66346153846155,
+        "meanIndependent": 412.66346153846155,
+        "meanDiff": 0,
+        "medianDiff": 0,
+        "countPrimary": 104,
+        "countIndependent": 104,
+        "countMatch": true
+      },
+      {
+        "key": "Friday|9",
+        "status": "match",
+        "meanPrimary": 584.0096153846154,
+        "meanIndependent": 584.0096153846154,
+        "meanDiff": 0,
+        "medianDiff": 0,
+        "countPrimary": 104,
+        "countIndependent": 104,
+        "countMatch": true
+      }
+    ]
+  },
+  "spotCheck": {
+    "url": "https://data.melbourne.vic.gov.au/api/v2/catalog/datasets/pedestrian-counting-system-monthly-counts-per-hour/records?limit=25&where=location_id%3D3%20AND%20sensing_date%3E%3D'2024-01-01'",
+    "matched": 25,
+    "samples": [
+      {
+        "sensing_date": "2026-03-21",
+        "hourday": 13,
+        "count": 2920,
+        "bucket": "Saturday|13",
+        "foundInCalculatedTrendBucket": true
+      },
+      {
+        "sensing_date": "2024-10-19",
+        "hourday": 23,
+        "count": 1413,
+        "bucket": "Saturday|23",
+        "foundInCalculatedTrendBucket": true
+      },
+      {
+        "sensing_date": "2025-09-29",
+        "hourday": 14,
+        "count": 2595,
+        "bucket": "Monday|14",
+        "foundInCalculatedTrendBucket": true
+      },
+      {
+        "sensing_date": "2026-04-04",
+        "hourday": 14,
+        "count": 4267,
+        "bucket": "Saturday|14",
+        "foundInCalculatedTrendBucket": true
+      },
+      {
+        "sensing_date": "2025-08-21",
+        "hourday": 23,
+        "count": 789,
+        "bucket": "Thursday|23",
+        "foundInCalculatedTrendBucket": true
+      },
+      {
+        "sensing_date": "2026-03-23",
+        "hourday": 17,
+        "count": 2721,
+        "bucket": "Monday|17",
+        "foundInCalculatedTrendBucket": true
+      },
+      {
+        "sensing_date": "2024-09-04",
+        "hourday": 20,
+        "count": 1320,
+        "bucket": "Wednesday|20",
+        "foundInCalculatedTrendBucket": true
+      },
+      {
+        "sensing_date": "2026-05-13",
+        "hourday": 17,
+        "count": 2833,
+        "bucket": "Wednesday|17",
+        "foundInCalculatedTrendBucket": true
+      },
+      {
+        "sensing_date": "2024-10-24",
+        "hourday": 14,
+        "count": 1521,
+        "bucket": "Thursday|14",
+        "foundInCalculatedTrendBucket": true
+      },
+      {
+        "sensing_date": "2026-04-01",
+        "hourday": 5,
+        "count": 48,
+        "bucket": "Wednesday|5",
+        "foundInCalculatedTrendBucket": true
+      },
+      {
+        "sensing_date": "2025-05-04",
+        "hourday": 17,
+        "count": 1967,
+        "bucket": "Sunday|17",
+        "foundInCalculatedTrendBucket": true
+      },
+      {
+        "sensing_date": "2025-01-08",
+        "hourday": 4,
+        "count": 18,
+        "bucket": "Wednesday|4",
+        "foundInCalculatedTrendBucket": true
+      },
+      {
+        "sensing_date": "2026-06-23",
+        "hourday": 12,
+        "count": 2040,
+        "bucket": "Tuesday|12",
+        "foundInCalculatedTrendBucket": true
+      },
+      {
+        "sensing_date": "2024-12-26",
+        "hourday": 23,
+        "count": 596,
+        "bucket": "Thursday|23",
+        "foundInCalculatedTrendBucket": true
+      },
+      {
+        "sensing_date": "2024-12-31",
+        "hourday": 21,
+        "count": 3397,
+        "bucket": "Tuesday|21",
+        "foundInCalculatedTrendBucket": true
+      },
+      {
+        "sensing_date": "2025-06-02",
+        "hourday": 14,
+        "count": 1670,
+        "bucket": "Monday|14",
+        "foundInCalculatedTrendBucket": true
+      },
+      {
+        "sensing_date": "2026-06-20",
+        "hourday": 10,
+        "count": 746,
+        "bucket": "Saturday|10",
+        "foundInCalculatedTrendBucket": true
+      },
+      {
+        "sensing_date": "2025-04-29",
+        "hourday": 14,
+        "count": 1743,
+        "bucket": "Tuesday|14",
+        "foundInCalculatedTrendBucket": true
+      },
+      {
+        "sensing_date": "2024-08-25",
+        "hourday": 4,
+        "count": 214,
+        "bucket": "Sunday|4",
+        "foundInCalculatedTrendBucket": true
+      },
+      {
+        "sensing_date": "2025-12-12",
+        "hourday": 18,
+        "count": 2515,
+        "bucket": "Friday|18",
+        "foundInCalculatedTrendBucket": true
+      },
+      {
+        "sensing_date": "2026-08-07",
+        "hourday": 15,
+        "count": 2516,
+        "bucket": "Friday|15",
+        "foundInCalculatedTrendBucket": true
+      },
+      {
+        "sensing_date": "2025-06-14",
+        "hourday": 1,
+        "count": 260,
+        "bucket": "Saturday|1",
+        "foundInCalculatedTrendBucket": true
+      },
+      {
+        "sensing_date": "2025-05-01",
+        "hourday": 0,
+        "count": 155,
+        "bucket": "Thursday|0",
+        "foundInCalculatedTrendBucket": true
+      },
+      {
+        "sensing_date": "2026-08-06",
+        "hourday": 17,
+        "count": 3043,
+        "bucket": "Thursday|17",
+        "foundInCalculatedTrendBucket": true
+      },
+      {
+        "sensing_date": "2026-02-20",
+        "hourday": 22,
+        "count": 1672,
+        "bucket": "Friday|22",
+        "foundInCalculatedTrendBucket": true
+      }
+    ]
+  },
+  "summary": {
+    "pass": true,
+    "comparisonPass": true,
+    "spotCheckPass": true
+  },
+  "verifiedAt": "2026-08-10T10:18:25.327Z",
+  "reproducibleCommand": "node scripts/verify/ac-225-historical-trend-com-validation.mjs --location-id 3",
+  "evidencePath": "pgp/evidence/AC-2.2.5/",
+  "googleDrivePgpNote": "Upload pgp/evidence/AC-2.2.5/ into the team Google Drive PGP folder and paste the Drive URL into DRIVE_LINK.md"
+}

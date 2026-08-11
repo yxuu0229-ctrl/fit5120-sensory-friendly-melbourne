@@ -1,0 +1,109 @@
+{
+  "acceptanceCriterion": "1.1.4",
+  "description": "When multiple routes are listed, order is lowest→highest sensory indicator (calmest first)",
+  "offline": {
+    "passed": 4,
+    "cases": [
+      {
+        "name": "sorts lowest sensory indicator first",
+        "pass": true,
+        "expectedOrder": [
+          "calm",
+          "mid",
+          "busy"
+        ],
+        "actualOrder": [
+          "calm",
+          "mid",
+          "busy"
+        ]
+      },
+      {
+        "name": "stable sort preserves relative order on ties",
+        "pass": true,
+        "expectedOrder": [
+          "c",
+          "a",
+          "b"
+        ],
+        "actualOrder": [
+          "c",
+          "a",
+          "b"
+        ]
+      },
+      {
+        "name": "already-sorted list remains calmest-first",
+        "pass": true,
+        "expectedOrder": [
+          "x",
+          "y",
+          "z"
+        ],
+        "actualOrder": [
+          "x",
+          "y",
+          "z"
+        ]
+      },
+      {
+        "name": "detector rejects reverse sensory order",
+        "pass": true,
+        "expectedOrder": "not calmest-first",
+        "actualOrder": [
+          "a",
+          "b"
+        ]
+      }
+    ]
+  },
+  "wiring": {
+    "passed": 4,
+    "checks": [
+      {
+        "name": "routeOrdering.ts exports calmest-first sorter",
+        "pass": true
+      },
+      {
+        "name": "planQuietWalkingRoute uses orderRoutesBySensoryIndicator",
+        "pass": true
+      },
+      {
+        "name": "planRoute returns trips list",
+        "pass": true
+      },
+      {
+        "name": "map UI lists route options by sensory indicator",
+        "pass": true
+      }
+    ]
+  },
+  "live": {
+    "ran": true,
+    "pass": true,
+    "tripCount": 2,
+    "indicators": [
+      1.091,
+      1.094
+    ],
+    "labels": [
+      "Walk via quieter sensor area",
+      "Direct walk (OSRM)"
+    ],
+    "firstIsCalmest": true,
+    "sensorCount": 99
+  },
+  "summary": {
+    "pass": true
+  },
+  "verifiedAt": "2026-08-10T10:18:34.666Z",
+  "reproducibleCommand": "npm run verify:ac-114",
+  "evidencePath": "pgp/evidence/AC-1.1.4/",
+  "googleDrivePgpNote": "Upload pgp/evidence/AC-1.1.4/ into the team Google Drive PGP folder and paste the Drive URL into DRIVE_LINK.md",
+  "implementation": {
+    "ordering": "src/lib/routeOrdering.ts",
+    "planner": "src/lib/quietRoute.ts#planQuietWalkingRoute",
+    "entry": "src/lib/planRoute.ts#planRoute → { trip, trips }",
+    "ui": "src/components/LiveMapPage.tsx route options list"
+  }
+}
