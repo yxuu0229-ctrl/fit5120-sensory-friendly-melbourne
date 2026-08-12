@@ -43,8 +43,10 @@ export default function SensoryPreferences({
           onChange={(e) => onThreshold(Number(e.target.value))}
         />
         <span className="field-hint">
-          Routes with load above {threshold} show as High. Move the slider to
-          update badges instantly.
+          Routes with load above {threshold} show as High, above{" "}
+          {Math.round(threshold / 2)} as Medium. Routes that run through busy
+          sensor areas are flagged even when their average load is lower. Move
+          the slider to update badges instantly.
         </span>
       </div>
       {onToggleMute != null ? (

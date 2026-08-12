@@ -2,7 +2,7 @@ import { fetchTransitRoutes } from "../api/googleTransit";
 import { fetchOsrmRoutes } from "../api/osrm";
 import { colorForMode } from "./modeColors";
 import type { TransportMode } from "./transportModes";
-import { loadFromScore, scoreRoutePath } from "./routeScore";
+import { loadFromScore, routeExposure, scoreRoutePath } from "./routeScore";
 import { indicatorForLoad } from "./sensoryIndicator";
 import type {
   LatLng,
@@ -48,6 +48,7 @@ export async function planTopRoutes(
   const scored = raw.map((route, index) => {
     const coords = route.coordinates;
     const score = scoreRoutePath(coords, sensors);
+    const exposure = routeExposure(coords, sensors);
     const sensoryLoad =
       mode === "drive"
         ? Math.round(loadFromScore(score) * 0.5)
@@ -75,7 +76,8 @@ export async function planTopRoutes(
       label: summary || `${mode} ${index + 1}`,
       recommended: false,
       sensoryLoad,
-      indicator: indicatorForLoad(sensoryLoad, threshold),
+      exposure,
+      indicator: indicatorForLoad(sensoryLoad, threshold, exposure),
       distanceMeters: route.distanceMeters,
       durationSeconds: route.durationSeconds,
       positions,

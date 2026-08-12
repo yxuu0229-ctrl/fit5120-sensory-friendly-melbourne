@@ -58,7 +58,7 @@ export default function MapPage() {
   const routes = useMemo(() => {
     return rawRoutes.map((route) => ({
       ...route,
-      indicator: indicatorForLoad(route.sensoryLoad, threshold),
+      indicator: indicatorForLoad(route.sensoryLoad, threshold, route.exposure),
     }));
   }, [rawRoutes, threshold]);
 

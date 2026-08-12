@@ -2,7 +2,17 @@ export type LatLng = { lat: number; lng: number };
 
 export type DensityLevel = "Low" | "Medium" | "High";
 
-export type SensoryIndicator = "Low" | "High";
+export type SensoryIndicator = "Low" | "Medium" | "High";
+
+/**
+ * Share of a route's sampled points that fall within sensor range of a Medium
+ * or High reading. Averaged scores hide short busy stretches, so the badge is
+ * derived from exposure instead.
+ */
+export type RouteExposure = {
+  medium: number;
+  high: number;
+};
 
 export type SensorReading = {
   location_id: number;
@@ -58,6 +68,8 @@ export type RouteOption = {
   recommended: boolean;
   sensoryLoad: number;
   indicator: SensoryIndicator;
+  /** Absent for synthetic routes (e.g. refuge navigation) that are not scored. */
+  exposure?: RouteExposure;
   distanceMeters: number;
   durationSeconds: number;
   positions: [number, number][];

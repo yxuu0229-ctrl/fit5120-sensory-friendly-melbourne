@@ -573,6 +573,11 @@
   color: #1f5a3a;
 }
 
+.badge-medium {
+  background: rgba(179, 107, 0, 0.18);
+  color: #8a5200;
+}
+
 .badge-high {
   background: rgba(163, 59, 50, 0.16);
   color: #8a2a24;
