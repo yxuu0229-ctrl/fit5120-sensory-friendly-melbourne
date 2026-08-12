@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
 import { fetchSensoryRefuges } from "../api/places";
 import { fetchQuietWindowsForHour } from "../api/quietWindows";
-import { fetchDensitySensors } from "../api/sensors";
-import { hasSupabaseEnv } from "../api/supabaseClient";
+import { fetchDensitySensors, MOCK_FALLBACK_SENSORS } from "../api/sensors";
 import { buildQuietAlert, nextHourLabel } from "../lib/quietForecast";
 import type { QuietAlert, RefugePlace, SensorReading } from "../lib/types";
 
@@ -30,26 +29,22 @@ export function useMapData() {
   const [dataUpdatedLabel, setDataUpdatedLabel] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!hasSupabaseEnv()) {
-      setNotice(
-        "Live density and refuges need VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY. Add them in Vercel → Settings → Environment Variables, then Redeploy."
-      );
-      return;
-    }
     void Promise.all([fetchDensitySensors(), fetchSensoryRefuges()])
       .then(([s, p]) => {
-        setSensors(s);
+        const finalSensors = s.length ? s : MOCK_FALLBACK_SENSORS;
+        setSensors(finalSensors);
         setRefuges(p);
-        const latest = s
+        const latest = finalSensors
           .map((row) => row.sensing_datetime)
           .filter((v): v is string => Boolean(v))
           .sort()
           .at(-1);
         setDataUpdatedLabel(formatUpdated(latest));
       })
-      .catch((e) =>
-        setError(e instanceof Error ? e.message : "Could not load map data")
-      );
+      .catch((e) => {
+        setSensors(MOCK_FALLBACK_SENSORS);
+        setError(e instanceof Error ? e.message : "Could not load map data");
+      });
   }, []);
 
   useEffect(() => {

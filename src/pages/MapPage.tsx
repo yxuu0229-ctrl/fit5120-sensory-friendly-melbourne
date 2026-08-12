@@ -4,6 +4,7 @@ import { getCurrentPosition } from "../api/geolocation";
 import { reverseGeocode } from "../api/nominatim";
 import { fetchOsrmTo } from "../api/osrm";
 import DataUpdatedTag from "../components/DataUpdatedTag";
+import CbdChoroplethLayer from "../components/map/CbdChoroplethLayer";
 import EndpointMarkers from "../components/map/EndpointMarkers";
 import MapCanvas from "../components/map/MapCanvas";
 import MapFitBounds from "../components/map/MapFitBounds";
@@ -30,10 +31,13 @@ import { planTopRoutes } from "../lib/topRoutes";
 import type { TransportMode } from "../lib/transportModes";
 import type { PlaceResult, RefugePlace, RouteOption } from "../lib/types";
 
+import { useSoundSettings } from "../hooks/useSoundSettings";
+
 type Sheet = "plan" | "routes" | "places";
 
 export default function MapPage() {
   const data = useMapData();
+  const sound = useSoundSettings();
   const [originText, setOriginText] = useState("");
   const [destText, setDestText] = useState("");
   const [origin, setOrigin] = useState<PlaceResult | null>(null);
@@ -42,13 +46,21 @@ export default function MapPage() {
   const [preferCalmer, setPreferCalmer] = useState(true);
   const [showLowSensors, setShowLowSensors] = useState(true);
   const [mode, setMode] = useState<TransportMode>("walk");
-  const [routes, setRoutes] = useState<RouteOption[]>([]);
+  const [rawRoutes, setRoutes] = useState<RouteOption[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [selectedRefugeId, setSelectedRefugeId] = useState<string | null>(null);
   const [navigating, setNavigating] = useState(false);
   const [sheet, setSheet] = useState<Sheet>("plan");
   const [planning, setPlanning] = useState(false);
   const [refugePickerOpen, setRefugePickerOpen] = useState(false);
+
+  // Dynamic route indicator derivation (eliminates double-render cascade on threshold change)
+  const routes = useMemo(() => {
+    return rawRoutes.map((route) => ({
+      ...route,
+      indicator: indicatorForLoad(route.sensoryLoad, threshold),
+    }));
+  }, [rawRoutes, threshold]);
 
   const selected = routes.find((r) => r.id === selectedId) ?? null;
   const alternative =
@@ -99,20 +111,6 @@ export default function MapPage() {
     };
   }, []);
 
-  // Keep High/Low badges in sync when the threshold slider moves.
-  useEffect(() => {
-    setRoutes((prev) => {
-      if (!prev.length) return prev;
-      let changed = false;
-      const next = prev.map((route) => {
-        const indicator = indicatorForLoad(route.sensoryLoad, threshold);
-        if (indicator === route.indicator) return route;
-        changed = true;
-        return { ...route, indicator };
-      });
-      return changed ? next : prev;
-    });
-  }, [threshold]);
 
   // Coverage / info toasts clear automatically after a few seconds.
   useEffect(() => {
@@ -193,7 +191,7 @@ export default function MapPage() {
         from = await getCurrentPosition();
         live.setUserPoint(from);
       } catch {
-        data.setError("Set your location first (Use my location or Origin).");
+        data.setError("Set your location first (Use my location or Start).");
         return;
       }
     }
@@ -297,7 +295,7 @@ export default function MapPage() {
           points={[origin?.point, dest?.point, live.userPoint]}
           paths={fitPaths}
         />
-        <SensorLayer sensors={mapSensors} />
+        <CbdChoroplethLayer sensors={data.sensors} />
         <RefugeMarkers
           places={sortedRefuges}
           selectedId={selectedRefugeId}
@@ -347,6 +345,17 @@ export default function MapPage() {
         <Link to="/" className="brand-link">
           Relax Maps
         </Link>
+        <div className="top-actions">
+          <DataUpdatedTag label={data.dataUpdatedLabel} />
+          <button
+            type="button"
+            className="btn btn-ghost sound-toggle-btn"
+            aria-label={sound.muted ? "Unmute audio chimes" : "Mute audio chimes"}
+            onClick={sound.toggleMute}
+          >
+            {sound.muted ? "🔇 Sound Off" : "🔊 Sound On"}
+          </button>
+        </div>
       </header>
 
       {navigating ? (
@@ -359,8 +368,6 @@ export default function MapPage() {
           }
         />
       ) : null}
-
-      <DataUpdatedTag label={data.dataUpdatedLabel} />
 
       <MapPanels
         hidden={navigating}
@@ -382,6 +389,8 @@ export default function MapPage() {
           planning,
           onPlan: () => void runPlan(mode),
           onLocate: () => void useMyLocation(),
+          muted: sound.muted,
+          onToggleMute: sound.toggleMute,
         }}
         routes={routes}
         selectedId={selectedId}

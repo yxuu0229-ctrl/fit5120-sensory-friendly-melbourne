@@ -28,6 +28,8 @@ type PlanProps = {
   planning: boolean;
   onPlan: () => void;
   onLocate: () => void;
+  muted?: boolean;
+  onToggleMute?: () => void;
 };
 
 function keepSheetScroll(e: TouchEvent) {
@@ -109,7 +111,7 @@ export default function MapPanels({
         <span className="dot sensor-low" /> Low{" "}
         <span className="dot sensor-med" /> Medium{" "}
         <span className="dot sensor-high" /> High crowd{" "}
-        <span className="legend-pin" aria-hidden="true" /> Refuge{" "}
+        <span className="legend-pin" aria-hidden="true">😇</span> Refuge{" "}
         <span className="dot you" /> You
       </p>
       <label className="check-row sensor-toggle">

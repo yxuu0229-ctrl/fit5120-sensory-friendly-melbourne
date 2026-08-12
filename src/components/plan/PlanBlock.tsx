@@ -22,12 +22,14 @@ export default function PlanBlock(props: {
   planning: boolean;
   onPlan: () => void;
   onLocate: () => void;
+  muted?: boolean;
+  onToggleMute?: () => void;
 }) {
   return (
     <div className="plan-block">
       <ModeSwitcher mode={props.mode} onChange={props.onModeChange} />
       <LocationSearch
-        label="Origin"
+        label="Start"
         value={props.originText}
         onChange={props.setOriginText}
         onResolved={props.setOrigin}
@@ -63,7 +65,10 @@ export default function PlanBlock(props: {
         onPreferCalmer={props.setPreferCalmer}
         showLowSensors={props.showLowSensors}
         onShowLowSensors={props.setShowLowSensors}
+        muted={props.muted}
+        onToggleMute={props.onToggleMute}
       />
     </div>
   );
 }
+

@@ -1,18 +1,20 @@
 :root {
   --ink: #12171c;
-  --ink-soft: #3d4750;
+  --ink-soft: #2d3740;
   --paper: #e8eef1;
-  --panel: rgba(255, 255, 255, 0.78);
-  --panel-border: rgba(18, 23, 28, 0.12);
+  --panel: rgba(255, 255, 255, 0.88);
+  --panel-border: rgba(18, 23, 28, 0.16);
   --panel-text: #1a2228;
-  --panel-muted: #3d4750;
+  --panel-muted: #2d3740;
   --accent: #1f7a6a;
   --accent-2: #c4ddd6;
   --danger: #a33b32;
-  --warn: #b07d2a;
-  --ok: #2f6f4e;
+  --warn: #8a5a12;
+  --ok: #205c3d;
   --radius: 14px;
   --font: "Outfit", system-ui, sans-serif;
   --display: "Source Serif 4", Georgia, serif;
   --shadow: 0 18px 40px rgba(10, 14, 18, 0.18);
+  --focus-ring: 3px solid var(--accent);
 }
+

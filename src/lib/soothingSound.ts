@@ -2,10 +2,27 @@
 
 import type { TransportMode } from "./transportModes";
 
+const STORAGE_KEY = "relax_maps_sound_muted";
 let sharedCtx: AudioContext | null = null;
+let audioMuted = false;
+
+if (typeof window !== "undefined") {
+  audioMuted = localStorage.getItem(STORAGE_KEY) === "true";
+}
+
+export function isAudioMuted(): boolean {
+  return audioMuted;
+}
+
+export function setAudioMuted(muted: boolean): void {
+  audioMuted = muted;
+  if (typeof window !== "undefined") {
+    localStorage.setItem(STORAGE_KEY, String(muted));
+  }
+}
 
 function getCtx(): AudioContext | null {
-  if (typeof window === "undefined") return null;
+  if (typeof window === "undefined" || audioMuted) return null;
   const AC =
     window.AudioContext ||
     (window as unknown as { webkitAudioContext?: typeof AudioContext })
@@ -16,6 +33,7 @@ function getCtx(): AudioContext | null {
 }
 
 export async function unlockSoothingAudio(): Promise<boolean> {
+  if (audioMuted) return false;
   const ctx = getCtx();
   if (!ctx) return false;
   if (ctx.state === "suspended") {
@@ -36,6 +54,7 @@ function tone(
   gainPeak: number,
   type: OscillatorType = "sine"
 ) {
+  if (audioMuted) return;
   const osc = ctx.createOscillator();
   const gain = ctx.createGain();
   osc.type = type;
@@ -51,6 +70,7 @@ function tone(
 
 /** Gentle rising pad when the map page opens. Returns true if audio started. */
 export async function playMapWelcome(): Promise<boolean> {
+  if (audioMuted) return false;
   const ready = await unlockSoothingAudio();
   const ctx = getCtx();
   if (!ready || !ctx || ctx.state !== "running") return false;
@@ -64,6 +84,7 @@ export async function playMapWelcome(): Promise<boolean> {
 
 /** Soft chime when Go starts navigation. */
 export async function playGoChime(): Promise<void> {
+  if (audioMuted) return;
   await unlockSoothingAudio();
   const ctx = getCtx();
   if (!ctx || ctx.state !== "running") return;
@@ -75,6 +96,7 @@ export async function playGoChime(): Promise<void> {
 
 /** Distinct soft motif for each transport mode button. */
 export async function playModeSound(mode: TransportMode): Promise<void> {
+  if (audioMuted) return;
   await unlockSoothingAudio();
   const ctx = getCtx();
   if (!ctx || ctx.state !== "running") return;
@@ -106,3 +128,4 @@ export async function playModeSound(mode: TransportMode): Promise<void> {
   tone(ctx, 392.0, t + 0.05, 0.85, 0.035);
   tone(ctx, 523.25, t + 0.4, 0.55, 0.03, "triangle");
 }
+

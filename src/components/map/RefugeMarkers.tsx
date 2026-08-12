@@ -1,5 +1,5 @@
 import L from "leaflet";
-import { useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import { Marker, Popup } from "react-leaflet";
 import type { Marker as LeafletMarker } from "leaflet";
 import type { RefugePlace } from "../../lib/types";
@@ -14,15 +14,10 @@ function refugeIcon(selected: boolean) {
   const size = selected ? 34 : 28;
   return L.divIcon({
     className: "refuge-pin-wrap",
-    html: `<div class="refuge-pin${selected ? " is-selected" : ""}" aria-hidden="true">
-      <svg viewBox="0 0 32 40" width="${size}" height="${Math.round(size * 1.25)}">
-        <path d="M16 2 L30 16 L16 38 L2 16 Z" fill="${selected ? "#155a4d" : "#1f7a6a"}" stroke="#ffffff" stroke-width="2.5"/>
-        <circle cx="16" cy="16" r="4.5" fill="#ffffff"/>
-      </svg>
-    </div>`,
-    iconSize: [size, Math.round(size * 1.25)],
-    iconAnchor: [size / 2, Math.round(size * 1.25) - 2],
-    popupAnchor: [0, -Math.round(size * 1.1)],
+    html: `<div class="refuge-pin${selected ? " is-selected" : ""}" aria-hidden="true" style="font-size: ${size}px;">😇</div>`,
+    iconSize: [size, size],
+    iconAnchor: [size / 2, size / 2],
+    popupAnchor: [0, -size / 2],
   });
 }
 
@@ -48,6 +43,13 @@ export default function RefugeMarkers({
     []
   );
 
+  const handleMarkerClick = useCallback(
+    (id: string) => {
+      if (!navigating) onSelect(id);
+    },
+    [navigating, onSelect]
+  );
+
   useEffect(() => {
     if (navigating) {
       markerRefs.current.forEach((marker) => marker.closePopup());
@@ -69,9 +71,7 @@ export default function RefugeMarkers({
             icon={selected ? icons.selected : icons.default}
             zIndexOffset={selected ? 400 : 200}
             eventHandlers={{
-              click: () => {
-                if (!navigating) onSelect(p.id);
-              },
+              click: () => handleMarkerClick(p.id),
             }}
             ref={(instance) => {
               if (instance) markerRefs.current.set(p.id, instance);

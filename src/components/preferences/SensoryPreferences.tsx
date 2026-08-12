@@ -1,3 +1,5 @@
+import { useId } from "react";
+
 export default function SensoryPreferences({
   threshold,
   onThreshold,
@@ -5,6 +7,8 @@ export default function SensoryPreferences({
   onPreferCalmer,
   showLowSensors,
   onShowLowSensors,
+  muted,
+  onToggleMute,
 }: {
   threshold: number;
   onThreshold: (n: number) => void;
@@ -12,34 +16,58 @@ export default function SensoryPreferences({
   onPreferCalmer: (v: boolean) => void;
   showLowSensors: boolean;
   onShowLowSensors: (v: boolean) => void;
+  muted?: boolean;
+  onToggleMute?: () => void;
 }) {
+  const sliderId = useId();
+  const soundId = useId();
+  const calmId = useId();
+  const sensorId = useId();
+
   return (
     <section className="panel-block">
       <h2>Sensory preferences</h2>
-      <label className="field">
-        <span>Crowd density threshold ({threshold})</span>
+      <div className="field">
+        <label htmlFor={sliderId}>Crowd density threshold ({threshold})</label>
         <input
+          id={sliderId}
           type="range"
           min={0}
           max={100}
           value={threshold}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuenow={threshold}
           onChange={(e) => onThreshold(Number(e.target.value))}
         />
         <span className="field-hint">
           Routes with load above {threshold} show as High. Move the slider to
           update badges instantly.
         </span>
-      </label>
-      <label className="check-row">
+      </div>
+      {onToggleMute != null ? (
+        <label className="check-row" htmlFor={soundId}>
+          <input
+            id={soundId}
+            type="checkbox"
+            checked={Boolean(muted)}
+            onChange={onToggleMute}
+          />
+          Mute map audio chimes & sound effects
+        </label>
+      ) : null}
+      <label className="check-row" htmlFor={calmId}>
         <input
+          id={calmId}
           type="checkbox"
           checked={preferCalmer}
           onChange={(e) => onPreferCalmer(e.target.checked)}
         />
         Prefer calmer pedestrian corridors
       </label>
-      <label className="check-row">
+      <label className="check-row" htmlFor={sensorId}>
         <input
+          id={sensorId}
           type="checkbox"
           checked={showLowSensors}
           onChange={(e) => onShowLowSensors(e.target.checked)}
@@ -49,3 +77,4 @@ export default function SensoryPreferences({
     </section>
   );
 }
+

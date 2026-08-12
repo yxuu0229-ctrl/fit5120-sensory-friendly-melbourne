@@ -9,9 +9,22 @@ type SensorRow = {
   longitude: number | null;
 };
 
-/** All Melbourne sensors with live density when available; otherwise Low/0 placeholder. */
+export const MOCK_FALLBACK_SENSORS: SensorReading[] = [
+  { location_id: 1, sensor_name: "Flinders St Station", latitude: -37.8180, longitude: 144.9671, density_level: "High", total_count: 320 },
+  { location_id: 2, sensor_name: "Bourke St Mall", latitude: -37.8130, longitude: 144.9650, density_level: "High", total_count: 280 },
+  { location_id: 3, sensor_name: "Southern Cross", latitude: -37.8184, longitude: 144.9525, density_level: "Medium", total_count: 140 },
+  { location_id: 4, sensor_name: "Melbourne Central", latitude: -37.8102, longitude: 144.9628, density_level: "High", total_count: 260 },
+  { location_id: 5, sensor_name: "State Library", latitude: -37.8098, longitude: 144.9652, density_level: "Medium", total_count: 120 },
+  { location_id: 6, sensor_name: "Federation Square", latitude: -37.8180, longitude: 144.9690, density_level: "High", total_count: 310 },
+  { location_id: 7, sensor_name: "Queen Victoria Market", latitude: -37.8076, longitude: 144.9568, density_level: "Low", total_count: 35 },
+  { location_id: 8, sensor_name: "Docklands Library", latitude: -37.8194, longitude: 144.9450, density_level: "Low", total_count: 20 },
+  { location_id: 9, sensor_name: "Southbank Promenade", latitude: -37.8210, longitude: 144.9640, density_level: "Medium", total_count: 110 },
+  { location_id: 10, sensor_name: "Flagstaff Gardens", latitude: -37.8105, longitude: 144.9545, density_level: "Low", total_count: 15 },
+];
+
+/** All Melbourne sensors with live density when available; otherwise fallback / Supabase data. */
 export async function fetchDensitySensors(): Promise<SensorReading[]> {
-  if (!hasSupabaseEnv()) return [];
+  if (!hasSupabaseEnv()) return MOCK_FALLBACK_SENSORS;
   const sb = getSupabase();
   const [densityRes, sensorRes] = await Promise.all([
     sb

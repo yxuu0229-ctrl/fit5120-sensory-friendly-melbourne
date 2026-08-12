@@ -61,12 +61,16 @@
   .sheet-tabs button {
     border: 0;
     border-radius: 999px;
-    padding: 0.45rem 0.4rem;
+    padding: 0.65rem 0.6rem;
+    min-height: 44px;
     text-transform: capitalize;
     background: rgba(18, 23, 28, 0.06);
     color: var(--panel-muted);
     font-weight: 600;
     cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     transition: background 160ms ease, color 160ms ease;
   }
 
@@ -141,11 +145,7 @@
     bottom: calc(5.8rem + 0.75rem);
   }
 
-  .data-updated-tag {
-    bottom: calc(5.8rem + 0.55rem);
-    left: 50%;
-    transform: translateX(-50%);
-  }
+
 }
 
 @media (min-width: 901px) {
