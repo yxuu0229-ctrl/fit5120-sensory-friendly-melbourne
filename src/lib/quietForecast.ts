@@ -47,9 +47,12 @@ export function buildQuietAlert(
     const level = densityFromCount(w.mean);
     if (!(w.is_reliable && level === "High")) continue;
     candidates.push({
+      locationId: s.location_id,
       areaName: (s.sensor_name || "Nearby sensor").replace(/_/g, " "),
       periodLabel,
       expectedMean: w.mean,
+      currentCount: s.total_count ?? null,
+      densityLevel: level,
       reliable: w.is_reliable,
       point: { lat: s.latitude, lng: s.longitude },
     });

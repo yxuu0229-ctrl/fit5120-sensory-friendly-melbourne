@@ -88,6 +88,7 @@ a {
   color: var(--panel-muted);
   font-size: 1rem;
   line-height: 1.45;
+  margin-top: auto;
 }
 
 .eyebrow {

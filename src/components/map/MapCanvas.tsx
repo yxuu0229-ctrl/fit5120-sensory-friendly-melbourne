@@ -7,25 +7,33 @@ import "leaflet/dist/leaflet.css";
 function FollowCam({
   follow,
   point,
+  centerTarget,
 }: {
   follow: boolean;
   point: LatLng | null;
+  centerTarget?: { lat: number; lng: number } | null;
 }) {
   const map = useMap();
   useEffect(() => {
+    if (centerTarget) {
+      map.setView([centerTarget.lat, centerTarget.lng], 15, { animate: true });
+      return;
+    }
     if (!follow || !point) return;
     map.panTo([point.lat, point.lng], { animate: true, duration: 0.6 });
-  }, [follow, point, map]);
+  }, [follow, point, centerTarget, map]);
   return null;
 }
 
 export default function MapCanvas({
   follow,
   followPoint,
+  centerTarget,
   children,
 }: {
   follow: boolean;
   followPoint: LatLng | null;
+  centerTarget?: { lat: number; lng: number } | null;
   children?: ReactNode;
 }) {
   return (
@@ -40,7 +48,7 @@ export default function MapCanvas({
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>'
         url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
       />
-      <FollowCam follow={follow} point={followPoint} />
+      <FollowCam follow={follow} point={followPoint} centerTarget={centerTarget} />
       {children}
     </MapContainer>
   );

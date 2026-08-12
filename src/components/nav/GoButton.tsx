@@ -1,11 +1,10 @@
 export default function GoButton({
-  disabled,
   navigating,
   onGo,
   onStop,
   progress,
 }: {
-  disabled: boolean;
+  disabled?: boolean;
   navigating: boolean;
   onGo: () => void;
   onStop: () => void;
@@ -22,10 +21,11 @@ export default function GoButton({
     <button
       type="button"
       className="btn btn-go"
-      disabled={disabled}
       onClick={onGo}
+      title="Recenter to CBD"
     >
-      Go
+      🎯 Recenter
     </button>
   );
 }
+

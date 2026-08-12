@@ -257,15 +257,12 @@ export default function MapPage() {
     await navigateToRefuge(target);
   }
 
+  const [mapCenterTarget, setMapCenterTarget] = useState<{ lat: number; lng: number } | null>(null);
+
   async function startGo() {
-    if (!selected) {
-      data.setError("Plan a route first, then press Go.");
-      return;
-    }
-    void playGoChime();
     setRefugePickerOpen(false);
-    await useMyLocation();
-    setNavigating(true);
+    setMapCenterTarget(CBD_CENTER);
+    setTimeout(() => setMapCenterTarget(null), 1000);
   }
 
   function stopNavigation() {
@@ -289,13 +286,13 @@ export default function MapPage() {
 
   return (
     <div className={`map-app${navigating ? " is-navigating" : ""}`}>
-      <MapCanvas follow={navigating} followPoint={navPoint}>
+      <MapCanvas follow={navigating} followPoint={navPoint} centerTarget={mapCenterTarget}>
         <MapFitBounds
-          enabled={!navigating}
+          enabled={!navigating && !mapCenterTarget}
           points={[origin?.point, dest?.point, live.userPoint]}
           paths={fitPaths}
         />
-        <CbdChoroplethLayer sensors={data.sensors} />
+        <CbdChoroplethLayer sensors={mapSensors} threshold={threshold} />
         <RefugeMarkers
           places={sortedRefuges}
           selectedId={selectedRefugeId}
@@ -386,6 +383,7 @@ export default function MapPage() {
           setPreferCalmer,
           showLowSensors,
           setShowLowSensors,
+          sensorCount: data.sensors.length,
           planning,
           onPlan: () => void runPlan(mode),
           onLocate: () => void useMyLocation(),
@@ -399,6 +397,13 @@ export default function MapPage() {
         alternative={alternative}
         onTakeAlternative={() => alternative && setSelectedId(alternative.id)}
         alert={data.alert}
+        onFocusLocation={(pt, locationId) => {
+          setMapCenterTarget(pt);
+          window.dispatchEvent(
+            new CustomEvent("map:focus", { detail: { point: pt, locationId } })
+          );
+          setTimeout(() => setMapCenterTarget(null), 1000);
+        }}
         refuges={sortedRefuges}
         selectedRefugeId={selectedRefugeId}
         onSelectRefuge={(id) => {

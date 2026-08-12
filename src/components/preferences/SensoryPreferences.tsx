@@ -7,6 +7,7 @@ export default function SensoryPreferences({
   onPreferCalmer,
   showLowSensors,
   onShowLowSensors,
+  sensorCount,
   muted,
   onToggleMute,
 }: {
@@ -16,6 +17,7 @@ export default function SensoryPreferences({
   onPreferCalmer: (v: boolean) => void;
   showLowSensors: boolean;
   onShowLowSensors: (v: boolean) => void;
+  sensorCount?: number | null;
   muted?: boolean;
   onToggleMute?: () => void;
 }) {
@@ -74,6 +76,13 @@ export default function SensoryPreferences({
         />
         Show low-crowd sensors on map
       </label>
+      {sensorCount != null ? (
+        <p className="sensor-count-note">
+          {showLowSensors
+            ? `Showing all ${sensorCount} sensors on the map.`
+            : `Hiding low sensors — map shows Medium/High only (scoring still uses all ${sensorCount}).`}
+        </p>
+      ) : null}
     </section>
   );
 }

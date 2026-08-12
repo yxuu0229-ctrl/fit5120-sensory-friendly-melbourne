@@ -19,6 +19,7 @@ export default function PlanBlock(props: {
   setPreferCalmer: (v: boolean) => void;
   showLowSensors: boolean;
   setShowLowSensors: (v: boolean) => void;
+  sensorCount?: number | null;
   planning: boolean;
   onPlan: () => void;
   onLocate: () => void;
@@ -65,6 +66,7 @@ export default function PlanBlock(props: {
         onPreferCalmer={props.setPreferCalmer}
         showLowSensors={props.showLowSensors}
         onShowLowSensors={props.setShowLowSensors}
+        sensorCount={props.sensorCount}
         muted={props.muted}
         onToggleMute={props.onToggleMute}
       />

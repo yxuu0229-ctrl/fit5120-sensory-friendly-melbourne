@@ -80,7 +80,7 @@ export default function RouteCard({
       </button>
       {selected && onGo ? (
         <button type="button" className="btn btn-go-beside" onClick={onGo}>
-          Go
+          Recenter
         </button>
       ) : null}
     </div>

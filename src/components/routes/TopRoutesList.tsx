@@ -33,10 +33,9 @@ export default function TopRoutesList({
           <button
             type="button"
             className="btn btn-go-inline"
-            disabled={!canGo}
             onClick={onGo}
           >
-            Go
+            Recenter
           </button>
         ) : null}
       </div>

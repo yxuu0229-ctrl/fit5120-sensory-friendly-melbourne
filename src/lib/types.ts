@@ -68,9 +68,12 @@ export type RouteOption = {
 };
 
 export type QuietAlert = {
+  locationId?: number;
   areaName: string;
   periodLabel: string;
   expectedMean: number | null;
+  currentCount?: number | null;
+  densityLevel: DensityLevel;
   reliable: boolean;
   point: LatLng;
 };

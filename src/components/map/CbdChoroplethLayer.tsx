@@ -6,6 +6,7 @@ import type { SensorReading } from "../../lib/types";
 
 interface HexCellData {
   id: string;
+  locationId: number;
   points: [number, number][]; // [[lat, lng], ...]
   center: [number, number];
   sensorName: string;
@@ -17,6 +18,7 @@ interface CbdChoroplethLayerProps {
   sensors: SensorReading[];
   radiusMeters?: number;
   visible?: boolean;
+  threshold?: number;
 }
 
 /** Generates 6 vertices of a regular hexagon given center lat/lng and radius in meters */
@@ -72,9 +74,11 @@ export default function CbdChoroplethLayer({
   sensors,
   radiusMeters = 80, // ~80m radius per non-overlapping hexagon bin
   visible = true,
+  threshold,
 }: CbdChoroplethLayerProps) {
   const map = useMap();
   const [zoom, setZoom] = useState(map.getZoom());
+  const polygonRefs = React.useRef<Map<number, L.Polygon>>(new Map());
 
   useEffect(() => {
     const onZoom = () => setZoom(map.getZoom());
@@ -83,6 +87,45 @@ export default function CbdChoroplethLayer({
       map.off("zoomend", onZoom);
     };
   }, [map]);
+
+  // Listen to map:focus to open popup/tooltip for the corresponding sensor
+  useEffect(() => {
+    const handleFocus = (e: Event) => {
+      const customEvent = e as CustomEvent<{ point?: { lat: number; lng: number }; locationId?: number }>;
+      const { point, locationId } = customEvent.detail || {};
+
+      let targetPoly: L.Polygon | undefined;
+
+      if (locationId != null) {
+        targetPoly = polygonRefs.current.get(locationId);
+      }
+
+      if (!targetPoly && point) {
+        let minDist = Infinity;
+        polygonRefs.current.forEach((poly, id) => {
+          const center = poly.getBounds().getCenter();
+          const dLat = center.lat - point.lat;
+          const dLng = center.lng - point.lng;
+          const dist = dLat * dLat + dLng * dLng;
+          if (dist < minDist) {
+            minDist = dist;
+            targetPoly = poly;
+          }
+        });
+      }
+
+      if (targetPoly) {
+        setTimeout(() => {
+          targetPoly?.openPopup();
+        }, 150);
+      }
+    };
+
+    window.addEventListener("map:focus", handleFocus);
+    return () => {
+      window.removeEventListener("map:focus", handleFocus);
+    };
+  }, []);
 
   // Compute screen pixel radius of hexagon at current map zoom level
   const hexPixelRadius = useMemo(() => {
@@ -97,7 +140,10 @@ export default function CbdChoroplethLayer({
     if (!visible || !sensors.length) return [];
 
     const validSensors = sensors.filter(
-      (s) => s.latitude != null && s.longitude != null
+      (s) =>
+        s.latitude != null &&
+        s.longitude != null &&
+        (s.total_count || 0) >= 10
     );
 
     const radiusLat = radiusMeters / 111000;
@@ -151,18 +197,29 @@ export default function CbdChoroplethLayer({
 
       const corners = generateHexCorners(centerLat, centerLng, radiusMeters);
 
+      // If a crowd density threshold is specified by the user, dynamically evaluate density level
+      const dynamicLevel: "Low" | "Medium" | "High" =
+        threshold != null
+          ? (s.total_count || 0) > threshold
+            ? "High"
+            : (s.total_count || 0) > Math.round(threshold * 0.5)
+            ? "Medium"
+            : "Low"
+          : s.density_level || "Low";
+
       cells.push({
         id: `sensor-hex-${s.location_id}`,
+        locationId: s.location_id,
         points: corners,
         center: [centerLat, centerLng],
         sensorName: (s.sensor_name || "Sensor").replace(/_/g, " "),
         totalCount: s.total_count || 0,
-        densityLevel: s.density_level || "Low",
+        densityLevel: dynamicLevel,
       });
     });
 
     return cells;
-  }, [sensors, radiusMeters, visible]);
+  }, [sensors, radiusMeters, visible, threshold]);
 
   if (!visible || hexCells.length === 0) return null;
 
@@ -182,6 +239,10 @@ export default function CbdChoroplethLayer({
         return (
           <React.Fragment key={cell.id}>
             <Polygon
+              ref={(el) => {
+                if (el) polygonRefs.current.set(cell.locationId, el);
+                else polygonRefs.current.delete(cell.locationId);
+              }}
               positions={cell.points}
               pathOptions={{
                 color: color,

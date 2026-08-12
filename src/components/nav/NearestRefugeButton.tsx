@@ -24,7 +24,7 @@ export default function NearestRefugeButton({
       <span className="btn-refuge-copy">
         <strong>Nearest refuge</strong>
         <small>
-          {compact ? "Go to closest calm spot" : "3 calm options nearby"}
+          {compact ? "Go to closest calm spot" : "Route to closest calm spot"}
         </small>
       </span>
     </button>

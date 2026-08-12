@@ -1,7 +1,6 @@
 import type { ReactNode, TouchEvent } from "react";
 import NextHourAlert from "../alerts/NextHourAlert";
 import PlanBlock from "../plan/PlanBlock";
-import RefugeDetail from "../refuges/RefugeDetail";
 import RefugeList from "../refuges/RefugeList";
 import AlternativeBanner from "../routes/AlternativeBanner";
 import TopRoutesList from "../routes/TopRoutesList";
@@ -25,6 +24,7 @@ type PlanProps = {
   setPreferCalmer: (v: boolean) => void;
   showLowSensors: boolean;
   setShowLowSensors: (v: boolean) => void;
+  sensorCount?: number | null;
   planning: boolean;
   onPlan: () => void;
   onLocate: () => void;
@@ -56,6 +56,7 @@ export default function MapPanels({
   hidden = false,
   onGo,
   sensorCount,
+  onFocusLocation,
 }: {
   planProps: PlanProps;
   routes: RouteOption[];
@@ -76,6 +77,7 @@ export default function MapPanels({
   hidden?: boolean;
   onGo?: () => void;
   sensorCount?: number | null;
+  onFocusLocation?: (point: { lat: number; lng: number }, locationId?: number) => void;
 }) {
   if (hidden) {
     return <>{toast}</>;
@@ -99,36 +101,24 @@ export default function MapPanels({
   );
   const placesBlock = (
     <>
-      <NextHourAlert alert={alert} />
+      <NextHourAlert alert={alert} onFocusLocation={onFocusLocation} />
       <h2>Nearby refuges</h2>
       <RefugeList
         places={refuges}
         selectedId={selectedRefugeId}
         onSelect={onSelectRefuge}
       />
-      <RefugeDetail place={selectedRefuge} onNavigate={onNavigateRefuge} />
-      <p className="legend">
-        <span className="dot sensor-low" /> Low{" "}
-        <span className="dot sensor-med" /> Medium{" "}
-        <span className="dot sensor-high" /> High crowd{" "}
-        <span className="legend-pin" aria-hidden="true">😇</span> Refuge{" "}
-        <span className="dot you" /> You
-      </p>
-      <label className="check-row sensor-toggle">
-        <input
-          type="checkbox"
-          checked={planProps.showLowSensors}
-          onChange={(e) => planProps.setShowLowSensors(e.target.checked)}
-        />
-        Show low-crowd sensors on map
-      </label>
-      {sensorCount != null ? (
-        <p className="sensor-count-note">
-          {planProps.showLowSensors
-            ? `Showing all ${sensorCount} sensors on the map.`
-            : `Hiding low sensors — map shows Medium/High only (scoring still uses all ${sensorCount}).`}
+      <div className="legend-group">
+        <p className="legend">
+          <span className="legend-item"><span className="dot sensor-low" /> Low</span>
+          <span className="legend-item"><span className="dot sensor-med" /> Medium</span>
+          <span className="legend-item"><span className="dot sensor-high" /> High crowd</span>
         </p>
-      ) : null}
+        <p className="legend">
+          <span className="legend-item"><span className="legend-pin" aria-hidden="true">😇</span> Refuge</span>
+          <span className="legend-item"><span className="dot you" /> You</span>
+        </p>
+      </div>
     </>
   );
 

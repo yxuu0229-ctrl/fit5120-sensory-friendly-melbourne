@@ -24,8 +24,13 @@ export default function EndpointMarkers({
             weight: 2,
           }}
         >
-          <Tooltip direction="top" offset={[0, -6]} permanent>
-            A
+          <Tooltip
+            direction="top"
+            offset={[0, -8]}
+            permanent
+            className="endpoint-tooltip endpoint-tooltip-start"
+          >
+            Start (A)
           </Tooltip>
           <Popup>Start</Popup>
         </CircleMarker>
@@ -41,8 +46,13 @@ export default function EndpointMarkers({
             weight: 2,
           }}
         >
-          <Tooltip direction="top" offset={[0, -6]} permanent>
-            B
+          <Tooltip
+            direction="top"
+            offset={[0, -8]}
+            permanent
+            className="endpoint-tooltip endpoint-tooltip-dest"
+          >
+            Destination (B)
           </Tooltip>
           <Popup>Destination</Popup>
         </CircleMarker>
