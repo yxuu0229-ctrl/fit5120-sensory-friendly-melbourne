@@ -262,8 +262,10 @@
   cursor: pointer;
 }
 
-.suggest-list button:hover {
-  background: rgba(18, 23, 28, 0.06);
+.suggest-list button:hover,
+.suggest-list button.is-active {
+  background: rgba(18, 23, 28, 0.08);
+  outline: none;
 }
 
 .suggest-muted {

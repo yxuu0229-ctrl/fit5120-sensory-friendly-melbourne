@@ -29,6 +29,15 @@ export default function LocationSearch({
   }, [suggestions]);
 
   useEffect(() => {
+    if (activeIndex >= 0 && rootRef.current) {
+      const activeEl = rootRef.current.querySelector<HTMLElement>(
+        `#${listboxId}-opt-${activeIndex} button`
+      );
+      activeEl?.scrollIntoView({ block: "nearest" });
+    }
+  }, [activeIndex, listboxId]);
+
+  useEffect(() => {
     function onPointerDown(event: MouseEvent) {
       if (!rootRef.current?.contains(event.target as Node)) {
         setOpen(false);
