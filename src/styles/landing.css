@@ -1,72 +1,254 @@
-.landing {
-  position: relative;
-  min-height: 100vh;
-  overflow: hidden;
-  color: #f2f6f5;
+@import url("https://fonts.googleapis.com/css2?family=Architects+Daughter&family=Inria+Serif:wght@700&family=Inter:wght@300;400;500;600;700&display=swap");
+
+.landing-page {
   background: #0d1514;
+  height: 100vh;
+  width: 100vw;
+  position: relative;
+  overflow: hidden;
+  font-family: Inter, -apple-system, BlinkMacSystemFont, sans-serif;
+  color: #f2f6f5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .landing-wash {
   position: absolute;
   inset: -20% -10% auto;
-  height: 75vh;
+  height: 90vh;
   background:
-    radial-gradient(ellipse 60% 50% at 20% 30%, rgba(31, 122, 106, 0.35), transparent 60%),
-    radial-gradient(ellipse 50% 40% at 80% 20%, rgba(40, 70, 90, 0.4), transparent 55%),
-    linear-gradient(180deg, #15201e 0%, #0d1514 70%);
+    radial-gradient(ellipse 65% 55% at 50% 30%, rgba(31, 122, 106, 0.35), transparent 65%),
+    radial-gradient(ellipse 45% 40% at 20% 70%, rgba(40, 70, 90, 0.25), transparent 60%),
+    radial-gradient(ellipse 45% 40% at 80% 70%, rgba(31, 122, 106, 0.2), transparent 60%),
+    linear-gradient(180deg, #15201e 0%, #0d1514 80%);
   pointer-events: none;
+  z-index: 0;
 }
 
-.landing-top,
-.landing-hero,
-.landing-foot {
-  position: relative;
-  z-index: 1;
+.landing-header {
+  position: absolute;
+  top: 36px;
+  left: 0;
+  width: 100%;
+  text-align: center;
+  z-index: 10;
+  padding: 0 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  pointer-events: auto;
 }
 
-.landing-top {
-  padding: 1.5rem clamp(1.25rem, 4vw, 3rem);
-}
-
-.brand {
+.hero-text {
+  font-size: clamp(1.6rem, 2.8vw, 2.5rem);
+  font-weight: 400;
   margin: 0;
-  font-family: var(--display);
-  font-size: clamp(1.8rem, 4vw, 2.4rem);
-  font-weight: 600;
+  line-height: 1.25;
   letter-spacing: -0.02em;
+  color: #ffffff;
 }
 
-.landing-hero {
-  max-width: 38rem;
-  padding: clamp(4rem, 16vh, 9rem) clamp(1.25rem, 4vw, 3rem) 3rem;
+.hero-bold {
+  font-weight: 700;
+  background: linear-gradient(135deg, #249987 0%, #4ade80 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
-.landing-hero h1 {
-  margin: 0 0 1rem;
-  font-family: var(--display);
-  font-size: clamp(2.4rem, 7vw, 4.2rem);
-  font-weight: 600;
-  line-height: 1.05;
-  letter-spacing: -0.03em;
+.hero-subtitle {
+  margin: 0;
+  font-size: clamp(0.95rem, 1.2vw, 1.1rem);
+  color: #9cb0aa;
+  font-weight: 300;
+  letter-spacing: 0.01em;
 }
 
-.landing-hero p {
-  margin: 0 0 1.75rem;
-  max-width: 30rem;
-  color: #c5d2ce;
-  font-size: 1.1rem;
-  line-height: 1.55;
+.landing-bottom-cta {
+  position: absolute;
+  bottom: 4rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 20;
+  pointer-events: auto;
 }
 
 .landing-cta {
   display: inline-flex;
+  align-items: center;
+  gap: 8px;
   text-decoration: none;
+  font-size: 1.05rem;
+  font-weight: 600;
+  padding: 0.75rem 1.8rem;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #249987 0%, #1f7a6a 100%);
+  color: #ffffff;
+  box-shadow: 0 6px 24px rgba(31, 122, 106, 0.45);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.landing-cta:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(31, 122, 106, 0.6);
+}
+
+.landing-main {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+  z-index: 1;
+}
+
+
+.mockup-container {
+  position: absolute;
+  width: 1301px;
+  height: 885px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-shrink: 0;
+  filter: drop-shadow(0 20px 50px rgba(0, 0, 0, 0.5));
+}
+
+.mockup-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+  display: block;
+}
+
+.phone-screen-container {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 320px;
+  height: 680px;
+  transform-origin: top left;
+  transform: matrix3d(0.71825776, 0.01171684, 0, -0.0000048948, 0.04591609, 0.72640621, 0, -0.0000545616, 0, 0, 1, 0, 508.00000000, 156.00000000, 0, 1);
+  overflow: hidden;
+  border-radius: 38px;
+  background: #f7f2e9;
+  box-shadow: inset 0 0 12px rgba(0, 0, 0, 0.25), 0 0 40px rgba(31, 122, 106, 0.2);
+  display: flex;
+  flex-direction: column;
+}
+
+.phone-screen-iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  background: #f7f2e9;
+  display: block;
+}
+
+.dynamic-island {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 70px;
+  height: 22px;
+  background: #000000;
+  border-radius: 11px;
+  z-index: 20;
+  pointer-events: none;
+}
+
+.hint-container {
+  position: absolute;
+  left: 180px;
+  top: 240px;
+  width: 280px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transform: rotate(-3deg);
+  pointer-events: none;
+  z-index: 25;
+}
+
+.hint-text {
+  font-family: 'Architects Daughter', cursive;
+  font-size: 1.15rem;
+  color: #ffffff;
+  line-height: 1.35;
+  letter-spacing: 0.02em;
+  text-align: center;
+  margin: 0 0 4px 0;
+  -webkit-font-smoothing: antialiased;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.9), 0 0 4px rgba(0, 0, 0, 0.9);
+  font-weight: 600;
+}
+
+.hint-arrow {
+  color: #ffffff;
+  width: 110px;
+  height: auto;
+  opacity: 1;
+  transform: translateX(20px);
+  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.8));
 }
 
 .landing-foot {
   position: absolute;
-  left: clamp(1.25rem, 4vw, 3rem);
+  left: 50%;
+  transform: translateX(-50%);
   bottom: 1.4rem;
-  color: #7f908b;
-  font-size: 0.85rem;
+  color: #d8e5e1;
+  font-size: 0.92rem;
+  font-weight: 500;
+  z-index: 10;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.8);
 }
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.landing-header,
+.hint-container,
+.mockup-container {
+  animation: fadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.landing-header {
+  animation-delay: 0.1s;
+}
+.hint-container {
+  animation-delay: 0.2s;
+}
+.mockup-container {
+  animation-delay: 0.3s;
+}
+
+body.embedded,
+body.embedded * {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+body.embedded::-webkit-scrollbar,
+body.embedded *::-webkit-scrollbar {
+  display: none;
+}
+
+
+
