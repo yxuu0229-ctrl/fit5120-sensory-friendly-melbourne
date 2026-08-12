@@ -80,7 +80,7 @@
 
 .rail h2 {
   margin: 1rem 0 0.55rem;
-  font-size: 0.95rem;
+  font-size: 1.1rem;
 }
 
 .field {
@@ -97,7 +97,7 @@
 
 .field > label,
 .field > span {
-  font-size: 0.8rem;
+  font-size: 0.92rem;
   color: var(--panel-muted);
   font-weight: 600;
 }
@@ -182,7 +182,7 @@
   padding: 0.48rem 0.2rem;
   background: transparent;
   color: var(--panel-muted);
-  font-size: 0.78rem;
+  font-size: 0.88rem;
   font-weight: 600;
   letter-spacing: 0.01em;
   cursor: pointer;
@@ -204,7 +204,7 @@
 
 .coverage-hint {
   margin: 0 0 0.75rem;
-  font-size: 0.78rem;
+  font-size: 0.9rem;
   line-height: 1.4;
   color: var(--panel-muted);
 }
@@ -222,7 +222,7 @@
   display: flex;
   gap: 0.55rem;
   align-items: flex-start;
-  font-size: 0.9rem;
+  font-size: 1rem;
   color: var(--panel-text);
 }
 
@@ -258,15 +258,15 @@
   gap: 0.75rem;
   margin-top: 0.4rem;
   color: var(--panel-muted);
-  font-size: 0.85rem;
+  font-size: 0.95rem;
 }
 
 .badge {
   display: inline-flex;
   align-items: center;
   border-radius: 999px;
-  padding: 0.15rem 0.5rem;
-  font-size: 0.72rem;
+  padding: 0.2rem 0.55rem;
+  font-size: 0.8rem;
   font-weight: 700;
 }
 
@@ -296,7 +296,7 @@
 
 .alt-banner p {
   margin: 0 0 0.6rem;
-  font-size: 0.9rem;
+  font-size: 1rem;
   line-height: 1.4;
 }
 
@@ -323,7 +323,7 @@
 
 .refuge-list button span {
   color: var(--panel-muted);
-  font-size: 0.82rem;
+  font-size: 0.92rem;
 }
 
 .refuge-list button.is-selected {
@@ -340,7 +340,7 @@
 
 .refuge-detail h3 {
   margin: 0 0 0.5rem;
-  font-size: 1rem;
+  font-size: 1.15rem;
 }
 
 .refuge-detail dl {
@@ -350,7 +350,7 @@
 }
 
 .refuge-detail dt {
-  font-size: 0.72rem;
+  font-size: 0.82rem;
   color: var(--panel-muted);
   font-weight: 600;
 }
@@ -376,20 +376,20 @@
 
 .alert-card h3 {
   margin: 0 0 0.35rem;
-  font-size: 1rem;
+  font-size: 1.1rem;
   color: #7a2a24;
 }
 
 .alert-card p {
   margin: 0;
-  font-size: 0.9rem;
+  font-size: 1rem;
   line-height: 1.4;
   color: var(--panel-text);
 }
 
 .legend {
   margin-top: 1rem;
-  font-size: 0.8rem;
+  font-size: 0.92rem;
   color: var(--panel-muted);
   display: flex;
   gap: 0.75rem;
@@ -398,8 +398,8 @@
 }
 
 .dot {
-  width: 0.55rem;
-  height: 0.55rem;
+  width: 0.65rem;
+  height: 0.65rem;
   border-radius: 50%;
   display: inline-block;
   margin-right: 0.25rem;
@@ -409,8 +409,17 @@
   background: #a33b32;
 }
 
-.dot.refuge {
-  background: #7ea0b5;
+.legend-pin {
+  width: 0.7rem;
+  height: 0.7rem;
+  display: inline-block;
+  margin-right: 0.25rem;
+  background: #1f7a6a;
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 1px rgba(18, 23, 28, 0.2);
+  transform: rotate(45deg);
+  border-radius: 2px;
+  vertical-align: -0.05rem;
 }
 
 .dot.you {
@@ -450,9 +459,9 @@
   bottom: 0.85rem;
   z-index: 500;
   margin: 0;
-  padding: 0.35rem 0.65rem;
+  padding: 0.4rem 0.75rem;
   border-radius: 999px;
-  font-size: 0.75rem;
+  font-size: 0.86rem;
   color: var(--panel-muted);
   background: rgba(255, 255, 255, 0.92);
   border: 1px solid rgba(18, 23, 28, 0.08);
@@ -489,27 +498,41 @@
 
 .refuge-popup-body strong {
   display: block;
-  font-size: 0.98rem;
+  font-size: 1.1rem;
   margin-bottom: 0.25rem;
 }
 
 .refuge-popup-body p {
   margin: 0 0 0.35rem;
-  font-size: 0.86rem;
+  font-size: 0.98rem;
   line-height: 1.35;
   color: var(--panel-text);
 }
 
 .refuge-popup-meta {
   color: var(--panel-muted) !important;
-  font-size: 0.78rem !important;
+  font-size: 0.9rem !important;
 }
 
 .refuge-popup-nav {
   margin-top: 0.45rem;
   width: 100%;
-  padding: 0.5rem 0.75rem;
-  font-size: 0.85rem;
+  padding: 0.55rem 0.8rem;
+  font-size: 0.95rem;
+}
+
+.refuge-pin-wrap {
+  background: transparent !important;
+  border: 0 !important;
+}
+
+.refuge-pin {
+  filter: drop-shadow(0 3px 8px rgba(10, 14, 18, 0.28));
+  line-height: 0;
+}
+
+.refuge-pin.is-selected {
+  filter: drop-shadow(0 4px 12px rgba(31, 122, 106, 0.45));
 }
 
 .nav-arrow-wrap {

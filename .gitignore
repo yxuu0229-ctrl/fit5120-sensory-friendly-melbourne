@@ -7,33 +7,43 @@ node_modules/
 .env.*
 !.env.example
 
-# Build output
+# Build / Vite output
 dist/
 build/
 .turbo/
 .next/
 *.tsbuildinfo
+.vite/
 
 # Supabase local state
 supabase/.temp/
 supabase/.branches/
 
-# Python
+# Python (notebooks / scripts)
 __pycache__/
 *.pyc
 .ipynb_checkpoints/
 .venv/
 venv/
 
-# Editors and operating systems
+# Editors and OS
 .DS_Store
 Thumbs.db
 .idea/
 .vscode/
 *.swp
+*.swo
 
-# Logs and coverage
+# Logs and test coverage
 *.log
 npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
 coverage/
 .nyc_output/
+
+# Optional local caches
+.cache/
+tmp/
+temp/

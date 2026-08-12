@@ -88,8 +88,9 @@ export default function MapPanels({
       />
       <RefugeDetail place={selectedRefuge} onNavigate={onNavigateRefuge} />
       <p className="legend">
-        <span className="dot overload" /> Overload{" "}
-        <span className="dot refuge" /> Refuge <span className="dot you" /> You
+        <span className="dot overload" /> Crowd overload{" "}
+        <span className="legend-pin" aria-hidden="true" /> Refuge pin{" "}
+        <span className="dot you" /> You
       </p>
     </>
   );

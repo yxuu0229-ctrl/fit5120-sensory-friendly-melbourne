@@ -13,6 +13,7 @@ body,
 
 body {
   font-family: var(--font);
+  font-size: 17px;
   color: var(--ink);
   background: var(--paper);
   -webkit-font-smoothing: antialiased;
@@ -85,14 +86,14 @@ a {
 
 .muted {
   color: var(--panel-muted);
-  font-size: 0.92rem;
+  font-size: 1rem;
   line-height: 1.45;
 }
 
 .eyebrow {
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  font-size: 0.72rem;
+  font-size: 0.8rem;
   font-weight: 600;
   color: var(--panel-muted);
   margin: 0 0 0.55rem;
