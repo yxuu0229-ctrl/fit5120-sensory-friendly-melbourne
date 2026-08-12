@@ -1,16 +1,20 @@
 export default function NearestRefugeButton({
   disabled,
   active,
+  compact,
   onClick,
 }: {
   disabled: boolean;
   active?: boolean;
+  compact?: boolean;
   onClick: () => void;
 }) {
   return (
     <button
       type="button"
-      className={`btn btn-refuge${active ? " is-active" : ""}`}
+      className={`btn btn-refuge${active ? " is-active" : ""}${
+        compact ? " is-compact" : ""
+      }`}
       disabled={disabled}
       onClick={onClick}
     >
@@ -19,7 +23,9 @@ export default function NearestRefugeButton({
       </span>
       <span className="btn-refuge-copy">
         <strong>Nearest refuge</strong>
-        <small>3 calm options nearby</small>
+        <small>
+          {compact ? "Go to closest calm spot" : "3 calm options nearby"}
+        </small>
       </span>
     </button>
   );

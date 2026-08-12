@@ -16,6 +16,7 @@ export default function NavDock({
   onTogglePicker,
   onSelectRefuge,
   onNavigateRefuge,
+  onGoNearest,
   onClosePicker,
   onGo,
   onStop,
@@ -32,13 +33,14 @@ export default function NavDock({
   onTogglePicker: () => void;
   onSelectRefuge: (id: string) => void;
   onNavigateRefuge: (place: RefugePlace) => void;
+  onGoNearest: () => void;
   onClosePicker: () => void;
   onGo: () => void;
   onStop: () => void;
 }) {
   return (
     <div className={`nav-dock${navigating ? " is-navigating" : ""}`}>
-      {pickerOpen ? (
+      {pickerOpen && !navigating ? (
         <NearestRefugePicker
           places={topRefuges}
           selectedId={selectedRefugeId}
@@ -60,8 +62,9 @@ export default function NavDock({
           <div className="nav-dock-active-actions">
             <NearestRefugeButton
               disabled={!canRefuge}
-              active={pickerOpen}
-              onClick={onTogglePicker}
+              active={false}
+              compact
+              onClick={onGoNearest}
             />
             <button type="button" className="btn btn-stop" onClick={onStop}>
               Stop navigation

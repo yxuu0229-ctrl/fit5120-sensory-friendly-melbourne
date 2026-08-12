@@ -12,13 +12,14 @@ import RouteLayer from "../components/map/RouteLayer";
 import SensorLayer from "../components/map/SensorLayer";
 import UserLocationMarker from "../components/map/UserLocationMarker";
 import NavDock from "../components/nav/NavDock";
+import ActiveRouteBar from "../components/nav/ActiveRouteBar";
 import MapPanels from "../components/shell/MapPanels";
 import { useLiveNavigation } from "../hooks/useLiveNavigation";
 import { useMapData } from "../hooks/useMapData";
 import { coverageMessage } from "../lib/coverage";
 import { CBD_CENTER } from "../lib/densityBands";
 import { bearingAlongPath } from "../lib/geo";
-import { sortRefugesByDistance } from "../lib/nearestRefuge";
+import { nearestRefuge, sortRefugesByDistance } from "../lib/nearestRefuge";
 import { indicatorForLoad } from "../lib/sensoryIndicator";
 import {
   playGoChime,
@@ -112,6 +113,13 @@ export default function MapPage() {
       return changed ? next : prev;
     });
   }, [threshold]);
+
+  // Coverage / info toasts clear automatically after a few seconds.
+  useEffect(() => {
+    if (!data.notice) return;
+    const timer = window.setTimeout(() => data.setNotice(null), 5000);
+    return () => window.clearTimeout(timer);
+  }, [data.notice, data.setNotice]);
 
   async function runPlan(nextMode: TransportMode = mode) {
     if (!origin?.point || !dest?.point) {
@@ -226,6 +234,31 @@ export default function MapPage() {
     }
   }
 
+  async function goNearestRefuge() {
+    const from = live.userPoint ?? origin?.point;
+    if (!from) {
+      try {
+        const point = await getCurrentPosition();
+        live.setUserPoint(point);
+        const target = nearestRefuge(point, data.refuges);
+        if (!target) {
+          data.setError("No refuge places available.");
+          return;
+        }
+        await navigateToRefuge(target);
+      } catch {
+        data.setError("Set your location first.");
+      }
+      return;
+    }
+    const target = nearestRefuge(from, data.refuges);
+    if (!target) {
+      data.setError("No refuge places available.");
+      return;
+    }
+    await navigateToRefuge(target);
+  }
+
   async function startGo() {
     if (!selected) {
       data.setError("Plan a route first, then press Go.");
@@ -316,6 +349,17 @@ export default function MapPage() {
         </Link>
       </header>
 
+      {navigating ? (
+        <ActiveRouteBar
+          route={selected}
+          progress={live.progress}
+          originLabel={originText || origin?.label || null}
+          destinationLabel={
+            selected?.label || destText || dest?.label || null
+          }
+        />
+      ) : null}
+
       <DataUpdatedTag label={data.dataUpdatedLabel} />
 
       <MapPanels
@@ -399,6 +443,7 @@ export default function MapPage() {
           setSelectedRefugeId(id);
         }}
         onNavigateRefuge={(place) => void navigateToRefuge(place)}
+        onGoNearest={() => void goNearestRefuge()}
         onClosePicker={() => {
           setRefugePickerOpen(false);
           setSelectedRefugeId(null);

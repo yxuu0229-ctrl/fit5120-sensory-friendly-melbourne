@@ -27,6 +27,88 @@
   pointer-events: none;
 }
 
+.active-route-bar {
+  position: absolute;
+  top: 4.15rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 520;
+  width: min(640px, calc(100vw - 1.2rem));
+  display: grid;
+  gap: 0.45rem;
+  padding: 0.7rem 0.85rem 0.55rem;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(18, 23, 28, 0.1);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  color: var(--panel-text);
+  pointer-events: none;
+}
+
+.active-route-bar-main {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+}
+
+.active-route-pill {
+  flex: 0 0 auto;
+  margin-top: 0.15rem;
+  border-radius: 999px;
+  padding: 0.2rem 0.55rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: #f4fffb;
+  background: #1f7a6a;
+}
+
+.active-route-copy {
+  display: grid;
+  gap: 0.12rem;
+  min-width: 0;
+}
+
+.active-route-copy strong {
+  font-size: 0.98rem;
+  line-height: 1.25;
+}
+
+.active-route-copy span {
+  font-size: 0.82rem;
+  color: var(--panel-muted);
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.active-route-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  align-items: center;
+  font-size: 0.82rem;
+  color: var(--panel-muted);
+}
+
+.active-route-progress {
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(18, 23, 28, 0.08);
+  overflow: hidden;
+}
+
+.active-route-progress > div {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #1f7a6a, #249987);
+  transition: width 200ms ease;
+}
+
 .map-topbar > * {
   pointer-events: auto;
 }
@@ -706,8 +788,12 @@
   box-shadow: 0 16px 32px rgba(31, 122, 106, 0.4);
 }
 
-.btn-refuge.is-active {
-  outline: 2px solid rgba(255, 255, 255, 0.55);
+.btn-refuge.is-compact {
+  padding: 0.7rem 0.85rem;
+}
+
+.btn-refuge.is-compact .btn-refuge-copy strong {
+  font-size: 0.92rem;
 }
 
 .btn-refuge-icon {

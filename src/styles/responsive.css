@@ -84,6 +84,23 @@
     align-items: flex-start;
   }
 
+  .active-route-bar {
+    top: 4rem;
+    width: calc(100vw - 1rem);
+    padding: 0.65rem 0.75rem 0.5rem;
+  }
+
+  .active-route-copy strong {
+    font-size: 0.92rem;
+  }
+
+  .active-route-copy span {
+    white-space: normal;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
+
   .nav-dock {
     bottom: 0.65rem;
     width: calc(100vw - 1rem);
