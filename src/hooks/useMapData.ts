@@ -3,7 +3,11 @@ import { fetchSensoryRefuges } from "../api/places";
 import { fetchQuietWindowsForHour } from "../api/quietWindows";
 import { fetchDensitySensors } from "../api/sensors";
 import { hasSupabaseEnv } from "../api/supabaseClient";
-import { buildQuietAlert, nextHourLabel } from "../lib/quietForecast";
+import {
+  buildForecastHotspots,
+  type ForecastHotspot,
+} from "../lib/forecastHotspots";
+import { nextHourLabel } from "../lib/quietForecast";
 import type { QuietAlert, RefugePlace, SensorReading } from "../lib/types";
 
 const HOUR_MS = 60 * 60 * 1000;
@@ -27,6 +31,7 @@ export function useMapData() {
   const [sensors, setSensors] = useState<SensorReading[]>([]);
   const [refuges, setRefuges] = useState<RefugePlace[]>([]);
   const [alert, setAlert] = useState<QuietAlert | null>(null);
+  const [hotspots, setHotspots] = useState<ForecastHotspot[]>([]);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState<string | null>(null);
   const [dataUpdatedLabel, setDataUpdatedLabel] = useState<string | null>(null);
@@ -53,8 +58,7 @@ export function useMapData() {
         .sort()
         .at(-1);
       setDataUpdatedLabel(
-        formatUpdated(latest) ??
-          formatUpdated(new Date().toISOString())
+        formatUpdated(latest) ?? formatUpdated(new Date().toISOString())
       );
       if (!silent) setError("");
     } catch (e) {
@@ -85,14 +89,22 @@ export function useMapData() {
       hourday,
       sensors.map((s) => s.location_id)
     )
-      .then((windows) => setAlert(buildQuietAlert(sensors, windows, label)))
-      .catch(() => setAlert(null));
+      .then((windows) => {
+        const next = buildForecastHotspots(sensors, windows, label, 6);
+        setHotspots(next);
+        setAlert(next[0] ?? null);
+      })
+      .catch(() => {
+        setHotspots([]);
+        setAlert(null);
+      });
   }, [sensors]);
 
   return {
     sensors,
     refuges,
     alert,
+    hotspots,
     error,
     setError,
     notice,

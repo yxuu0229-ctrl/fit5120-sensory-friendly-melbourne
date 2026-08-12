@@ -1,6 +1,12 @@
-import type { QuietAlert } from "../../lib/types";
+import type { ForecastHotspot } from "../../lib/forecastHotspots";
 
-export default function NextHourAlert({ alert }: { alert: QuietAlert | null }) {
+export default function NextHourAlert({
+  alert,
+  hotspotCount = 0,
+}: {
+  alert: ForecastHotspot | null;
+  hotspotCount?: number;
+}) {
   if (!alert) {
     return (
       <p className="muted">
@@ -13,12 +19,11 @@ export default function NextHourAlert({ alert }: { alert: QuietAlert | null }) {
       <p className="eyebrow">Next-hour forecast</p>
       <h3>{alert.areaName}</h3>
       <p>
-        This coverage area (streets &amp; buildings the sensor watches) is
-        typically busy around <strong>{alert.periodLabel}</strong>
+        Typically busy around <strong>{alert.periodLabel}</strong>
         {alert.expectedMean != null
           ? ` · about ${Math.round(alert.expectedMean)} people`
           : ""}
-        {alert.reliable ? "" : " · limited history"}
+        {hotspotCount > 1 ? ` · ${hotspotCount} heat zones on map` : ""}
       </p>
     </div>
   );

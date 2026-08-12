@@ -7,7 +7,10 @@ import DataUpdatedTag from "../components/DataUpdatedTag";
 import EndpointMarkers from "../components/map/EndpointMarkers";
 import MapCanvas from "../components/map/MapCanvas";
 import MapFitBounds from "../components/map/MapFitBounds";
+import ForecastHeatLayer from "../components/map/ForecastHeatLayer";
 import RefugeMarkers from "../components/map/RefugeMarkers";
+import ResetRingsLayer from "../components/map/ResetRingsLayer";
+import RiskZoneLayer from "../components/map/RiskZoneLayer";
 import RouteLayer from "../components/map/RouteLayer";
 import SensorLayer from "../components/map/SensorLayer";
 import TransitModeKey from "../components/map/TransitModeKey";
@@ -19,9 +22,16 @@ import MapPanels from "../components/shell/MapPanels";
 import { useLiveNavigation } from "../hooks/useLiveNavigation";
 import { useMapData } from "../hooks/useMapData";
 import { coverageMessage } from "../lib/coverage";
+import { CBD_SUPPORT_PLACES } from "../data/cbdSupportPlaces";
 import { CBD_CENTER } from "../lib/densityBands";
-import { bearingAlongPath } from "../lib/geo";
+import { bearingAlongPath, distanceMeters } from "../lib/geo";
 import { nearestRefuge, sortRefugesByDistance } from "../lib/nearestRefuge";
+import {
+  DEFAULT_SUPPORT_LAYERS,
+  filterPlacesForLayers,
+  walkMinutesFromMeters,
+  type SupportLayerId,
+} from "../lib/refugeCategories";
 import { sensorsAlongPath } from "../lib/sensorsAlongRoute";
 import { indicatorForLoad, sensorLevelForThreshold } from "../lib/sensoryIndicator";
 import {
@@ -52,6 +62,7 @@ export default function MapPage() {
   const [sheet, setSheet] = useState<Sheet>("plan");
   const [planning, setPlanning] = useState(false);
   const [refugePickerOpen, setRefugePickerOpen] = useState(false);
+  const [layers, setLayers] = useState(DEFAULT_SUPPORT_LAYERS);
 
   const selected = routes.find((r) => r.id === selectedId) ?? null;
   const alternative =
@@ -60,13 +71,41 @@ export default function MapPage() {
     null;
   const live = useLiveNavigation(navigating, selected);
   const anchor = live.userPoint ?? origin?.point ?? dest?.point ?? CBD_CENTER;
+  const allPlaces = useMemo(() => {
+    const byId = new Map<string, RefugePlace>();
+    for (const p of data.refuges) byId.set(p.id, p);
+    for (const p of CBD_SUPPORT_PLACES) {
+      if (!byId.has(p.id)) byId.set(p.id, p);
+    }
+    return [...byId.values()];
+  }, [data.refuges]);
   const sortedRefuges = useMemo(
-    () => sortRefugesByDistance(anchor, data.refuges),
-    [anchor, data.refuges]
+    () =>
+      sortRefugesByDistance(anchor, allPlaces).map((p) => ({
+        ...p,
+        distanceMeters:
+          p.distanceMeters ??
+          distanceMeters(anchor, { lat: p.latitude, lng: p.longitude }),
+      })),
+    [anchor, allPlaces]
+  );
+  const visibleRefuges = useMemo(
+    () => filterPlacesForLayers(sortedRefuges, layers),
+    [sortedRefuges, layers]
   );
   const topRefuges = useMemo(() => sortedRefuges.slice(0, 3), [sortedRefuges]);
   const selectedRefuge =
     sortedRefuges.find((r) => r.id === selectedRefugeId) ?? null;
+
+  const resetSummary = useMemo(() => {
+    const nearest = sortedRefuges[0];
+    if (!nearest?.distanceMeters) return null;
+    return `Nearest calm reset · ~${walkMinutesFromMeters(nearest.distanceMeters)} min walk · ${nearest.name}`;
+  }, [sortedRefuges]);
+
+  function toggleLayer(id: SupportLayerId) {
+    setLayers((prev) => ({ ...prev, [id]: !prev[id] }));
+  }
 
   const navPoint = navigating
     ? live.userPoint ?? origin?.point ?? null
@@ -326,8 +365,18 @@ export default function MapPage() {
           highlightIds={routeHighlightIds}
           threshold={threshold}
         />
-        <RefugeMarkers
+        <RiskZoneLayer enabled={layers.riskZones && !navigating} />
+        <ForecastHeatLayer
+          hotspots={data.hotspots}
+          enabled={layers.forecast && !navigating}
+        />
+        <ResetRingsLayer
+          origin={anchor}
           places={sortedRefuges}
+          enabled={layers.resetRings && !navigating}
+        />
+        <RefugeMarkers
+          places={visibleRefuges}
           selectedId={selectedRefugeId}
           navigating={navigating}
           onSelect={(id) => {
@@ -357,6 +406,11 @@ export default function MapPage() {
           segments={selected?.segments}
           style={navigating ? "navigating" : "selected"}
           showLabels={Boolean(selected?.transitLegs?.length)}
+          calm={
+            preferCalmer ||
+            selected?.indicator === "Low" ||
+            selected?.recommended === true
+          }
         />
         <UserLocationMarker
           point={navPoint}
@@ -453,8 +507,9 @@ export default function MapPage() {
         selected={selected}
         alternative={alternative}
         onTakeAlternative={() => alternative && setSelectedId(alternative.id)}
-        alert={data.alert}
-        refuges={sortedRefuges}
+        alert={data.hotspots[0] ?? null}
+        hotspotCount={data.hotspots.length}
+        refuges={visibleRefuges}
         selectedRefugeId={selectedRefugeId}
         onSelectRefuge={(id) => {
           setSelectedRefugeId(id);
@@ -462,6 +517,9 @@ export default function MapPage() {
         }}
         selectedRefuge={selectedRefuge}
         onNavigateRefuge={(place) => void navigateToRefuge(place)}
+        layers={layers}
+        onToggleLayer={toggleLayer}
+        resetSummary={resetSummary}
         sheet={sheet}
         setSheet={setSheet}
         onGo={() => void startGo()}

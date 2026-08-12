@@ -1,13 +1,16 @@
 import type { ReactNode, TouchEvent } from "react";
+import type { ForecastHotspot } from "../../lib/forecastHotspots";
+import type { SupportLayerId } from "../../lib/refugeCategories";
+import type { PlaceResult, RefugePlace, RouteOption } from "../../lib/types";
+import type { TransportMode } from "../../lib/transportModes";
 import NextHourAlert from "../alerts/NextHourAlert";
 import PlanBlock from "../plan/PlanBlock";
 import RefugeDetail from "../refuges/RefugeDetail";
 import RefugeList from "../refuges/RefugeList";
 import AlternativeBanner from "../routes/AlternativeBanner";
 import TopRoutesList from "../routes/TopRoutesList";
+import LayerControls from "./LayerControls";
 import MapLegend from "./MapLegend";
-import type { PlaceResult, QuietAlert, RefugePlace, RouteOption } from "../../lib/types";
-import type { TransportMode } from "../../lib/transportModes";
 
 type Sheet = "plan" | "routes" | "places";
 
@@ -44,11 +47,15 @@ export default function MapPanels({
   alternative,
   onTakeAlternative,
   alert,
+  hotspotCount,
   refuges,
   selectedRefugeId,
   onSelectRefuge,
   selectedRefuge,
   onNavigateRefuge,
+  layers,
+  onToggleLayer,
+  resetSummary,
   sheet,
   setSheet,
   toast,
@@ -63,12 +70,16 @@ export default function MapPanels({
   selected: RouteOption | null;
   alternative: RouteOption | null;
   onTakeAlternative: () => void;
-  alert: QuietAlert | null;
+  alert: ForecastHotspot | null;
+  hotspotCount: number;
   refuges: RefugePlace[];
   selectedRefugeId: string | null;
   onSelectRefuge: (id: string) => void;
   selectedRefuge: RefugePlace | null;
   onNavigateRefuge: (place: RefugePlace) => void;
+  layers: Record<SupportLayerId, boolean>;
+  onToggleLayer: (id: SupportLayerId) => void;
+  resetSummary: string | null;
   sheet: Sheet;
   setSheet: (s: Sheet) => void;
   toast: ReactNode;
@@ -99,6 +110,12 @@ export default function MapPanels({
   const placesBlock = (
     <>
       <MapLegend />
+      <LayerControls layers={layers} onToggle={onToggleLayer} />
+      {resetSummary ? (
+        <p className="reset-summary" role="status">
+          {resetSummary}
+        </p>
+      ) : null}
       <label className="check-row sensor-toggle">
         <input
           type="checkbox"
@@ -114,7 +131,7 @@ export default function MapPanels({
             : `Hiding low areas — map shows Medium/High coverage only (scoring still uses all ${sensorCount}).`}
         </p>
       ) : null}
-      <NextHourAlert alert={alert} />
+      <NextHourAlert alert={alert} hotspotCount={hotspotCount} />
       <h2>Nearby refuges</h2>
       <RefugeList
         places={refuges}

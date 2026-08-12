@@ -5,19 +5,27 @@ export default function MapLegend() {
       <div className="map-legend-items">
         <span className="map-legend-item">
           <span className="area-swatch sensor-low" aria-hidden="true" />
-          Low crowd zone
+          Low crowd
         </span>
         <span className="map-legend-item">
           <span className="area-swatch sensor-med" aria-hidden="true" />
-          Medium crowd zone
+          Medium crowd
         </span>
         <span className="map-legend-item">
           <span className="area-swatch sensor-high" aria-hidden="true" />
-          High crowd zone
+          High crowd
         </span>
         <span className="map-legend-item">
           <span className="legend-pin" aria-hidden="true" />
-          Refuge
+          Calm refuge
+        </span>
+        <span className="map-legend-item">
+          <span className="legend-risk" aria-hidden="true" />
+          Sensory risk
+        </span>
+        <span className="map-legend-item">
+          <span className="legend-heat" aria-hidden="true" />
+          Next-hour heat
         </span>
         <span className="map-legend-item">
           <span className="dot you" aria-hidden="true" />
