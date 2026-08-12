@@ -2,6 +2,8 @@
 
 Team TE37's shared source of truth for the Supabase-backed open-data pipeline and the React (Vite) sensory-aware Melbourne CBD travel map.
 
+**Live website:** [fit5120-sensory-friendly-melbourne.vercel.app](https://fit5120-sensory-friendly-melbourne.vercel.app/)
+
 Every implementation change must map to a LeanKit Epic, User Story and Acceptance Criterion. Development is reviewed through Pull Requests; protected or privileged values must never be committed.
 
 ## What you get
