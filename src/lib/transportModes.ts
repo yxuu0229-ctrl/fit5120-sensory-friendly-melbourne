@@ -1,18 +1,16 @@
-export type TransportMode = "walk" | "cycle" | "drive";
+export type TransportMode = "walk" | "cycle" | "drive" | "transit";
 
-export type OsrmProfile = "foot" | "bike" | "driving";
-
-export const MODE_OPTIONS: Array<{
+export const TRANSPORT_MODES: Array<{
   id: TransportMode;
   label: string;
-  hint: string;
 }> = [
-  { id: "walk", label: "Walk", hint: "Quieter footpaths (OSRM + density)" },
-  { id: "cycle", label: "Cycle", hint: "Bike routing (OSRM)" },
-  { id: "drive", label: "Drive", hint: "Car routing (OSRM)" },
+  { id: "walk", label: "Walk" },
+  { id: "cycle", label: "Cycle" },
+  { id: "drive", label: "Drive" },
+  { id: "transit", label: "Transit" },
 ];
 
-export function osrmProfileForMode(mode: TransportMode): OsrmProfile | null {
+export function osrmProfile(mode: TransportMode): "foot" | "bike" | "driving" | null {
   if (mode === "walk") return "foot";
   if (mode === "cycle") return "bike";
   if (mode === "drive") return "driving";

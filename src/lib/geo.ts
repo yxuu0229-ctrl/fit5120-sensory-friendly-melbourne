@@ -1,11 +1,8 @@
-export type LatLng = {
-  lat: number;
-  lng: number;
-};
+import type { LatLng } from "./types";
 
 export function distanceMeters(a: LatLng, b: LatLng) {
-  const radius = 6371000;
-  const toRad = (value: number) => (value * Math.PI) / 180;
+  const R = 6371000;
+  const toRad = (d: number) => (d * Math.PI) / 180;
   const dLat = toRad(b.lat - a.lat);
   const dLng = toRad(b.lng - a.lng);
   const lat1 = toRad(a.lat);
@@ -13,128 +10,93 @@ export function distanceMeters(a: LatLng, b: LatLng) {
   const h =
     Math.sin(dLat / 2) ** 2 +
     Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) ** 2;
-  return 2 * radius * Math.asin(Math.sqrt(h));
+  return 2 * R * Math.asin(Math.sqrt(h));
 }
 
-/** Alias kept for the route-planning modules ported from the map app. */
-export const haversineMeters = distanceMeters;
-
-export function distanceToRouteMeters(point: LatLng, routePath: [number, number][]) {
-  return Math.min(
-    ...routePath.map(([lat, lng]) => distanceMeters(point, { lat, lng }))
-  );
-}
-
-/**
- * Progress 0–100 along a [lat, lng] path, using the closest vertex as the
- * traveller's position. Returns 0 when the path is too short or empty.
- */
-export function progressAlongRoutePercent(
-  point: LatLng,
-  routePath: [number, number][]
-): number {
-  if (routePath.length < 2) return 0;
-
-  let closestIdx = 0;
-  let closestDist = Infinity;
-  for (let i = 0; i < routePath.length; i++) {
-    const d = distanceMeters(point, {
-      lat: routePath[i][0],
-      lng: routePath[i][1],
-    });
-    if (d < closestDist) {
-      closestDist = d;
-      closestIdx = i;
-    }
-  }
-
-  let total = 0;
-  let along = 0;
-  for (let i = 1; i < routePath.length; i++) {
-    const seg = distanceMeters(
-      { lat: routePath[i - 1][0], lng: routePath[i - 1][1] },
-      { lat: routePath[i][0], lng: routePath[i][1] }
-    );
-    total += seg;
-    if (i <= closestIdx) along += seg;
-  }
-
-  if (total <= 0) return 0;
-  return Math.max(0, Math.min(100, Math.round((along / total) * 100)));
-}
-
-/** Sample points along a [lng, lat] polyline roughly every `stepMeters`. */
 export function sampleLine(
   coords: [number, number][],
-  stepMeters = 40
+  stepMeters = 45
 ): LatLng[] {
-  if (coords.length === 0) return [];
+  if (!coords.length) return [];
   const out: LatLng[] = [{ lat: coords[0][1], lng: coords[0][0] }];
   let carry = 0;
-
   for (let i = 1; i < coords.length; i++) {
     const prev = { lat: coords[i - 1][1], lng: coords[i - 1][0] };
     const curr = { lat: coords[i][1], lng: coords[i][0] };
-    const seg = haversineMeters(prev, curr);
-    carry += seg;
+    carry += distanceMeters(prev, curr);
     if (carry >= stepMeters) {
       out.push(curr);
       carry = 0;
     }
   }
-
   const last = coords[coords.length - 1];
   out.push({ lat: last[1], lng: last[0] });
   return out;
 }
 
-export function midpoint(a: LatLng, b: LatLng): LatLng {
-  return { lat: (a.lat + b.lat) / 2, lng: (a.lng + b.lng) / 2 };
-}
-
-/**
- * Distance from a point to the nearest sample on a [lat, lng] path.
- */
-export function distanceToPathMeters(
+export function progressAlongRoute(
   point: LatLng,
-  pathLatLng: [number, number][],
-  sampleEveryMeters = 50
-): number {
-  if (pathLatLng.length === 0) return Infinity;
-  // Convert to [lng, lat] for sampleLine, then measure
-  const asLngLat: [number, number][] = pathLatLng.map(([lat, lng]) => [
-    lng,
-    lat,
-  ]);
-  const samples = sampleLine(asLngLat, sampleEveryMeters);
-  let min = Infinity;
-  for (const s of samples) {
-    const d = haversineMeters(point, s);
-    if (d < min) min = d;
+  path: [number, number][]
+): { percent: number; closestIndex: number } {
+  if (path.length < 2) return { percent: 0, closestIndex: 0 };
+  let closestIndex = 0;
+  let closest = Infinity;
+  for (let i = 0; i < path.length; i++) {
+    const d = distanceMeters(point, { lat: path[i][0], lng: path[i][1] });
+    if (d < closest) {
+      closest = d;
+      closestIndex = i;
+    }
   }
-  return min;
+  let total = 0;
+  let along = 0;
+  for (let i = 1; i < path.length; i++) {
+    const seg = distanceMeters(
+      { lat: path[i - 1][0], lng: path[i - 1][1] },
+      { lat: path[i][0], lng: path[i][1] }
+    );
+    total += seg;
+    if (i <= closestIndex) along += seg;
+  }
+  const percent = total <= 0 ? 0 : Math.round((along / total) * 100);
+  return { percent: Math.min(100, Math.max(0, percent)), closestIndex };
 }
 
-export type PlaceAlongRoute<T extends { latitude: number; longitude: number }> =
-  T & { distanceToRouteMeters: number };
+export function remainingPath(
+  path: [number, number][],
+  closestIndex: number
+): [number, number][] {
+  if (closestIndex >= path.length - 1) return path.slice(-2);
+  return path.slice(Math.max(0, closestIndex));
+}
 
-/** Keep places within `radiusMeters` of the journey path, nearest first. */
-export function filterPlacesAlongRoute<
-  T extends { latitude: number; longitude: number },
->(
-  places: T[],
-  pathLatLng: [number, number][],
-  radiusMeters = 180
-): PlaceAlongRoute<T>[] {
-  if (!pathLatLng.length) return [];
-  return places
-    .map((p) => ({
-      ...p,
-      distanceToRouteMeters: distanceToPathMeters(
-        { lat: p.latitude, lng: p.longitude },
-        pathLatLng
-      ),
-    }))
-    .filter((p) => p.distanceToRouteMeters <= radiusMeters)
-    .sort((a, b) => a.distanceToRouteMeters - b.distanceToRouteMeters);
+/** Compass bearing in degrees (0 = north) from `from` toward `to`. */
+export function bearingDegrees(from: LatLng, to: LatLng): number {
+  const toRad = (d: number) => (d * Math.PI) / 180;
+  const toDeg = (r: number) => (r * 180) / Math.PI;
+  const φ1 = toRad(from.lat);
+  const φ2 = toRad(to.lat);
+  const Δλ = toRad(to.lng - from.lng);
+  const y = Math.sin(Δλ) * Math.cos(φ2);
+  const x =
+    Math.cos(φ1) * Math.sin(φ2) -
+    Math.sin(φ1) * Math.cos(φ2) * Math.cos(Δλ);
+  return (toDeg(Math.atan2(y, x)) + 360) % 360;
+}
+
+/** Bearing along the remaining polyline from the closest vertex. */
+export function bearingAlongPath(
+  point: LatLng,
+  path: [number, number][]
+): number | null {
+  if (path.length < 2) return null;
+  const { closestIndex } = progressAlongRoute(point, path);
+  const nextIndex = Math.min(path.length - 1, closestIndex + 1);
+  const from =
+    closestIndex === nextIndex && closestIndex > 0
+      ? { lat: path[closestIndex - 1][0], lng: path[closestIndex - 1][1] }
+      : { lat: path[closestIndex][0], lng: path[closestIndex][1] };
+  const to = { lat: path[nextIndex][0], lng: path[nextIndex][1] };
+  if (from.lat === to.lat && from.lng === to.lng) return null;
+  return bearingDegrees(from, to);
 }

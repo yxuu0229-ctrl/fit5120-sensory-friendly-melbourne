@@ -1,54 +1,60 @@
+export type LatLng = { lat: number; lng: number };
+
 export type DensityLevel = "Low" | "Medium" | "High";
 
-export type SensorDensityCurrent = {
+export type SensoryIndicator = "Low" | "High";
+
+export type SensorReading = {
   location_id: number;
   sensor_name: string | null;
   latitude: number;
   longitude: number;
-  in_cbd: boolean | null;
-  total_count: number;
   density_level: DensityLevel;
+  total_count: number;
   sensing_datetime: string | null;
-  updated_at: string;
 };
 
-/**
- * Typical pedestrian volume for one sensor at one weekday-hour.
- * `is_reliable` is computed during sync from `sample_count`; consumers must not
- * re-derive it, so the threshold lives in exactly one place.
- */
+export type RefugePlace = {
+  id: string;
+  name: string;
+  category: string | null;
+  theme: string | null;
+  latitude: number;
+  longitude: number;
+  distanceMeters?: number;
+};
+
+export type PlaceResult = {
+  label: string;
+  placeId?: string;
+  point: LatLng;
+};
+
+export type RouteOption = {
+  id: string;
+  rank: number;
+  label: string;
+  recommended: boolean;
+  sensoryLoad: number;
+  indicator: SensoryIndicator;
+  distanceMeters: number;
+  durationSeconds: number;
+  positions: [number, number][];
+};
+
+export type QuietAlert = {
+  areaName: string;
+  periodLabel: string;
+  expectedMean: number | null;
+  reliable: boolean;
+  point: LatLng;
+};
+
 export type LocationQuietWindow = {
   location_id: number;
   day_name: string;
   hourday: number;
   mean: number;
-  median: number;
-  std: number;
   sample_count: number;
   is_reliable: boolean;
-  updated_at: string;
-};
-
-export type Place = {
-  id: string;
-  name: string;
-  category: string | null;
-  theme: string | null;
-  sub_theme: string | null;
-  source: string;
-  is_sensory_refuge: boolean;
-  in_cbd: boolean | null;
-  latitude: number;
-  longitude: number;
-  updated_at: string;
-};
-
-export type SyncRun = {
-  id: string;
-  started_at: string;
-  finished_at: string | null;
-  status: "running" | "success" | "error";
-  mode: string;
-  rows_upserted: Record<string, number>;
-  error: string | null;
 };

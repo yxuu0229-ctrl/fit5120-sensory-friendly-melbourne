@@ -6,21 +6,19 @@ node_modules/
 .env
 .env.*
 !.env.example
-apps/web/.env.local
 
-# Next.js and build output
-apps/web/.next/
-apps/web/out/
+# Build output
 dist/
 build/
 .turbo/
+.next/
 *.tsbuildinfo
 
 # Supabase local state
 supabase/.temp/
 supabase/.branches/
 
-# Python and notebooks
+# Python
 __pycache__/
 *.pyc
 .ipynb_checkpoints/
