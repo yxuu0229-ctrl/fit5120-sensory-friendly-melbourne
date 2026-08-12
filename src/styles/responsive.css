@@ -15,10 +15,12 @@
     position: absolute;
     left: 0.6rem;
     right: 0.6rem;
-    bottom: 0.6rem;
+    bottom: 5.8rem;
     z-index: 480;
-    max-height: min(48vh, 420px);
-    overflow: auto;
+    max-height: min(52vh, 460px);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
     border-radius: 18px 18px 14px 14px;
     background: var(--panel);
     color: var(--panel-text);
@@ -27,6 +29,20 @@
     padding: 0.65rem 0.85rem 0.9rem;
     backdrop-filter: blur(18px) saturate(1.2);
     -webkit-backdrop-filter: blur(18px) saturate(1.2);
+    touch-action: pan-y;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .mobile-sheet-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    touch-action: pan-y;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 0.35rem;
   }
 
   .sheet-tabs {
@@ -34,9 +50,8 @@
     grid-template-columns: repeat(3, 1fr);
     gap: 0.35rem;
     margin-bottom: 0.65rem;
-    position: sticky;
-    top: 0;
-    background: rgba(255, 255, 255, 0.82);
+    flex: 0 0 auto;
+    background: rgba(255, 255, 255, 0.92);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     padding-bottom: 0.35rem;
@@ -69,17 +84,48 @@
     align-items: flex-start;
   }
 
-  .top-actions .btn {
-    padding: 0.55rem 0.85rem;
-    font-size: 0.88rem;
+  .nav-dock {
+    bottom: 0.65rem;
+    width: calc(100vw - 1rem);
+  }
+
+  .nav-dock-actions {
+    grid-template-columns: 1.7fr 0.8fr;
+    gap: 0.5rem;
+  }
+
+  .btn-refuge {
+    padding: 0.75rem 0.85rem;
+    border-radius: 16px;
+  }
+
+  .btn-refuge-copy strong {
+    font-size: 0.92rem;
+  }
+
+  .btn-refuge-copy small {
+    font-size: 0.72rem;
+  }
+
+  .btn-go {
+    border-radius: 16px;
+    font-size: 0.98rem;
+  }
+
+  .nav-dock-active {
+    grid-template-columns: 1fr;
+  }
+
+  .nav-dock-active-actions {
+    grid-template-columns: 1fr;
   }
 
   .toast {
-    bottom: calc(min(48vh, 420px) + 1rem);
+    bottom: calc(5.8rem + 0.75rem);
   }
 
   .data-updated-tag {
-    bottom: calc(min(48vh, 420px) + 0.75rem);
+    bottom: calc(5.8rem + 0.55rem);
     left: 50%;
     transform: translateX(-50%);
   }

@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import type { ReactNode, TouchEvent } from "react";
 import NextHourAlert from "../alerts/NextHourAlert";
 import PlanBlock from "../plan/PlanBlock";
 import RefugeDetail from "../refuges/RefugeDetail";
@@ -23,10 +23,16 @@ type PlanProps = {
   setThreshold: (n: number) => void;
   preferCalmer: boolean;
   setPreferCalmer: (v: boolean) => void;
+  showLowSensors: boolean;
+  setShowLowSensors: (v: boolean) => void;
   planning: boolean;
   onPlan: () => void;
   onLocate: () => void;
 };
+
+function keepSheetScroll(e: TouchEvent) {
+  e.stopPropagation();
+}
 
 export default function MapPanels({
   planProps,
@@ -45,6 +51,9 @@ export default function MapPanels({
   sheet,
   setSheet,
   toast,
+  hidden = false,
+  onGo,
+  sensorCount,
 }: {
   planProps: PlanProps;
   routes: RouteOption[];
@@ -62,13 +71,22 @@ export default function MapPanels({
   sheet: Sheet;
   setSheet: (s: Sheet) => void;
   toast: ReactNode;
+  hidden?: boolean;
+  onGo?: () => void;
+  sensorCount?: number | null;
 }) {
+  if (hidden) {
+    return <>{toast}</>;
+  }
+
   const routesBlock = (
     <>
       <TopRoutesList
         routes={routes}
         selectedId={selectedId}
         onSelect={onSelectRoute}
+        onGo={onGo}
+        canGo={Boolean(selected)}
       />
       <AlternativeBanner
         selected={selected}
@@ -88,10 +106,27 @@ export default function MapPanels({
       />
       <RefugeDetail place={selectedRefuge} onNavigate={onNavigateRefuge} />
       <p className="legend">
-        <span className="dot overload" /> Crowd overload{" "}
-        <span className="legend-pin" aria-hidden="true" /> Refuge pin{" "}
+        <span className="dot sensor-low" /> Low{" "}
+        <span className="dot sensor-med" /> Medium{" "}
+        <span className="dot sensor-high" /> High crowd{" "}
+        <span className="legend-pin" aria-hidden="true" /> Refuge{" "}
         <span className="dot you" /> You
       </p>
+      <label className="check-row sensor-toggle">
+        <input
+          type="checkbox"
+          checked={planProps.showLowSensors}
+          onChange={(e) => planProps.setShowLowSensors(e.target.checked)}
+        />
+        Show low-crowd sensors on map
+      </label>
+      {sensorCount != null ? (
+        <p className="sensor-count-note">
+          {planProps.showLowSensors
+            ? `Showing all ${sensorCount} sensors on the map.`
+            : `Hiding low sensors — map shows Medium/High only (scoring still uses all ${sensorCount}).`}
+        </p>
+      ) : null}
     </>
   );
 
@@ -102,7 +137,11 @@ export default function MapPanels({
         {routesBlock}
       </aside>
       <aside className="rail rail-right desktop-only">{placesBlock}</aside>
-      <div className="mobile-sheet mobile-only">
+      <div
+        className="mobile-sheet mobile-only"
+        onTouchStart={keepSheetScroll}
+        onTouchMove={keepSheetScroll}
+      >
         <div className="sheet-tabs">
           {(["plan", "routes", "places"] as Sheet[]).map((id) => (
             <button
@@ -115,9 +154,11 @@ export default function MapPanels({
             </button>
           ))}
         </div>
-        {sheet === "plan" && <PlanBlock {...planProps} />}
-        {sheet === "routes" && routesBlock}
-        {sheet === "places" && placesBlock}
+        <div className="mobile-sheet-body">
+          {sheet === "plan" && <PlanBlock {...planProps} />}
+          {sheet === "routes" && routesBlock}
+          {sheet === "places" && placesBlock}
+        </div>
       </div>
       {toast}
     </>

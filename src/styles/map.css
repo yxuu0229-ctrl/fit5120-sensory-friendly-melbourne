@@ -56,7 +56,7 @@
 .rail {
   position: absolute;
   top: 4.4rem;
-  bottom: 1rem;
+  bottom: 6.2rem;
   z-index: 450;
   width: min(360px, calc(100vw - 1.6rem));
   overflow: auto;
@@ -219,6 +219,13 @@
   background: #5b3d8f;
 }
 
+.field-hint {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--panel-muted);
+  line-height: 1.35;
+}
+
 .coverage-hint {
   margin: 0 0 0.75rem;
   font-size: 0.9rem;
@@ -247,6 +254,62 @@
   display: grid;
   gap: 0.55rem;
   margin-top: 0.75rem;
+}
+
+.route-list-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.route-list-head .eyebrow {
+  margin: 0;
+}
+
+.route-card-row {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.45rem;
+  align-items: stretch;
+}
+
+.route-card-row.is-selected {
+  grid-template-columns: 1fr auto;
+}
+
+.btn-go-beside,
+.btn-go-inline {
+  border: 0;
+  border-radius: 14px;
+  padding: 0.7rem 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  color: #f4fffb;
+  background: linear-gradient(180deg, #249987 0%, var(--accent) 100%);
+  box-shadow: 0 8px 18px rgba(31, 122, 106, 0.28);
+  align-self: center;
+}
+
+.btn-go-beside {
+  min-width: 4.5rem;
+}
+
+.btn-go-inline:disabled,
+.btn-go-beside:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.sensor-toggle {
+  margin-top: 0.65rem;
+}
+
+.sensor-count-note {
+  margin: 0.75rem 0 0;
+  font-size: 0.86rem;
+  line-height: 1.4;
+  color: var(--panel-muted);
 }
 
 .route-card {
@@ -519,6 +582,18 @@
   background: #a33b32;
 }
 
+.dot.sensor-low {
+  background: #2f6f4e;
+}
+
+.dot.sensor-med {
+  background: #b07d2a;
+}
+
+.dot.sensor-high {
+  background: #a33b32;
+}
+
 .legend-pin {
   width: 0.7rem;
   height: 0.7rem;
@@ -540,7 +615,7 @@
 .toast {
   position: absolute;
   left: 50%;
-  bottom: 1rem;
+  bottom: 6.4rem;
   transform: translateX(-50%);
   z-index: 600;
   max-width: min(520px, calc(100vw - 1.5rem));
@@ -566,7 +641,7 @@
 .data-updated-tag {
   position: absolute;
   left: 0.85rem;
-  bottom: 0.85rem;
+  bottom: 6.2rem;
   z-index: 500;
   margin: 0;
   padding: 0.4rem 0.75rem;
@@ -579,17 +654,233 @@
   pointer-events: none;
 }
 
-.go-stack {
+.nav-dock {
+  position: absolute;
+  left: 50%;
+  bottom: 0.85rem;
+  transform: translateX(-50%);
+  z-index: 550;
+  width: min(560px, calc(100vw - 1.2rem));
   display: grid;
-  gap: 0.25rem;
-  justify-items: end;
+  gap: 0.65rem;
+  pointer-events: none;
 }
 
-.go-stack .muted {
-  color: var(--ink-soft);
-  background: rgba(255, 255, 255, 0.85);
+.nav-dock > * {
+  pointer-events: auto;
+}
+
+.nav-dock-actions {
+  display: grid;
+  grid-template-columns: 1.55fr 0.85fr;
+  gap: 0.65rem;
+  align-items: stretch;
+}
+
+.btn-refuge {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  width: 100%;
+  text-align: left;
+  border: 0;
+  border-radius: 18px;
+  padding: 0.85rem 1rem;
+  cursor: pointer;
+  color: #f4fffb;
+  background: linear-gradient(135deg, #1f7a6a 0%, #155a4d 100%);
+  box-shadow: 0 14px 28px rgba(31, 122, 106, 0.32);
+  transition:
+    transform 160ms ease,
+    box-shadow 160ms ease,
+    opacity 160ms ease;
+}
+
+.btn-refuge:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.btn-refuge:not(:disabled):hover {
+  transform: translateY(-1px);
+  box-shadow: 0 16px 32px rgba(31, 122, 106, 0.4);
+}
+
+.btn-refuge.is-active {
+  outline: 2px solid rgba(255, 255, 255, 0.55);
+}
+
+.btn-refuge-icon {
+  display: grid;
+  place-items: center;
+  width: 2.1rem;
+  height: 2.1rem;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.16);
+  font-size: 1.05rem;
+}
+
+.btn-refuge-copy {
+  display: grid;
+  gap: 0.1rem;
+}
+
+.btn-refuge-copy strong {
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.btn-refuge-copy small {
+  font-size: 0.78rem;
+  opacity: 0.88;
+}
+
+.btn-go {
+  border: 0;
+  border-radius: 18px;
+  padding: 0.85rem 1.1rem;
+  font-weight: 700;
+  font-size: 1.05rem;
+  cursor: pointer;
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(18, 23, 28, 0.08);
+  box-shadow: 0 14px 28px rgba(10, 14, 18, 0.16);
+  backdrop-filter: blur(12px);
+}
+
+.btn-go:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.btn-stop {
+  border: 0;
+  border-radius: 16px;
+  padding: 0.9rem 1.15rem;
+  font-weight: 700;
+  cursor: pointer;
+  color: #fff;
+  background: linear-gradient(135deg, #a33b32 0%, #7a2a24 100%);
+  box-shadow: 0 14px 28px rgba(163, 59, 50, 0.28);
+}
+
+.nav-dock-active {
+  display: grid;
+  gap: 0.75rem;
+  padding: 0.85rem 1rem;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(18, 23, 28, 0.1);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(18px);
+}
+
+.nav-dock-active-actions {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 0.55rem;
+  align-items: stretch;
+}
+
+.nav-dock-active-actions .btn-refuge {
+  min-height: 100%;
+}
+
+.nav-dock-active-actions .btn-stop {
+  width: 100%;
+}
+
+.nav-dock-status {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.nav-dock-status strong {
+  font-size: 1.05rem;
+  color: var(--panel-text);
+}
+
+.nav-dock-status span {
+  font-size: 0.88rem;
+  color: var(--panel-muted);
+}
+
+.refuge-picker {
+  border-radius: 20px;
+  padding: 0.85rem 0.9rem 0.95rem;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(18, 23, 28, 0.1);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(18px);
+  color: var(--panel-text);
+  max-height: min(42vh, 360px);
+  overflow: auto;
+}
+
+.refuge-picker-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  align-items: flex-start;
+  margin-bottom: 0.65rem;
+}
+
+.refuge-picker-head h2 {
+  margin: 0;
+  font-size: 1.15rem;
+}
+
+.picker-close,
+.picker-back {
+  padding: 0.45rem 0.75rem;
+  font-size: 0.85rem;
+}
+
+.refuge-picker-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.refuge-picker-list button.is-selected {
+  border-color: rgba(31, 122, 106, 0.55);
+  background: rgba(31, 122, 106, 0.1);
+}
+
+.refuge-rank {
+  width: 1.7rem;
+  height: 1.7rem;
   border-radius: 999px;
-  padding: 0.15rem 0.55rem;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: #f4fffb;
+  background: #1f7a6a;
+}
+
+.refuge-picker-copy {
+  display: grid;
+  gap: 0.12rem;
+}
+
+.refuge-picker-copy span {
+  color: var(--panel-muted);
+  font-size: 0.88rem;
+}
+
+.refuge-picker-detail .refuge-detail {
+  border-top: 0;
+  padding-top: 0.35rem;
+  margin-top: 0.35rem;
+}
+
+.map-app.is-navigating .data-updated-tag {
+  bottom: 6.2rem;
 }
 
 .panel-block h2 {

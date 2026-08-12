@@ -17,6 +17,8 @@ export default function PlanBlock(props: {
   setThreshold: (n: number) => void;
   preferCalmer: boolean;
   setPreferCalmer: (v: boolean) => void;
+  showLowSensors: boolean;
+  setShowLowSensors: (v: boolean) => void;
   planning: boolean;
   onPlan: () => void;
   onLocate: () => void;
@@ -50,14 +52,17 @@ export default function PlanBlock(props: {
         </button>
       </div>
       <p className="coverage-hint">
-        Crowd sensors cover Melbourne CBD only — density scores outside that area
-        are limited.
+        Pedestrian sensors are from the City of Melbourne open network (~134
+        sites around the city centre / inner CBD). There is no public sensor
+        API covering all of Greater Melbourne suburbs.
       </p>
       <SensoryPreferences
         threshold={props.threshold}
         onThreshold={props.setThreshold}
         preferCalmer={props.preferCalmer}
         onPreferCalmer={props.setPreferCalmer}
+        showLowSensors={props.showLowSensors}
+        onShowLowSensors={props.setShowLowSensors}
       />
     </div>
   );

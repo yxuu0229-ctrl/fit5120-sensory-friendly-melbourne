@@ -3,11 +3,15 @@ export default function SensoryPreferences({
   onThreshold,
   preferCalmer,
   onPreferCalmer,
+  showLowSensors,
+  onShowLowSensors,
 }: {
   threshold: number;
   onThreshold: (n: number) => void;
   preferCalmer: boolean;
   onPreferCalmer: (v: boolean) => void;
+  showLowSensors: boolean;
+  onShowLowSensors: (v: boolean) => void;
 }) {
   return (
     <section className="panel-block">
@@ -21,6 +25,10 @@ export default function SensoryPreferences({
           value={threshold}
           onChange={(e) => onThreshold(Number(e.target.value))}
         />
+        <span className="field-hint">
+          Routes with load above {threshold} show as High. Move the slider to
+          update badges instantly.
+        </span>
       </label>
       <label className="check-row">
         <input
@@ -29,6 +37,14 @@ export default function SensoryPreferences({
           onChange={(e) => onPreferCalmer(e.target.checked)}
         />
         Prefer calmer pedestrian corridors
+      </label>
+      <label className="check-row">
+        <input
+          type="checkbox"
+          checked={showLowSensors}
+          onChange={(e) => onShowLowSensors(e.target.checked)}
+        />
+        Show low-crowd sensors on map
       </label>
     </section>
   );

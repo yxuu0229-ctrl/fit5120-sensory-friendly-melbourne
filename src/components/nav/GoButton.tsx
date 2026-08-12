@@ -13,18 +13,15 @@ export default function GoButton({
 }) {
   if (navigating) {
     return (
-      <div className="go-stack">
-        <button type="button" className="btn btn-primary" onClick={onStop}>
-          End navigation
-        </button>
-        <p className="muted">Progress {progress}%</p>
-      </div>
+      <button type="button" className="btn btn-stop" onClick={onStop}>
+        Stop navigation · {progress}%
+      </button>
     );
   }
   return (
     <button
       type="button"
-      className="btn btn-primary"
+      className="btn btn-go"
       disabled={disabled}
       onClick={onGo}
     >

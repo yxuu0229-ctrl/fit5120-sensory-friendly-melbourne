@@ -5,10 +5,14 @@ export default function TopRoutesList({
   routes,
   selectedId,
   onSelect,
+  onGo,
+  canGo,
 }: {
   routes: RouteOption[];
   selectedId: string | null;
   onSelect: (id: string) => void;
+  onGo?: () => void;
+  canGo?: boolean;
 }) {
   if (!routes.length) {
     return (
@@ -23,7 +27,19 @@ export default function TopRoutesList({
 
   return (
     <div className="route-list">
-      <p className="eyebrow">Top 3 · coloured by transport mode</p>
+      <div className="route-list-head">
+        <p className="eyebrow">Top 3 · coloured by transport mode</p>
+        {onGo ? (
+          <button
+            type="button"
+            className="btn btn-go-inline"
+            disabled={!canGo}
+            onClick={onGo}
+          >
+            Go
+          </button>
+        ) : null}
+      </div>
       {showTransitLegend ? (
         <p className="mode-legend" aria-label="Route colour key">
           <span className="mode-key walk">Walk</span>
@@ -38,6 +54,7 @@ export default function TopRoutesList({
           route={route}
           selected={route.id === selectedId}
           onSelect={() => onSelect(route.id)}
+          onGo={onGo}
         />
       ))}
     </div>

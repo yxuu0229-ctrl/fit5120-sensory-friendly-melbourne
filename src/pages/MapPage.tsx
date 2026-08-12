@@ -3,24 +3,23 @@ import { Link } from "react-router-dom";
 import { getCurrentPosition } from "../api/geolocation";
 import { reverseGeocode } from "../api/nominatim";
 import { fetchOsrmTo } from "../api/osrm";
-import { overloadSensors } from "../api/sensors";
 import DataUpdatedTag from "../components/DataUpdatedTag";
 import EndpointMarkers from "../components/map/EndpointMarkers";
 import MapCanvas from "../components/map/MapCanvas";
 import MapFitBounds from "../components/map/MapFitBounds";
-import OverloadLayer from "../components/map/OverloadLayer";
 import RefugeMarkers from "../components/map/RefugeMarkers";
 import RouteLayer from "../components/map/RouteLayer";
+import SensorLayer from "../components/map/SensorLayer";
 import UserLocationMarker from "../components/map/UserLocationMarker";
-import GoButton from "../components/nav/GoButton";
-import NearestRefugeButton from "../components/nav/NearestRefugeButton";
+import NavDock from "../components/nav/NavDock";
 import MapPanels from "../components/shell/MapPanels";
 import { useLiveNavigation } from "../hooks/useLiveNavigation";
 import { useMapData } from "../hooks/useMapData";
 import { coverageMessage } from "../lib/coverage";
 import { CBD_CENTER } from "../lib/densityBands";
 import { bearingAlongPath } from "../lib/geo";
-import { nearestRefuge, sortRefugesByDistance } from "../lib/nearestRefuge";
+import { sortRefugesByDistance } from "../lib/nearestRefuge";
+import { indicatorForLoad } from "../lib/sensoryIndicator";
 import {
   playGoChime,
   playMapWelcome,
@@ -40,6 +39,7 @@ export default function MapPage() {
   const [dest, setDest] = useState<PlaceResult | null>(null);
   const [threshold, setThreshold] = useState(50);
   const [preferCalmer, setPreferCalmer] = useState(true);
+  const [showLowSensors, setShowLowSensors] = useState(true);
   const [mode, setMode] = useState<TransportMode>("walk");
   const [routes, setRoutes] = useState<RouteOption[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -47,6 +47,7 @@ export default function MapPage() {
   const [navigating, setNavigating] = useState(false);
   const [sheet, setSheet] = useState<Sheet>("plan");
   const [planning, setPlanning] = useState(false);
+  const [refugePickerOpen, setRefugePickerOpen] = useState(false);
 
   const selected = routes.find((r) => r.id === selectedId) ?? null;
   const alternative =
@@ -54,15 +55,12 @@ export default function MapPage() {
     routes.find((r) => r.indicator === "Low" && r.id !== selectedId) ??
     null;
   const live = useLiveNavigation(navigating, selected);
-  const overloads = useMemo(
-    () => overloadSensors(data.sensors),
-    [data.sensors]
-  );
   const anchor = live.userPoint ?? origin?.point ?? dest?.point ?? CBD_CENTER;
   const sortedRefuges = useMemo(
     () => sortRefugesByDistance(anchor, data.refuges),
     [anchor, data.refuges]
   );
+  const topRefuges = useMemo(() => sortedRefuges.slice(0, 3), [sortedRefuges]);
   const selectedRefuge =
     sortedRefuges.find((r) => r.id === selectedRefugeId) ?? null;
 
@@ -99,6 +97,21 @@ export default function MapPage() {
       window.removeEventListener("pointerdown", unlock);
     };
   }, []);
+
+  // Keep High/Low badges in sync when the threshold slider moves.
+  useEffect(() => {
+    setRoutes((prev) => {
+      if (!prev.length) return prev;
+      let changed = false;
+      const next = prev.map((route) => {
+        const indicator = indicatorForLoad(route.sensoryLoad, threshold);
+        if (indicator === route.indicator) return route;
+        changed = true;
+        return { ...route, indicator };
+      });
+      return changed ? next : prev;
+    });
+  }, [threshold]);
 
   async function runPlan(nextMode: TransportMode = mode) {
     if (!origin?.point || !dest?.point) {
@@ -166,12 +179,18 @@ export default function MapPage() {
   }
 
   async function navigateToRefuge(target: RefugePlace) {
-    const from = live.userPoint ?? origin?.point;
+    let from = live.userPoint ?? origin?.point;
     if (!from) {
-      data.setError("Set your location first (Use my location or Origin).");
-      return;
+      try {
+        from = await getCurrentPosition();
+        live.setUserPoint(from);
+      } catch {
+        data.setError("Set your location first (Use my location or Origin).");
+        return;
+      }
     }
     setSelectedRefugeId(target.id);
+    setRefugePickerOpen(false);
     try {
       const trip = await fetchOsrmTo(
         from,
@@ -195,33 +214,40 @@ export default function MapPage() {
       };
       setRoutes([option]);
       setSelectedId(option.id);
+      setDest({
+        label: target.name,
+        point: { lat: target.latitude, lng: target.longitude },
+      });
+      setDestText(target.name);
       setNavigating(true);
-      setSheet("routes");
       void playGoChime();
     } catch (e) {
       data.setError(e instanceof Error ? e.message : "Refuge routing failed");
     }
   }
 
-  async function goNearestRefuge() {
-    const from = live.userPoint ?? origin?.point;
-    if (!from) {
-      data.setError("Set your location first.");
-      return;
-    }
-    const target = nearestRefuge(from, data.refuges);
-    if (!target) {
-      data.setError("No refuge places available.");
-      return;
-    }
-    await navigateToRefuge(target);
-  }
-
   async function startGo() {
+    if (!selected) {
+      data.setError("Plan a route first, then press Go.");
+      return;
+    }
     void playGoChime();
+    setRefugePickerOpen(false);
     await useMyLocation();
     setNavigating(true);
   }
+
+  function stopNavigation() {
+    setNavigating(false);
+  }
+
+  const mapSensors = useMemo(
+    () =>
+      showLowSensors
+        ? data.sensors
+        : data.sensors.filter((s) => s.density_level !== "Low"),
+    [data.sensors, showLowSensors]
+  );
 
   const path =
     navigating && live.remaining.length > 1
@@ -231,18 +257,23 @@ export default function MapPage() {
   const fitPaths = routes.map((r) => r.positions);
 
   return (
-    <div className="map-app">
+    <div className={`map-app${navigating ? " is-navigating" : ""}`}>
       <MapCanvas follow={navigating} followPoint={navPoint}>
         <MapFitBounds
           enabled={!navigating}
           points={[origin?.point, dest?.point, live.userPoint]}
           paths={fitPaths}
         />
-        <OverloadLayer sensors={overloads} />
+        <SensorLayer sensors={mapSensors} />
         <RefugeMarkers
           places={sortedRefuges}
           selectedId={selectedRefugeId}
-          onSelect={setSelectedRefugeId}
+          navigating={navigating}
+          onSelect={(id) => {
+            setSelectedRefugeId(id);
+            setRefugePickerOpen(true);
+            setSheet("places");
+          }}
           onNavigate={(place) => void navigateToRefuge(place)}
         />
         <EndpointMarkers
@@ -262,11 +293,7 @@ export default function MapPage() {
         )}
         <RouteLayer
           path={path}
-          segments={
-            navigating
-              ? undefined
-              : selected?.segments
-          }
+          segments={navigating ? undefined : selected?.segments}
           style={navigating ? "navigating" : "selected"}
         />
         {navigating && selected?.segments?.length ? (
@@ -275,7 +302,8 @@ export default function MapPage() {
             segments={selected.segments}
             style="selected"
           />
-        ) : null}        <UserLocationMarker
+        ) : null}
+        <UserLocationMarker
           point={navPoint}
           navigating={navigating}
           bearing={navBearing}
@@ -286,24 +314,12 @@ export default function MapPage() {
         <Link to="/" className="brand-link">
           Relax Maps
         </Link>
-        <div className="top-actions">
-          <NearestRefugeButton
-            disabled={!data.refuges.length}
-            onClick={() => void goNearestRefuge()}
-          />
-          <GoButton
-            disabled={!selected}
-            navigating={navigating}
-            progress={live.progress}
-            onGo={() => void startGo()}
-            onStop={() => setNavigating(false)}
-          />
-        </div>
       </header>
 
       <DataUpdatedTag label={data.dataUpdatedLabel} />
 
       <MapPanels
+        hidden={navigating}
         planProps={{
           originText,
           destText,
@@ -317,6 +333,8 @@ export default function MapPage() {
           setThreshold,
           preferCalmer,
           setPreferCalmer,
+          showLowSensors,
+          setShowLowSensors,
           planning,
           onPlan: () => void runPlan(mode),
           onLocate: () => void useMyLocation(),
@@ -330,11 +348,16 @@ export default function MapPage() {
         alert={data.alert}
         refuges={sortedRefuges}
         selectedRefugeId={selectedRefugeId}
-        onSelectRefuge={setSelectedRefugeId}
+        onSelectRefuge={(id) => {
+          setSelectedRefugeId(id);
+          setRefugePickerOpen(true);
+        }}
         selectedRefuge={selectedRefuge}
         onNavigateRefuge={(place) => void navigateToRefuge(place)}
         sheet={sheet}
         setSheet={setSheet}
+        onGo={() => void startGo()}
+        sensorCount={data.sensors.length || null}
         toast={
           data.error || data.notice ? (
             <div className="toast">
@@ -347,6 +370,41 @@ export default function MapPage() {
             </div>
           ) : null
         }
+      />
+
+      <NavDock
+        navigating={navigating}
+        progress={live.progress}
+        canGo={Boolean(selected)}
+        canRefuge={topRefuges.length > 0}
+        destinationLabel={selected?.label ?? (destText || null)}
+        pickerOpen={refugePickerOpen && !navigating}
+        topRefuges={topRefuges}
+        selectedRefugeId={selectedRefugeId}
+        selectedRefuge={
+          topRefuges.find((r) => r.id === selectedRefugeId) ?? null
+        }
+        onTogglePicker={() => {
+          setRefugePickerOpen((open) => {
+            const next = !open;
+            if (next) setSelectedRefugeId(null);
+            return next;
+          });
+        }}
+        onSelectRefuge={(id) => {
+          if (!id) {
+            setSelectedRefugeId(null);
+            return;
+          }
+          setSelectedRefugeId(id);
+        }}
+        onNavigateRefuge={(place) => void navigateToRefuge(place)}
+        onClosePicker={() => {
+          setRefugePickerOpen(false);
+          setSelectedRefugeId(null);
+        }}
+        onGo={() => void startGo()}
+        onStop={stopNavigation}
       />
     </div>
   );

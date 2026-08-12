@@ -29,11 +29,13 @@ function refugeIcon(selected: boolean) {
 export default function RefugeMarkers({
   places,
   selectedId,
+  navigating,
   onSelect,
   onNavigate,
 }: {
   places: RefugePlace[];
   selectedId: string | null;
+  navigating: boolean;
   onSelect: (id: string) => void;
   onNavigate: (place: RefugePlace) => void;
 }) {
@@ -47,10 +49,14 @@ export default function RefugeMarkers({
   );
 
   useEffect(() => {
+    if (navigating) {
+      markerRefs.current.forEach((marker) => marker.closePopup());
+      return;
+    }
     if (!selectedId) return;
     const marker = markerRefs.current.get(selectedId);
     marker?.openPopup();
-  }, [selectedId]);
+  }, [selectedId, navigating]);
 
   return (
     <>
@@ -62,37 +68,41 @@ export default function RefugeMarkers({
             position={[p.latitude, p.longitude]}
             icon={selected ? icons.selected : icons.default}
             zIndexOffset={selected ? 400 : 200}
-            eventHandlers={{ click: () => onSelect(p.id) }}
+            eventHandlers={{
+              click: () => {
+                if (!navigating) onSelect(p.id);
+              },
+            }}
             ref={(instance) => {
               if (instance) markerRefs.current.set(p.id, instance);
               else markerRefs.current.delete(p.id);
             }}
           >
-            <Popup className="refuge-popup" maxWidth={280}>
-              <div className="refuge-popup-body">
-                <strong>{p.name}</strong>
-                <p>{p.category || p.theme || "Quiet public space"}</p>
-                {formatDistance(p.distanceMeters) ? (
-                  <p className="refuge-popup-meta">
-                    {formatDistance(p.distanceMeters)}
-                  </p>
-                ) : null}
-                <p className="refuge-popup-meta">
-                  {p.latitude.toFixed(5)}, {p.longitude.toFixed(5)}
-                </p>
-                <button
-                  type="button"
-                  className="btn btn-primary refuge-popup-nav"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    onNavigate(p);
-                  }}
-                >
-                  Navigate to it
-                </button>
-              </div>
-            </Popup>
+            {!navigating ? (
+              <Popup className="refuge-popup" maxWidth={280}>
+                <div className="refuge-popup-body">
+                  <strong>{p.name}</strong>
+                  <p>{p.category || p.theme || "Quiet public space"}</p>
+                  {formatDistance(p.distanceMeters) ? (
+                    <p className="refuge-popup-meta">
+                      {formatDistance(p.distanceMeters)}
+                    </p>
+                  ) : null}
+                  <button
+                    type="button"
+                    className="btn btn-primary refuge-popup-nav"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      markerRefs.current.get(p.id)?.closePopup();
+                      onNavigate(p);
+                    }}
+                  >
+                    Navigate to it
+                  </button>
+                </div>
+              </Popup>
+            ) : null}
           </Marker>
         );
       })}
