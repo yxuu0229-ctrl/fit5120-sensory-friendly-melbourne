@@ -28,7 +28,7 @@
 
 .landing-header {
   position: absolute;
-  top: 36px;
+  top: 28px;
   left: 0;
   width: 100%;
   text-align: center;
@@ -37,8 +37,48 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   pointer-events: auto;
+}
+
+.landing-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.85rem;
+  filter: drop-shadow(0 8px 20px rgba(0, 0, 0, 0.45));
+}
+
+.landing-brand-mark {
+  width: 56px;
+  height: 56px;
+  display: block;
+  flex: 0 0 auto;
+  border-radius: 14px;
+}
+
+.landing-brand-name {
+  font-size: clamp(2rem, 4vw, 2.75rem);
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.landing-brand-relax {
+  font-family: "Inria Serif", "Source Serif 4", Georgia, serif;
+  font-weight: 700;
+  color: #f7fbfa;
+}
+
+.landing-brand-maps {
+  font-family: Inter, Outfit, system-ui, sans-serif;
+  font-weight: 700;
+  color: #7dcfbf;
+}
+
+.landing-logo {
+  width: min(280px, 58vw);
+  height: auto;
+  display: block;
+  filter: drop-shadow(0 6px 18px rgba(0, 0, 0, 0.35));
 }
 
 .hero-text {

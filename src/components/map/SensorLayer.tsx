@@ -3,6 +3,10 @@ import { Delaunay } from "d3-delaunay";
 import { Polygon, Popup } from "react-leaflet";
 import { densityColor } from "../../lib/densityBands";
 import { distanceMeters } from "../../lib/geo";
+import {
+  sensorLevelForThreshold,
+  sensorLoadScore,
+} from "../../lib/sensoryIndicator";
 import type { DensityLevel, SensorReading } from "../../lib/types";
 
 const LEVEL_RANK: Record<DensityLevel, number> = {
@@ -109,35 +113,46 @@ function blockAround(lat: number, lng: number, half: number): [number, number][]
   ];
 }
 
-/** Street/building coverage areas; route corridor zones are emphasized. */
+/** Street/building coverage areas; route zones follow the user threshold. */
 export default function SensorLayer({
   sensors,
   highlightIds,
+  threshold = 50,
 }: {
   sensors: SensorReading[];
   /** All crowd zones along the selected route. */
   highlightIds?: Set<number>;
+  /** User crowd-density threshold (0–100). */
+  threshold?: number;
 }) {
   const focusRoute = Boolean(highlightIds && highlightIds.size > 0);
 
   const cells = useMemo(() => {
     const built = buildCoverageCells(sensors);
-    // Draw off-route first, then along-route on top.
     return [...built].sort((a, b) => {
       const aHit = highlightIds?.has(a.sensor.location_id) ? 1 : 0;
       const bHit = highlightIds?.has(b.sensor.location_id) ? 1 : 0;
       if (aHit !== bHit) return aHit - bHit;
-      return (
-        LEVEL_RANK[a.sensor.density_level] - LEVEL_RANK[b.sensor.density_level]
-      );
+      const aLevel = highlightIds?.has(a.sensor.location_id)
+        ? sensorLevelForThreshold(a.sensor, threshold)
+        : a.sensor.density_level;
+      const bLevel = highlightIds?.has(b.sensor.location_id)
+        ? sensorLevelForThreshold(b.sensor, threshold)
+        : b.sensor.density_level;
+      return LEVEL_RANK[aLevel] - LEVEL_RANK[bLevel];
     });
-  }, [sensors, highlightIds]);
+  }, [sensors, highlightIds, threshold]);
 
   return (
     <>
       {cells.map(({ sensor: s, positions }) => {
-        const color = densityColor(s.density_level);
         const alongRoute = highlightIds?.has(s.location_id) ?? false;
+        // Along the selected route, colours follow the user's threshold.
+        const displayLevel = alongRoute
+          ? sensorLevelForThreshold(s, threshold)
+          : s.density_level;
+        const color = densityColor(displayLevel);
+        const load = sensorLoadScore(s);
         return (
           <Polygon
             key={s.location_id}
@@ -145,13 +160,13 @@ export default function SensorLayer({
             pathOptions={{
               color: alongRoute ? "#12171c" : color,
               fillColor: color,
-              fillOpacity: fillOpacity(s.density_level, alongRoute, focusRoute),
-              weight: strokeWeight(s.density_level, alongRoute),
+              fillOpacity: fillOpacity(displayLevel, alongRoute, focusRoute),
+              weight: strokeWeight(displayLevel, alongRoute),
               opacity: alongRoute
                 ? 0.95
                 : focusRoute
                   ? 0.2
-                  : s.density_level === "Low"
+                  : displayLevel === "Low"
                     ? 0.25
                     : 0.65,
               lineJoin: "round",
@@ -163,12 +178,14 @@ export default function SensorLayer({
               </strong>
               <br />
               <span
-                className={`map-popup-level level-${s.density_level.toLowerCase()}`}
+                className={`map-popup-level level-${displayLevel.toLowerCase()}`}
               >
-                {s.density_level} crowd
+                {displayLevel} for your threshold
               </span>
               {" · "}
-              {s.total_count} people
+              load {load}/{threshold}
+              <br />
+              Live reading: {s.density_level} · {s.total_count} people
               <br />
               Area this sensor covers (streets &amp; buildings nearby)
               {alongRoute ? (

@@ -23,7 +23,7 @@ import { CBD_CENTER } from "../lib/densityBands";
 import { bearingAlongPath } from "../lib/geo";
 import { nearestRefuge, sortRefugesByDistance } from "../lib/nearestRefuge";
 import { sensorsAlongPath } from "../lib/sensorsAlongRoute";
-import { indicatorForLoad } from "../lib/sensoryIndicator";
+import { indicatorForLoad, sensorLevelForThreshold } from "../lib/sensoryIndicator";
 import {
   playGoChime,
   playMapWelcome,
@@ -321,7 +321,11 @@ export default function MapPage() {
           points={[origin?.point, dest?.point, live.userPoint]}
           paths={fitPaths}
         />
-        <SensorLayer sensors={mapSensors} highlightIds={routeHighlightIds} />
+        <SensorLayer
+          sensors={mapSensors}
+          highlightIds={routeHighlightIds}
+          threshold={threshold}
+        />
         <RefugeMarkers
           places={sortedRefuges}
           selectedId={selectedRefugeId}
@@ -363,6 +367,13 @@ export default function MapPage() {
 
       <header className="map-topbar">
         <Link to="/" className="brand-link">
+          <img
+            src="/images/relax-maps-logo.svg"
+            alt=""
+            className="brand-mark"
+            width={28}
+            height={28}
+          />
           Relax Maps
         </Link>
       </header>
@@ -390,20 +401,26 @@ export default function MapPage() {
           {routeSensors.length === 1 ? "" : "s"} along route
           {" · "}
           {
-            [
-              routeSensors.filter((s) => s.density_level === "High").length
-                ? `${routeSensors.filter((s) => s.density_level === "High").length} high`
-                : null,
-              routeSensors.filter((s) => s.density_level === "Medium").length
-                ? `${routeSensors.filter((s) => s.density_level === "Medium").length} med`
-                : null,
-              routeSensors.filter((s) => s.density_level === "Low").length
-                ? `${routeSensors.filter((s) => s.density_level === "Low").length} low`
-                : null,
-            ]
-              .filter(Boolean)
-              .join(" · ")
+            (() => {
+              const levels = routeSensors.map((s) =>
+                sensorLevelForThreshold(s, threshold)
+              );
+              return [
+                levels.filter((l) => l === "High").length
+                  ? `${levels.filter((l) => l === "High").length} high`
+                  : null,
+                levels.filter((l) => l === "Medium").length
+                  ? `${levels.filter((l) => l === "Medium").length} med`
+                  : null,
+                levels.filter((l) => l === "Low").length
+                  ? `${levels.filter((l) => l === "Low").length} low`
+                  : null,
+              ]
+                .filter(Boolean)
+                .join(" · ");
+            })()
           }
+          {" · "}vs threshold {threshold}
         </div>
       ) : null}
 

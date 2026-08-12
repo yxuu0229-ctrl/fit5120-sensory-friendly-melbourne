@@ -42,8 +42,21 @@ export default function LandingPage() {
       <div className="landing-wash" aria-hidden="true" />
 
       <header className="landing-header">
+        <div className="landing-brand">
+          <img
+            src="/images/relax-maps-logo.svg"
+            alt=""
+            className="landing-brand-mark"
+            width={56}
+            height={56}
+          />
+          <span className="landing-brand-name">
+            <span className="landing-brand-relax">Relax</span>{" "}
+            <span className="landing-brand-maps">Maps</span>
+          </span>
+        </div>
         <h1 className="hero-text">
-          <span className="hero-bold">Relax Maps:</span> Quiet paths through the city
+          Quiet paths through the city
         </h1>
         <p className="hero-subtitle">
           Plan walking routes that respect your sensory limits | crowd density, calmer corridors, and nearby places to reset

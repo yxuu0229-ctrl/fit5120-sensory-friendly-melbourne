@@ -26,8 +26,8 @@ export default function SensoryPreferences({
           onChange={(e) => onThreshold(Number(e.target.value))}
         />
         <span className="field-hint">
-          Routes with load above {threshold} show as High. Move the slider to
-          update badges instantly.
+          Zones along your route turn High/Medium/Low against this limit
+          ({threshold}). Move the slider to recolour them instantly.
         </span>
       </label>
       <label className="check-row">
