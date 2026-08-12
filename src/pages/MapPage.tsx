@@ -252,14 +252,30 @@ export default function MapPage() {
         />
         {routes.map((r) =>
           r.id === selectedId ? null : (
-            <RouteLayer key={r.id} path={r.positions} style="muted" />
+            <RouteLayer
+              key={r.id}
+              path={r.positions}
+              segments={r.segments}
+              style="muted"
+            />
           )
         )}
         <RouteLayer
           path={path}
+          segments={
+            navigating
+              ? undefined
+              : selected?.segments
+          }
           style={navigating ? "navigating" : "selected"}
         />
-        <UserLocationMarker
+        {navigating && selected?.segments?.length ? (
+          <RouteLayer
+            path={selected.positions}
+            segments={selected.segments}
+            style="selected"
+          />
+        ) : null}        <UserLocationMarker
           point={navPoint}
           navigating={navigating}
           bearing={navBearing}

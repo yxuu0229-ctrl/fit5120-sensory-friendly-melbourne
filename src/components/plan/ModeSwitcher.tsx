@@ -17,6 +17,7 @@ export default function ModeSwitcher({
           key={item.id}
           type="button"
           role="tab"
+          data-mode={item.id}
           aria-selected={mode === item.id}
           className={mode === item.id ? "is-active" : undefined}
           onClick={() => onChange(item.id)}

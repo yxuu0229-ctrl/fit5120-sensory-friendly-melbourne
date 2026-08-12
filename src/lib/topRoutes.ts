@@ -1,9 +1,16 @@
 import { fetchTransitRoutes } from "../api/googleTransit";
 import { fetchOsrmRoutes } from "../api/osrm";
+import { colorForMode } from "./modeColors";
 import type { TransportMode } from "./transportModes";
 import { loadFromScore, scoreRoutePath } from "./routeScore";
 import { indicatorForLoad } from "./sensoryIndicator";
-import type { LatLng, RouteOption, SensorReading } from "./types";
+import type {
+  LatLng,
+  RouteOption,
+  RouteSegment,
+  SensorReading,
+  TransitLeg,
+} from "./types";
 
 const MODE_LABELS: Record<TransportMode, [string, string, string]> = {
   walk: ["Calmest walk", "Balanced walk", "Busier walk"],
@@ -11,6 +18,20 @@ const MODE_LABELS: Record<TransportMode, [string, string, string]> = {
   drive: ["Recommended drive", "Alternative drive", "Longer drive"],
   transit: ["Best transit", "Transit alternative", "Other transit"],
 };
+
+function singleModeSegment(
+  mode: Exclude<TransportMode, "transit">,
+  positions: [number, number][]
+): RouteSegment[] {
+  return [
+    {
+      mode,
+      color: colorForMode(mode),
+      label: mode[0].toUpperCase() + mode.slice(1),
+      positions,
+    },
+  ];
+}
 
 export async function planTopRoutes(
   from: LatLng,
@@ -35,6 +56,19 @@ export async function planTopRoutes(
       "summary" in route && typeof route.summary === "string"
         ? route.summary
         : undefined;
+    const transitLegs: TransitLeg[] | undefined =
+      "transitLegs" in route && Array.isArray(route.transitLegs)
+        ? route.transitLegs
+        : undefined;
+    const positions = coords.map(
+      ([lng, lat]) => [lat, lng] as [number, number]
+    );
+    const segments: RouteSegment[] =
+      "segments" in route && Array.isArray(route.segments)
+        ? route.segments
+        : mode === "transit"
+          ? []
+          : singleModeSegment(mode, positions);
     return {
       id: `r-${mode}-${index}`,
       rank: 0,
@@ -44,9 +78,9 @@ export async function planTopRoutes(
       indicator: indicatorForLoad(sensoryLoad, threshold),
       distanceMeters: route.distanceMeters,
       durationSeconds: route.durationSeconds,
-      positions: coords.map(
-        ([lng, lat]) => [lat, lng] as [number, number]
-      ),
+      positions,
+      transitLegs,
+      segments,
     };
   });
 
@@ -59,12 +93,15 @@ export async function planTopRoutes(
   const labels = MODE_LABELS[mode];
   return scored.slice(0, 3).map((route, index): RouteOption => {
     const keepTransitSummary =
-      mode === "transit" && !/^\w+ \d+$/.test(route.label);
+      mode === "transit" && Boolean(route.transitLegs?.length || route.label);
     return {
       ...route,
       rank: index + 1,
       recommended: index === 0,
-      label: keepTransitSummary ? route.label : labels[index] ?? route.label,
+      label:
+        mode === "transit" && keepTransitSummary && route.label
+          ? route.label
+          : labels[index] ?? route.label,
     };
   });
 }

@@ -31,7 +31,9 @@ export function useMapData() {
 
   useEffect(() => {
     if (!hasSupabaseEnv()) {
-      setNotice("Add Supabase keys in .env to load live density and refuges.");
+      setNotice(
+        "Live density and refuges need VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY. Add them in Vercel → Settings → Environment Variables, then Redeploy."
+      );
       return;
     }
     void Promise.all([fetchDensitySensors(), fetchSensoryRefuges()])

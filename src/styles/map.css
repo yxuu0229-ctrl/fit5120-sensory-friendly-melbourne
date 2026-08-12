@@ -202,6 +202,23 @@
   box-shadow: 0 6px 14px rgba(31, 122, 106, 0.28);
 }
 
+.mode-switch button[aria-selected="true"][data-mode="walk"].is-active,
+.mode-switch button.is-active[data-mode="walk"] {
+  background: #2f6f4e;
+}
+
+.mode-switch button.is-active[data-mode="cycle"] {
+  background: #1f7a6a;
+}
+
+.mode-switch button.is-active[data-mode="drive"] {
+  background: #1d4e6f;
+}
+
+.mode-switch button.is-active[data-mode="transit"] {
+  background: #5b3d8f;
+}
+
 .coverage-hint {
   margin: 0 0 0.75rem;
   font-size: 0.9rem;
@@ -259,6 +276,99 @@
   margin-top: 0.4rem;
   color: var(--panel-muted);
   font-size: 0.95rem;
+}
+
+.transit-legs {
+  list-style: none;
+  margin: 0.55rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.4rem;
+  text-align: left;
+}
+
+.transit-legs li {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.transit-chip {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  border-radius: 8px;
+  padding: 0.2rem 0.5rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #fff;
+  background: #3d4750;
+}
+
+.transit-tram {
+  background: #c45c26;
+}
+
+.transit-train {
+  background: #5b3d8f;
+}
+
+.transit-bus {
+  background: #b07d2a;
+}
+
+.transit-walk {
+  background: #2f6f4e;
+}
+
+.transit-transit {
+  background: #4a5560;
+}
+
+.transit-leg-detail {
+  font-size: 0.88rem;
+  color: var(--panel-muted);
+  line-height: 1.35;
+}
+
+.mode-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0 0 0.35rem;
+}
+
+.mode-key {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 0.15rem 0.55rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #fff;
+}
+
+.mode-key.walk {
+  background: #2f6f4e;
+}
+
+.mode-key.tram {
+  background: #c45c26;
+}
+
+.mode-key.train {
+  background: #5b3d8f;
+}
+
+.mode-key.bus {
+  background: #b07d2a;
+}
+
+.mode-key.cycle {
+  background: #1f7a6a;
+}
+
+.mode-key.drive {
+  background: #1d4e6f;
 }
 
 .badge {

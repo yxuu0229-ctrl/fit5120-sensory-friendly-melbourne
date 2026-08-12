@@ -30,6 +30,27 @@ export type PlaceResult = {
   point: LatLng;
 };
 
+export type TransitLeg = {
+  kind: "tram" | "train" | "bus" | "transit" | "walk";
+  line: string;
+  vehicleName: string;
+  headsign: string | null;
+  fromStop: string | null;
+  toStop: string | null;
+  departsAt: string | null;
+  arrivesAt: string | null;
+  stopCount: number | null;
+  color: string | null;
+};
+
+/** Coloured polyline slice for one mode on a journey. */
+export type RouteSegment = {
+  mode: "walk" | "cycle" | "drive" | "tram" | "train" | "bus" | "transit";
+  color: string;
+  label?: string;
+  positions: [number, number][];
+};
+
 export type RouteOption = {
   id: string;
   rank: number;
@@ -40,6 +61,10 @@ export type RouteOption = {
   distanceMeters: number;
   durationSeconds: number;
   positions: [number, number][];
+  /** Populated for public-transport plans. */
+  transitLegs?: TransitLeg[];
+  /** Coloured map segments by mode (walk/tram/bus/…). */
+  segments?: RouteSegment[];
 };
 
 export type QuietAlert = {
