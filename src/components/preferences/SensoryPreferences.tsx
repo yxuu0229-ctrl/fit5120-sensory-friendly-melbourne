@@ -44,7 +44,7 @@ export default function SensoryPreferences({
           checked={showLowSensors}
           onChange={(e) => onShowLowSensors(e.target.checked)}
         />
-        Show low-crowd sensors on map
+        Show low-crowd areas on map
       </label>
     </section>
   );

@@ -61,6 +61,10 @@ export type RouteOption = {
   distanceMeters: number;
   durationSeconds: number;
   positions: [number, number][];
+  /** Transport mode used to plan this option. */
+  mode?: "walk" | "cycle" | "drive" | "transit";
+  /** Crowd zones intersecting this path. */
+  alongSensorCount?: number;
   /** Populated for public-transport plans. */
   transitLegs?: TransitLeg[];
   /** Coloured map segments by mode (walk/tram/bus/…). */
@@ -73,6 +77,8 @@ export type QuietAlert = {
   expectedMean: number | null;
   reliable: boolean;
   point: LatLng;
+  /** Sensor whose coverage area this forecast refers to. */
+  locationId?: number;
 };
 
 export type LocationQuietWindow = {

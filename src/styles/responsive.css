@@ -11,13 +11,23 @@
     display: block;
   }
 
+  .map-app {
+    height: 100svh;
+    height: 100dvh;
+    padding:
+      env(safe-area-inset-top, 0)
+      env(safe-area-inset-right, 0)
+      env(safe-area-inset-bottom, 0)
+      env(safe-area-inset-left, 0);
+  }
+
   .mobile-sheet {
     position: absolute;
-    left: 0.6rem;
-    right: 0.6rem;
-    bottom: 5.8rem;
+    left: 0.5rem;
+    right: 0.5rem;
+    bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px));
     z-index: 480;
-    max-height: min(52vh, 460px);
+    max-height: min(48svh, 420px);
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -82,10 +92,11 @@
 
   .map-topbar {
     align-items: flex-start;
+    top: calc(0.55rem + env(safe-area-inset-top, 0px));
   }
 
   .active-route-bar {
-    top: 4rem;
+    top: calc(3.6rem + env(safe-area-inset-top, 0px));
     width: calc(100vw - 1rem);
     padding: 0.65rem 0.75rem 0.5rem;
   }
@@ -102,7 +113,7 @@
   }
 
   .nav-dock {
-    bottom: 0.65rem;
+    bottom: calc(0.5rem + env(safe-area-inset-bottom, 0px));
     width: calc(100vw - 1rem);
   }
 
@@ -138,13 +149,77 @@
   }
 
   .toast {
-    bottom: calc(5.8rem + 0.75rem);
+    bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px) + 0.75rem);
+    left: 0.75rem;
+    right: 0.75rem;
+    transform: none;
+    max-width: none;
+    width: auto;
   }
 
   .data-updated-tag {
-    bottom: calc(5.8rem + 0.55rem);
+    bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px) + 0.55rem);
     left: 50%;
     transform: translateX(-50%);
+  }
+
+  .coach-plan,
+  .coach-modes {
+    left: 0.75rem;
+    right: 0.75rem;
+    max-width: none;
+  }
+
+  .coach-plan {
+    top: calc(4.2rem + env(safe-area-inset-top, 0px));
+  }
+
+  .coach-modes {
+    top: calc(9.5rem + env(safe-area-inset-top, 0px));
+  }
+
+  .coach-legend {
+    left: 0.75rem;
+    right: 0.75rem;
+    top: auto;
+    bottom: calc(12rem + env(safe-area-inset-bottom, 0px));
+    max-width: none;
+  }
+
+  .coach-go {
+    bottom: calc(6.4rem + env(safe-area-inset-bottom, 0px));
+  }
+
+  .coach-center {
+    top: 32%;
+  }
+
+  .map-legend-item {
+    font-size: 1rem;
+  }
+
+  .transit-mode-key {
+    top: calc(3.6rem + env(safe-area-inset-top, 0px));
+    max-width: calc(100vw - 1rem);
+    border-radius: 14px;
+  }
+
+  .map-app.is-navigating .transit-mode-key {
+    top: calc(7.2rem + env(safe-area-inset-top, 0px));
+  }
+
+  .route-crowd-tag {
+    top: auto;
+    right: 0.5rem;
+    left: 0.5rem;
+    bottom: calc(12.2rem + env(safe-area-inset-bottom, 0px));
+    max-width: none;
+    text-align: center;
+  }
+
+  .map-app.is-navigating .route-crowd-tag {
+    top: auto;
+    bottom: calc(7.2rem + env(safe-area-inset-bottom, 0px));
   }
 }
 

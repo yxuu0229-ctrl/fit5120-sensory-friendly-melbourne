@@ -20,7 +20,9 @@ export default function RouteCard({
 }) {
   const legs = route.transitLegs ?? [];
   const modeSwatch =
-    !legs.length && route.segments?.[0] ? route.segments[0] : null;
+    route.mode ||
+    (!legs.length && route.segments?.[0] ? route.segments[0].mode : null);
+  const modeColor = modeSwatch ? colorForMode(modeSwatch) : null;
 
   return (
     <div className={`route-card-row${selected ? " is-selected" : ""}`}>
@@ -39,9 +41,9 @@ export default function RouteCard({
           {modeSwatch ? (
             <span
               className="badge mode-swatch"
-              style={{ background: modeSwatch.color, color: "#fff" }}
+              style={{ background: modeColor || "#1f7a6a", color: "#fff" }}
             >
-              {labelForSegmentMode(modeSwatch.mode)}
+              {labelForSegmentMode(modeSwatch)}
             </span>
           ) : null}
         </div>
@@ -53,6 +55,12 @@ export default function RouteCard({
           <span>{formatMins(route.durationSeconds)}</span>
           <span>Load {route.sensoryLoad}</span>
         </div>
+        {route.alongSensorCount != null && route.alongSensorCount > 0 ? (
+          <p className="route-along-note">
+            {route.alongSensorCount} crowd zone
+            {route.alongSensorCount === 1 ? "" : "s"} along this path
+          </p>
+        ) : null}
         {legs.length > 0 ? (
           <ul className="transit-legs">
             {legs.map((leg, i) => (

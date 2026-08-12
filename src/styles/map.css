@@ -290,11 +290,11 @@
 }
 
 .mode-switch button.is-active[data-mode="cycle"] {
-  background: #1f7a6a;
+  background: #0e8f9a;
 }
 
 .mode-switch button.is-active[data-mode="drive"] {
-  background: #1d4e6f;
+  background: #1a4f8c;
 }
 
 .mode-switch button.is-active[data-mode="transit"] {
@@ -384,14 +384,63 @@
 }
 
 .sensor-toggle {
-  margin-top: 0.65rem;
+  margin: 0.55rem 0 0.35rem;
 }
 
 .sensor-count-note {
-  margin: 0.75rem 0 0;
+  margin: 0 0 0.85rem;
   font-size: 0.86rem;
   line-height: 1.4;
   color: var(--panel-muted);
+}
+
+.map-legend {
+  margin: 0 0 0.35rem;
+  padding-bottom: 0.65rem;
+  border-bottom: 1px solid var(--panel-border);
+}
+
+.map-legend .eyebrow {
+  margin-bottom: 0.45rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.map-legend-items {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.map-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--panel-text);
+}
+
+.area-swatch {
+  width: 1.35rem;
+  height: 0.9rem;
+  border-radius: 4px;
+  display: inline-block;
+  flex: 0 0 auto;
+  opacity: 0.95;
+  border: 1px solid rgba(18, 23, 28, 0.12);
+}
+
+.area-swatch.sensor-low {
+  background: rgba(47, 111, 78, 0.55);
+}
+
+.area-swatch.sensor-med {
+  background: rgba(176, 125, 42, 0.55);
+}
+
+.area-swatch.sensor-high {
+  background: rgba(163, 59, 50, 0.55);
 }
 
 .route-card {
@@ -701,15 +750,39 @@
   transform: translateX(-50%);
   z-index: 600;
   max-width: min(520px, calc(100vw - 1.5rem));
-  background: rgba(255, 255, 255, 0.94);
+  background: rgba(255, 255, 255, 0.96);
   color: var(--panel-text);
   border: 1px solid var(--panel-border);
-  border-radius: 12px;
-  padding: 0.75rem 1rem;
+  border-radius: 999px;
+  padding: 0.7rem 1.15rem;
   display: flex;
   gap: 0.75rem;
   align-items: center;
-  box-shadow: var(--shadow);
+  box-shadow: 0 10px 28px rgba(13, 21, 20, 0.18);
+  font-size: 0.95rem;
+  font-weight: 500;
+  animation: toast-in 280ms ease;
+}
+
+.toast-error {
+  border-radius: 14px;
+  border-color: rgba(163, 59, 50, 0.35);
+  background: rgba(255, 248, 246, 0.97);
+}
+
+.toast-info {
+  border-color: rgba(31, 122, 106, 0.22);
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 8px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
 }
 
 .toast button {
@@ -718,6 +791,213 @@
   color: var(--accent);
   font-weight: 600;
   cursor: pointer;
+}
+
+.route-along-note {
+  margin: 0.35rem 0 0;
+  font-size: 0.82rem;
+  color: var(--panel-muted);
+  font-weight: 500;
+}
+
+/* Onboarding coach marks (landing-style tips) */
+.coach-overlay {
+  position: absolute;
+  z-index: 700;
+  pointer-events: none;
+  max-width: min(300px, calc(100vw - 2rem));
+}
+
+.coach-overlay .coach-card {
+  pointer-events: auto;
+  padding: 0.85rem 1rem 0.75rem;
+  border-radius: 16px;
+  background: rgba(13, 32, 28, 0.92);
+  color: #f4fffb;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  animation: coach-fade 360ms ease;
+}
+
+.coach-text {
+  margin: 0;
+  font-family: "Architects Daughter", "Segoe Print", cursive, sans-serif;
+  font-size: 1.12rem;
+  line-height: 1.35;
+  letter-spacing: 0.01em;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.45);
+}
+
+.coach-arrow {
+  width: 96px;
+  height: auto;
+  color: #fff;
+  margin-top: 0.2rem;
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.45));
+}
+
+.coach-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin-top: 0.55rem;
+}
+
+.coach-progress {
+  font-size: 0.75rem;
+  opacity: 0.75;
+  margin-right: auto;
+}
+
+.coach-next,
+.coach-skip {
+  border: 0;
+  background: transparent;
+  color: #b7ebe0;
+  font-weight: 600;
+  font-size: 0.82rem;
+  cursor: pointer;
+  padding: 0.2rem 0.35rem;
+}
+
+.coach-next {
+  color: #fff;
+}
+
+.coach-center {
+  left: 50%;
+  top: 38%;
+  transform: translateX(-50%);
+}
+
+.coach-plan {
+  left: 1rem;
+  top: 5.5rem;
+}
+
+.coach-modes {
+  left: 1rem;
+  top: 11rem;
+}
+
+.coach-legend {
+  right: 1rem;
+  top: 6rem;
+  left: auto;
+}
+
+.coach-go {
+  left: 50%;
+  bottom: 7.2rem;
+  transform: translateX(-50%);
+}
+
+@keyframes coach-fade {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.transit-mode-key {
+  position: absolute;
+  top: 4.4rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 510;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  justify-content: center;
+  max-width: min(560px, calc(100vw - 1.5rem));
+  padding: 0.4rem 0.55rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.94);
+  border: 1px solid rgba(18, 23, 28, 0.1);
+  box-shadow: 0 8px 22px rgba(10, 14, 18, 0.14);
+  pointer-events: none;
+}
+
+.route-crowd-tag {
+  position: absolute;
+  top: 4.4rem;
+  right: 0.85rem;
+  z-index: 510;
+  max-width: min(280px, calc(100vw - 2rem));
+  padding: 0.45rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 650;
+  color: var(--panel-text);
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(18, 23, 28, 0.1);
+  box-shadow: 0 8px 22px rgba(10, 14, 18, 0.14);
+  pointer-events: none;
+}
+
+.map-app.is-navigating .route-crowd-tag {
+  top: 7.6rem;
+}
+
+.map-app:has(.transit-mode-key) .route-crowd-tag {
+  top: 6.6rem;
+}
+
+.map-app.is-navigating:has(.transit-mode-key) .route-crowd-tag {
+  top: 9.6rem;
+}
+
+.transit-mode-key-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.78rem;
+  font-weight: 650;
+  color: var(--panel-text);
+  padding: 0.15rem 0.4rem;
+}
+
+.transit-mode-swatch {
+  width: 1.1rem;
+  height: 0.35rem;
+  border-radius: 999px;
+  display: inline-block;
+  flex: 0 0 auto;
+}
+
+.transit-mode-swatch.mode-walk {
+  background-image: repeating-linear-gradient(
+    90deg,
+    currentColor 0 4px,
+    transparent 4px 8px
+  );
+}
+
+.map-app.is-navigating .transit-mode-key {
+  top: 7.6rem;
+}
+
+.map-popup-title {
+  font-size: 1rem;
+}
+
+.map-popup-level.level-high {
+  color: #a33b32;
+  font-weight: 700;
+}
+
+.map-popup-level.level-medium {
+  color: #b07d2a;
+  font-weight: 700;
+}
+
+.map-popup-level.level-low {
+  color: #2f6f4e;
+  font-weight: 700;
 }
 
 .data-updated-tag {

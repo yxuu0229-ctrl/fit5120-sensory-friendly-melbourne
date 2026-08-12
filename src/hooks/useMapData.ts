@@ -1,10 +1,12 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { fetchSensoryRefuges } from "../api/places";
 import { fetchQuietWindowsForHour } from "../api/quietWindows";
 import { fetchDensitySensors } from "../api/sensors";
 import { hasSupabaseEnv } from "../api/supabaseClient";
 import { buildQuietAlert, nextHourLabel } from "../lib/quietForecast";
 import type { QuietAlert, RefugePlace, SensorReading } from "../lib/types";
+
+const HOUR_MS = 60 * 60 * 1000;
 
 function formatUpdated(iso: string | null | undefined) {
   if (!iso) return null;
@@ -29,28 +31,51 @@ export function useMapData() {
   const [notice, setNotice] = useState<string | null>(null);
   const [dataUpdatedLabel, setDataUpdatedLabel] = useState<string | null>(null);
 
-  useEffect(() => {
+  const refresh = useCallback(async (silent = false) => {
     if (!hasSupabaseEnv()) {
-      setNotice(
-        "Live density and refuges need VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY. Add them in Vercel → Settings → Environment Variables, then Redeploy."
-      );
+      if (!silent) {
+        setNotice(
+          "Live density and refuges need VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY. Add them in Vercel → Settings → Environment Variables, then Redeploy."
+        );
+      }
       return;
     }
-    void Promise.all([fetchDensitySensors(), fetchSensoryRefuges()])
-      .then(([s, p]) => {
-        setSensors(s);
-        setRefuges(p);
-        const latest = s
-          .map((row) => row.sensing_datetime)
-          .filter((v): v is string => Boolean(v))
-          .sort()
-          .at(-1);
-        setDataUpdatedLabel(formatUpdated(latest));
-      })
-      .catch((e) =>
-        setError(e instanceof Error ? e.message : "Could not load map data")
+    try {
+      const [s, p] = await Promise.all([
+        fetchDensitySensors(),
+        fetchSensoryRefuges(),
+      ]);
+      setSensors(s);
+      setRefuges(p);
+      const latest = s
+        .map((row) => row.sensing_datetime)
+        .filter((v): v is string => Boolean(v))
+        .sort()
+        .at(-1);
+      setDataUpdatedLabel(
+        formatUpdated(latest) ??
+          formatUpdated(new Date().toISOString())
       );
+      if (!silent) setError("");
+    } catch (e) {
+      if (!silent) {
+        setError(e instanceof Error ? e.message : "Could not load map data");
+      }
+    }
   }, []);
+
+  useEffect(() => {
+    void refresh(false);
+    const id = window.setInterval(() => void refresh(true), HOUR_MS);
+    const onVisible = () => {
+      if (document.visibilityState === "visible") void refresh(true);
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      window.clearInterval(id);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
+  }, [refresh]);
 
   useEffect(() => {
     if (!sensors.length) return;
@@ -73,5 +98,6 @@ export function useMapData() {
     notice,
     setNotice,
     dataUpdatedLabel,
+    refresh,
   };
 }

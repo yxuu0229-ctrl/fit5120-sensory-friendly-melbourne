@@ -8,11 +8,21 @@ export function indicatorForLoad(
 }
 
 export function formatWalk(meters: number) {
-  return meters >= 1000
-    ? `${(meters / 1000).toFixed(1)} km`
-    : `${Math.round(meters)} m`;
+  if (!Number.isFinite(meters) || meters < 0) return "—";
+  if (meters >= 1000) {
+    const km = meters / 1000;
+    return `${km >= 10 ? km.toFixed(0) : km.toFixed(1)} km`;
+  }
+  return `${Math.round(meters)} m`;
 }
 
+/** Accurate ETA display: hours + minutes when needed. */
 export function formatMins(seconds: number) {
-  return `${Math.max(1, Math.round(seconds / 60))} min`;
+  if (!Number.isFinite(seconds) || seconds < 0) return "—";
+  const total = Math.max(0, Math.round(seconds / 60));
+  if (total < 1) return "<1 min";
+  if (total < 60) return `${total} min`;
+  const h = Math.floor(total / 60);
+  const m = total % 60;
+  return m === 0 ? `${h} hr` : `${h} hr ${m} min`;
 }

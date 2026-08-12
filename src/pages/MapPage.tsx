@@ -10,7 +10,9 @@ import MapFitBounds from "../components/map/MapFitBounds";
 import RefugeMarkers from "../components/map/RefugeMarkers";
 import RouteLayer from "../components/map/RouteLayer";
 import SensorLayer from "../components/map/SensorLayer";
+import TransitModeKey from "../components/map/TransitModeKey";
 import UserLocationMarker from "../components/map/UserLocationMarker";
+import OnboardingTips from "../components/onboarding/OnboardingTips";
 import NavDock from "../components/nav/NavDock";
 import ActiveRouteBar from "../components/nav/ActiveRouteBar";
 import MapPanels from "../components/shell/MapPanels";
@@ -20,6 +22,7 @@ import { coverageMessage } from "../lib/coverage";
 import { CBD_CENTER } from "../lib/densityBands";
 import { bearingAlongPath } from "../lib/geo";
 import { nearestRefuge, sortRefugesByDistance } from "../lib/nearestRefuge";
+import { sensorsAlongPath } from "../lib/sensorsAlongRoute";
 import { indicatorForLoad } from "../lib/sensoryIndicator";
 import {
   playGoChime,
@@ -40,7 +43,7 @@ export default function MapPage() {
   const [dest, setDest] = useState<PlaceResult | null>(null);
   const [threshold, setThreshold] = useState(50);
   const [preferCalmer, setPreferCalmer] = useState(true);
-  const [showLowSensors, setShowLowSensors] = useState(true);
+  const [showLowSensors, setShowLowSensors] = useState(false);
   const [mode, setMode] = useState<TransportMode>("walk");
   const [routes, setRoutes] = useState<RouteOption[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -124,7 +127,7 @@ export default function MapPage() {
   async function runPlan(nextMode: TransportMode = mode) {
     if (!origin?.point || !dest?.point) {
       data.setError(
-        "Choose an origin and destination from search (or press Enter)."
+        "Choose a start location and destination from search (or press Enter)."
       );
       return;
     }
@@ -193,7 +196,7 @@ export default function MapPage() {
         from = await getCurrentPosition();
         live.setUserPoint(from);
       } catch {
-        data.setError("Set your location first (Use my location or Origin).");
+        data.setError("Set your location first (Use my location or Start Location).");
         return;
       }
     }
@@ -219,6 +222,7 @@ export default function MapPage() {
         distanceMeters: trip.distanceMeters,
         durationSeconds: trip.durationSeconds,
         positions: trip.coordinates.map(([lng, lat]) => [lat, lng]),
+        mode: mode === "transit" ? "walk" : mode,
       };
       setRoutes([option]);
       setSelectedId(option.id);
@@ -274,20 +278,44 @@ export default function MapPage() {
     setNavigating(false);
   }
 
-  const mapSensors = useMemo(
-    () =>
-      showLowSensors
-        ? data.sensors
-        : data.sensors.filter((s) => s.density_level !== "Low"),
-    [data.sensors, showLowSensors]
-  );
+  const routePathPts = useMemo(() => {
+    if (navigating && live.remaining.length > 1) return live.remaining;
+    return selected?.positions ?? [];
+  }, [navigating, live.remaining, selected?.positions]);
 
-  const path =
-    navigating && live.remaining.length > 1
-      ? live.remaining
-      : (selected?.positions ?? []);
+  /** Every crowd zone that intersects the selected route corridor. */
+  const routeSensors = useMemo(() => {
+    if (!routePathPts.length) return [];
+    return sensorsAlongPath(routePathPts, data.sensors, 160);
+  }, [routePathPts, data.sensors]);
+
+  const routeHighlightIds = useMemo(() => {
+    if (!routeSensors.length && data.alert?.locationId == null) return undefined;
+    const ids = new Set(routeSensors.map((s) => s.location_id));
+    if (data.alert?.locationId != null) ids.add(data.alert.locationId);
+    return ids;
+  }, [routeSensors, data.alert?.locationId]);
+
+  const mapSensors = useMemo(() => {
+    const alongIds = new Set(routeSensors.map((s) => s.location_id));
+    // Always include Low/Med/High zones along the selected route.
+    const visible = showLowSensors
+      ? data.sensors
+      : data.sensors.filter(
+          (s) => s.density_level !== "Low" || alongIds.has(s.location_id)
+        );
+    const byId = new Map(visible.map((s) => [s.location_id, s]));
+    for (const s of routeSensors) byId.set(s.location_id, s);
+    return [...byId.values()];
+  }, [data.sensors, showLowSensors, routeSensors]);
+
+  const path = routePathPts.length > 1 ? routePathPts : (selected?.positions ?? []);
 
   const fitPaths = routes.map((r) => r.positions);
+
+  const isEmbedded =
+    typeof window !== "undefined" &&
+    (window.location.search.includes("embed=true") || window.self !== window.top);
 
   return (
     <div className={`map-app${navigating ? " is-navigating" : ""}`}>
@@ -297,7 +325,7 @@ export default function MapPage() {
           points={[origin?.point, dest?.point, live.userPoint]}
           paths={fitPaths}
         />
-        <SensorLayer sensors={mapSensors} />
+        <SensorLayer sensors={mapSensors} highlightIds={routeHighlightIds} />
         <RefugeMarkers
           places={sortedRefuges}
           selectedId={selectedRefugeId}
@@ -326,16 +354,10 @@ export default function MapPage() {
         )}
         <RouteLayer
           path={path}
-          segments={navigating ? undefined : selected?.segments}
+          segments={selected?.segments}
           style={navigating ? "navigating" : "selected"}
+          showLabels={Boolean(selected?.transitLegs?.length)}
         />
-        {navigating && selected?.segments?.length ? (
-          <RouteLayer
-            path={selected.positions}
-            segments={selected.segments}
-            style="selected"
-          />
-        ) : null}
         <UserLocationMarker
           point={navPoint}
           navigating={navigating}
@@ -361,6 +383,35 @@ export default function MapPage() {
       ) : null}
 
       <DataUpdatedTag label={data.dataUpdatedLabel} />
+
+      {selected?.segments && selected.segments.length > 1 ? (
+        <TransitModeKey segments={selected.segments} />
+      ) : null}
+
+      {routeSensors.length > 0 ? (
+        <div className="route-crowd-tag" role="status">
+          {routeSensors.length} crowd zone
+          {routeSensors.length === 1 ? "" : "s"} along route
+          {" · "}
+          {
+            [
+              routeSensors.filter((s) => s.density_level === "High").length
+                ? `${routeSensors.filter((s) => s.density_level === "High").length} high`
+                : null,
+              routeSensors.filter((s) => s.density_level === "Medium").length
+                ? `${routeSensors.filter((s) => s.density_level === "Medium").length} med`
+                : null,
+              routeSensors.filter((s) => s.density_level === "Low").length
+                ? `${routeSensors.filter((s) => s.density_level === "Low").length} low`
+                : null,
+            ]
+              .filter(Boolean)
+              .join(" · ")
+          }
+        </div>
+      ) : null}
+
+      {!navigating && !isEmbedded ? <OnboardingTips /> : null}
 
       <MapPanels
         hidden={navigating}
@@ -404,7 +455,7 @@ export default function MapPage() {
         sensorCount={data.sensors.length || null}
         toast={
           data.error || data.notice ? (
-            <div className="toast">
+            <div className={`toast${data.error ? " toast-error" : " toast-info"}`}>
               {data.error || data.notice}
               {data.error ? (
                 <button type="button" onClick={() => data.setError("")}>

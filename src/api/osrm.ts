@@ -1,4 +1,6 @@
 import type { LatLng } from "../lib/types";
+import { pathLengthFromLngLat } from "../lib/sensorsAlongRoute";
+import { durationForMode } from "../lib/travelTime";
 import { osrmProfile, type TransportMode } from "../lib/transportModes";
 
 export type OsrmRoute = {
@@ -14,7 +16,31 @@ function baseUrl() {
   );
 }
 
+function normalizeRoute(
+  mode: TransportMode,
+  r: {
+    distance?: number;
+    duration?: number;
+    geometry?: { coordinates?: [number, number][] };
+  }
+): OsrmRoute | null {
+  const coordinates = r.geometry?.coordinates ?? [];
+  if (coordinates.length < 2) return null;
+  const geomMeters = pathLengthFromLngLat(coordinates);
+  const distanceMeters =
+    r.distance && r.distance > 0 ? r.distance : geomMeters;
+  // Public OSRM returns identical car durations for foot/bike/driving —
+  // recompute with mode-specific urban speeds.
+  const durationSeconds = durationForMode(
+    mode,
+    distanceMeters,
+    r.duration ?? 0
+  );
+  return { distanceMeters, durationSeconds, coordinates };
+}
+
 async function requestRoute(
+  mode: TransportMode,
   profile: "foot" | "bike" | "driving",
   coords: string,
   alternatives: boolean | number
@@ -23,53 +49,47 @@ async function requestRoute(
   const res = await fetch(url);
   if (!res.ok) throw new Error(`Routing failed (${res.status})`);
   const body = (await res.json()) as {
+    code?: string;
     routes?: Array<{
       distance: number;
       duration: number;
       geometry?: { coordinates?: [number, number][] };
     }>;
   };
-  return (body.routes ?? []).map((r) => ({
-    distanceMeters: r.distance,
-    durationSeconds: r.duration,
-    coordinates: r.geometry?.coordinates ?? [],
-  }));
+  if (body.code && body.code !== "Ok") {
+    throw new Error(`Routing failed (${body.code})`);
+  }
+  return (body.routes ?? [])
+    .map((r) => normalizeRoute(mode, r))
+    .filter((r): r is OsrmRoute => r != null);
 }
 
+/**
+ * Fetch mode-specific routes. Geometry comes from OSRM; times are
+ * corrected per mode because the public demo ignores foot/bike speeds.
+ */
 export async function fetchOsrmRoutes(
   from: LatLng,
   to: LatLng,
   mode: TransportMode,
-  alternatives: boolean | number = 3
+  alternatives: boolean | number = true
 ): Promise<OsrmRoute[]> {
   const profile = osrmProfile(mode);
   if (!profile) return [];
 
   const direct = `${from.lng},${from.lat};${to.lng},${to.lat}`;
-  const routes = await requestRoute(profile, direct, alternatives);
+  const routes = await requestRoute(mode, profile, direct, alternatives);
 
-  // Ask OSRM for more variety when a profile returns few alternatives.
-  if (routes.length < 3 && (mode === "walk" || mode === "cycle" || mode === "drive")) {
-    const midLat = (from.lat + to.lat) / 2;
-    const midLng = (from.lng + to.lng) / 2;
-    const spread = mode === "drive" ? 0.006 : mode === "cycle" ? 0.005 : 0.004;
-    const offsets = [
-      { lat: midLat + spread, lng: midLng - spread * 0.75 },
-      { lat: midLat - spread * 0.75, lng: midLng + spread },
-    ];
-    for (const via of offsets) {
-      if (routes.length >= 3) break;
-      try {
-        const viaPath = `${from.lng},${from.lat};${via.lng},${via.lat};${to.lng},${to.lat}`;
-        const extra = await requestRoute(profile, viaPath, false);
-        if (extra[0]?.coordinates.length) routes.push(extra[0]);
-      } catch {
-        // ignore
-      }
-    }
+  const unique: OsrmRoute[] = [];
+  for (const r of routes) {
+    const dup = unique.some(
+      (u) =>
+        Math.abs(u.distanceMeters - r.distanceMeters) < 25 &&
+        Math.abs(u.durationSeconds - r.durationSeconds) < 15
+    );
+    if (!dup) unique.push(r);
   }
-
-  return routes;
+  return unique.slice(0, 3);
 }
 
 export async function fetchOsrmTo(
@@ -79,6 +99,7 @@ export async function fetchOsrmTo(
 ): Promise<OsrmRoute | null> {
   const profile = osrmProfile(mode) ?? "foot";
   const routes = await requestRoute(
+    mode,
     profile,
     `${from.lng},${from.lat};${to.lng},${to.lat}`,
     false
@@ -90,7 +111,7 @@ export async function fetchOsrmTo(
 export async function fetchOsrmFootRoutes(
   from: LatLng,
   to: LatLng,
-  alternatives: boolean | number = 3
+  alternatives: boolean | number = true
 ) {
   return fetchOsrmRoutes(from, to, "walk", alternatives);
 }

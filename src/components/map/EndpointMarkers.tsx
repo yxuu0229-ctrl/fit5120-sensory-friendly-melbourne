@@ -25,9 +25,9 @@ export default function EndpointMarkers({
           }}
         >
           <Tooltip direction="top" offset={[0, -6]} permanent>
-            A
+            Start
           </Tooltip>
-          <Popup>Origin</Popup>
+          <Popup>Start Location</Popup>
         </CircleMarker>
       )}
       {destination && (

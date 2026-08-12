@@ -1,5 +1,6 @@
 import { decodePolyline } from "../lib/polyline";
 import { MODE_COLORS, type SegmentMode } from "../lib/modeColors";
+import { pathLengthFromLngLat } from "../lib/sensorsAlongRoute";
 import type { LatLng, RouteSegment, TransitLeg } from "../lib/types";
 
 export type TransitRoute = {
@@ -10,6 +11,15 @@ export type TransitRoute = {
   transitLegs: TransitLeg[];
   segments: RouteSegment[];
 };
+
+/** Parse Routes API duration strings like "1234s", "1234.5s". */
+function parseDurationSeconds(raw: string | undefined | null): number {
+  if (!raw) return 0;
+  const match = String(raw).trim().match(/^([\d.]+)s$/i);
+  if (match) return Math.max(0, Number(match[1]) || 0);
+  const asNum = Number(raw);
+  return Number.isFinite(asNum) ? Math.max(0, asNum) : 0;
+}
 
 function googleKey() {
   return import.meta.env.VITE_GOOGLE_MAPS_API_KEY?.trim() || "";
@@ -103,26 +113,22 @@ function parseJourney(steps: GoogleStep[]): {
 
     const mode = (step.travelMode || "").toUpperCase();
     if (mode === "WALK" || mode === "WALKING") {
-      if (positions.length >= 2) {
-        segments.push({
-          mode: "walk",
-          color: MODE_COLORS.walk,
-          label: "Walk",
-          positions,
-        });
-      }
+      pushSegment(segments, {
+        mode: "walk",
+        color: MODE_COLORS.walk,
+        label: "Walk",
+        positions,
+      });
       continue;
     }
 
     if (mode !== "TRANSIT") {
-      if (positions.length >= 2) {
-        segments.push({
-          mode: "transit",
-          color: MODE_COLORS.transit,
-          label: "Transit",
-          positions,
-        });
-      }
+      pushSegment(segments, {
+        mode: "transit",
+        color: MODE_COLORS.transit,
+        label: "Transit",
+        positions,
+      });
       continue;
     }
 
@@ -148,17 +154,37 @@ function parseJourney(steps: GoogleStep[]): {
       color,
     });
 
-    if (positions.length >= 2) {
-      segments.push({
-        mode: kind,
-        color,
-        label: `${kindLabel(kind)} ${line}`,
-        positions,
-      });
-    }
+    pushSegment(segments, {
+      mode: kind,
+      color,
+      label: `${kindLabel(kind)} ${line}`,
+      positions,
+    });
   }
 
   return { transitLegs, segments, coordinates };
+}
+
+/** Merge consecutive same-mode slices so the map stays readable. */
+function pushSegment(segments: RouteSegment[], next: RouteSegment) {
+  if (next.positions.length < 2) return;
+  const prev = segments[segments.length - 1];
+  if (
+    prev &&
+    prev.mode === next.mode &&
+    prev.color === next.color &&
+    prev.label === next.label
+  ) {
+    const last = prev.positions[prev.positions.length - 1];
+    const first = next.positions[0];
+    const skipFirst =
+      last && first && last[0] === first[0] && last[1] === first[1];
+    prev.positions = prev.positions.concat(
+      skipFirst ? next.positions.slice(1) : next.positions
+    );
+    return;
+  }
+  segments.push({ ...next, positions: [...next.positions] });
 }
 
 function buildSummary(legs: TransitLeg[], fallback: string) {
@@ -195,7 +221,14 @@ export async function fetchTransitRoutes(
           "routes.legs.steps.travelMode",
           "routes.legs.steps.polyline.encodedPolyline",
           "routes.legs.steps.transitDetails",
+          "routes.legs.steps.transitDetails.headsign",
+          "routes.legs.steps.transitDetails.stopCount",
+          "routes.legs.steps.transitDetails.stopDetails",
           "routes.legs.steps.transitDetails.localizedValues",
+          "routes.legs.steps.transitDetails.transitLine.name",
+          "routes.legs.steps.transitDetails.transitLine.nameShort",
+          "routes.legs.steps.transitDetails.transitLine.color",
+          "routes.legs.steps.transitDetails.transitLine.vehicle",
         ].join(","),
       },
       body: JSON.stringify({
@@ -244,7 +277,12 @@ export async function fetchTransitRoutes(
           )
         : parsed.coordinates;
       if (!coordinates.length) return null;
-      const seconds = Number((r.duration || "0s").replace(/s$/, "")) || 0;
+      const seconds = parseDurationSeconds(r.duration);
+      const geomMeters = pathLengthFromLngLat(coordinates);
+      const distanceMeters =
+        r.distanceMeters && r.distanceMeters > 0
+          ? r.distanceMeters
+          : geomMeters;
       const fallback = r.description || `Transit option ${i + 1}`;
       const segments =
         parsed.segments.length > 0
@@ -260,7 +298,7 @@ export async function fetchTransitRoutes(
               },
             ];
       return {
-        distanceMeters: r.distanceMeters ?? 0,
+        distanceMeters,
         durationSeconds: seconds,
         coordinates,
         summary: buildSummary(parsed.transitLegs, fallback),

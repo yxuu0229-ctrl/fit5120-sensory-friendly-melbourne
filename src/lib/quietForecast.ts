@@ -34,6 +34,18 @@ export function nextHourLabel(now = new Date()) {
   return { dayName: day, hourday: next, label: `${day} ${label}` };
 }
 
+/** Turn sensor ids into a coverage-area label (not a raw sensor bubble name). */
+export function coverageAreaLabel(sensorName: string | null): string {
+  const raw = (sensorName || "Nearby streets").replace(/_/g, " ").trim();
+  const cleaned = raw
+    .replace(/\bsensor\b/gi, "")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (!cleaned) return "This coverage area";
+  if (/zone|area|streets?/i.test(cleaned)) return cleaned;
+  return `${cleaned} coverage area`;
+}
+
 export function buildQuietAlert(
   sensors: SensorReading[],
   windows: LocationQuietWindow[],
@@ -47,11 +59,12 @@ export function buildQuietAlert(
     const level = densityFromCount(w.mean);
     if (!(w.is_reliable && level === "High")) continue;
     candidates.push({
-      areaName: (s.sensor_name || "Nearby sensor").replace(/_/g, " "),
+      areaName: coverageAreaLabel(s.sensor_name),
       periodLabel,
       expectedMean: w.mean,
       reliable: w.is_reliable,
       point: { lat: s.latitude, lng: s.longitude },
+      locationId: s.location_id,
     });
   }
   candidates.sort((a, b) => (b.expectedMean ?? 0) - (a.expectedMean ?? 0));

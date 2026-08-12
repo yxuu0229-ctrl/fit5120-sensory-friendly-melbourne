@@ -27,7 +27,7 @@ export default function PlanBlock(props: {
     <div className="plan-block">
       <ModeSwitcher mode={props.mode} onChange={props.onModeChange} />
       <LocationSearch
-        label="Origin"
+        label="Start Location"
         value={props.originText}
         onChange={props.setOriginText}
         onResolved={props.setOrigin}

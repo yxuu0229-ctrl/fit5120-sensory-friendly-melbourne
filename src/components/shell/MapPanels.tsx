@@ -5,6 +5,7 @@ import RefugeDetail from "../refuges/RefugeDetail";
 import RefugeList from "../refuges/RefugeList";
 import AlternativeBanner from "../routes/AlternativeBanner";
 import TopRoutesList from "../routes/TopRoutesList";
+import MapLegend from "./MapLegend";
 import type { PlaceResult, QuietAlert, RefugePlace, RouteOption } from "../../lib/types";
 import type { TransportMode } from "../../lib/transportModes";
 
@@ -97,6 +98,22 @@ export default function MapPanels({
   );
   const placesBlock = (
     <>
+      <MapLegend />
+      <label className="check-row sensor-toggle">
+        <input
+          type="checkbox"
+          checked={planProps.showLowSensors}
+          onChange={(e) => planProps.setShowLowSensors(e.target.checked)}
+        />
+        Show low-crowd areas on map
+      </label>
+      {sensorCount != null ? (
+        <p className="sensor-count-note">
+          {planProps.showLowSensors
+            ? `Showing coverage for all ${sensorCount} sensors.`
+            : `Hiding low areas — map shows Medium/High coverage only (scoring still uses all ${sensorCount}).`}
+        </p>
+      ) : null}
       <NextHourAlert alert={alert} />
       <h2>Nearby refuges</h2>
       <RefugeList
@@ -105,28 +122,6 @@ export default function MapPanels({
         onSelect={onSelectRefuge}
       />
       <RefugeDetail place={selectedRefuge} onNavigate={onNavigateRefuge} />
-      <p className="legend">
-        <span className="dot sensor-low" /> Low{" "}
-        <span className="dot sensor-med" /> Medium{" "}
-        <span className="dot sensor-high" /> High crowd{" "}
-        <span className="legend-pin" aria-hidden="true" /> Refuge{" "}
-        <span className="dot you" /> You
-      </p>
-      <label className="check-row sensor-toggle">
-        <input
-          type="checkbox"
-          checked={planProps.showLowSensors}
-          onChange={(e) => planProps.setShowLowSensors(e.target.checked)}
-        />
-        Show low-crowd sensors on map
-      </label>
-      {sensorCount != null ? (
-        <p className="sensor-count-note">
-          {planProps.showLowSensors
-            ? `Showing all ${sensorCount} sensors on the map.`
-            : `Hiding low sensors — map shows Medium/High only (scoring still uses all ${sensorCount}).`}
-        </p>
-      ) : null}
     </>
   );
 
