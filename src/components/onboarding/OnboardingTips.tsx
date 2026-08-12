@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 
-const STORAGE_KEY = "relax-maps-onboarding-v1";
+/** Bump when tip copy/placement changes so returning users see the tour again. */
+const DONE_KEY = "relax-maps-onboarding-v2";
+const SESSION_KEY = "relax-maps-onboarding-session-v2";
 
 type Tip = {
   id: string;
   text: string;
-  /** Approximate placement of the tip bubble. */
   place: "center" | "plan" | "modes" | "go" | "legend";
 };
 
@@ -37,9 +38,19 @@ const TIPS: Tip[] = [
   },
 ];
 
+function forceTipsFromQuery() {
+  try {
+    return new URLSearchParams(window.location.search).get("tips") === "1";
+  } catch {
+    return false;
+  }
+}
+
 /**
  * Hand-drawn style coach marks for new users.
  * Each tip auto-advances after 5 seconds.
+ * Shows once per browser session until Skip (then permanently hidden).
+ * Add ?tips=1 to force the tour again.
  */
 export default function OnboardingTips({
   enabled = true,
@@ -50,26 +61,45 @@ export default function OnboardingTips({
 
   useEffect(() => {
     if (!enabled) return;
-    try {
-      if (localStorage.getItem(STORAGE_KEY) === "done") return;
-    } catch {
-      // ignore
+
+    const forced = forceTipsFromQuery();
+    if (forced) {
+      try {
+        localStorage.removeItem(DONE_KEY);
+        localStorage.removeItem("relax-maps-onboarding-v1");
+        sessionStorage.removeItem(SESSION_KEY);
+      } catch {
+        // ignore
+      }
+    } else {
+      try {
+        if (localStorage.getItem(DONE_KEY) === "done") return;
+        if (sessionStorage.getItem(SESSION_KEY) === "1") return;
+      } catch {
+        // ignore
+      }
     }
-    setStep(0);
+
+    // Brief delay so the map chrome is painted first.
+    const start = window.setTimeout(() => setStep(0), 400);
+    return () => window.clearTimeout(start);
   }, [enabled]);
 
   useEffect(() => {
     if (step == null) return;
     if (step >= TIPS.length) {
       try {
-        localStorage.setItem(STORAGE_KEY, "done");
+        sessionStorage.setItem(SESSION_KEY, "1");
       } catch {
         // ignore
       }
       setStep(null);
       return;
     }
-    const timer = window.setTimeout(() => setStep((s) => (s == null ? s : s + 1)), 5000);
+    const timer = window.setTimeout(
+      () => setStep((s) => (s == null ? s : s + 1)),
+      5000
+    );
     return () => window.clearTimeout(timer);
   }, [step]);
 
@@ -79,7 +109,8 @@ export default function OnboardingTips({
 
   function dismiss() {
     try {
-      localStorage.setItem(STORAGE_KEY, "done");
+      localStorage.setItem(DONE_KEY, "done");
+      sessionStorage.setItem(SESSION_KEY, "1");
     } catch {
       // ignore
     }

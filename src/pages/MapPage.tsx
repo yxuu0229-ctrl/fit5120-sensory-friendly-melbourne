@@ -313,10 +313,6 @@ export default function MapPage() {
 
   const fitPaths = routes.map((r) => r.positions);
 
-  const isEmbedded =
-    typeof window !== "undefined" &&
-    (window.location.search.includes("embed=true") || window.self !== window.top);
-
   return (
     <div className={`map-app${navigating ? " is-navigating" : ""}`}>
       <MapCanvas follow={navigating} followPoint={navPoint}>
@@ -411,7 +407,7 @@ export default function MapPage() {
         </div>
       ) : null}
 
-      {!navigating && !isEmbedded ? <OnboardingTips /> : null}
+      {!navigating ? <OnboardingTips /> : null}
 
       <MapPanels
         hidden={navigating}

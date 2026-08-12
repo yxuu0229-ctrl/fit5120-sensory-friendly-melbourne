@@ -803,9 +803,9 @@
 /* Onboarding coach marks (landing-style tips) */
 .coach-overlay {
   position: absolute;
-  z-index: 700;
+  z-index: 1200;
   pointer-events: none;
-  max-width: min(300px, calc(100vw - 2rem));
+  max-width: min(320px, calc(100vw - 2rem));
 }
 
 .coach-overlay .coach-card {
