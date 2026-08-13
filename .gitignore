@@ -1,21 +1,49 @@
-# Dependencies and build output
+# Dependencies
 node_modules/
-dist/
-coverage/
+.pnpm-store/
 
 # Local environment and secrets
 .env
 .env.*
 !.env.example
 
+# Build / Vite output
+dist/
+build/
+.turbo/
+.next/
+*.tsbuildinfo
+.vite/
+
 # Supabase local state
 supabase/.temp/
 supabase/.branches/
 
-# Editors and operating system
+# Python (notebooks / scripts)
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+.venv/
+venv/
+
+# Editors and OS
 .DS_Store
+Thumbs.db
 .idea/
 .vscode/
+*.swp
+*.swo
 
-# Logs
+# Logs and test coverage
 *.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+coverage/
+.nyc_output/
+
+# Optional local caches
+.cache/
+tmp/
+temp/

@@ -1,71 +1,57 @@
-# Team TE37 Sensory-Aware Web Project
+# Relax Maps
 
-This repository is the planned source-of-truth for Team TE37's runnable web build.
+Sensory-aware navigation map for Melbourne CBD.
 
-## Current status
+## Run locally
 
-- Repository governance and architecture baseline: ready for team review.
-- Frontend decision: React + Vite + TypeScript.
-- Backend decision: Supabase, using Postgres and the generated Data API first.
-- Hosting decision: deferred. Vercel may be considered later, but it is not configured now.
-- Assessed application code: not generated in this baseline.
-- Database schema, real datasets, user-facing features and acceptance tests: pending LeanKit claims and team decisions.
-
-## Course alignment
-
-Every implementation change must map to a LeanKit Epic, User Story and Acceptance Criteria. The deployed build must remain consistent with the presentation and LeanKit board, include database/data scripts and documentation, and run without mentor-visible errors.
-
-- [LeanKit / AgilePlace](https://monashie.leankit.com)
-- [Team TE37 Project Governance Portfolio](https://drive.google.com/drive/folders/1zkA3NtSfl-Jjgt35kKVRmSxm1q3pCHG6)
-
-## Proposed technology stack
-
-| Layer | Choice | Why now |
-|---|---|---|
-| Frontend | React + Vite + TypeScript | Small, fast SPA with type checking and a simple deployment path |
-| Database | Supabase Postgres | Managed relational database with migrations and generated APIs |
-| Backend API | Supabase Data API | Avoids maintaining a separate server for ordinary database reads |
-| Protected server logic | Supabase Edge Functions | Keeps third-party secrets and privileged operations out of the browser |
-| Frontend hosting | Deferred | Choose a provider only after the deployment readiness gate is satisfied |
-| Source control | GitHub | Pull requests, review history and CI evidence |
-| Work tracking | LeanKit | Course-required source for Stories, Acceptance Criteria, ownership and status |
-| Governance evidence | PGP | Course-required location for reviewed artefacts and evidence |
-
-## Repository map
-
-```text
-.
-├── .github/
-│   ├── ISSUE_TEMPLATE/
-│   └── PULL_REQUEST_TEMPLATE.md
-├── docs/
-│   ├── 01-overall-solution-and-repository-structure.md
-│   ├── 02-system-architecture-plan.md
-│   ├── 03-six-person-github-usage-handbook.md
-│   ├── 04-deployment-handbook.md
-│   ├── 05-security-baseline.md
-│   └── 06-member-contribution-rules.md
-├── src/                    # React application; team-authored code goes here
-├── supabase/
-│   ├── functions/          # Server-side functions only when justified
-│   └── migrations/         # Versioned database and RLS changes
-├── .env.example
-├── .gitignore
-└── README.md
+```bash
+npm install
+cp .env.example .env
+npm run dev
 ```
 
-## Before implementation starts
+Open [http://localhost:5173](http://localhost:5173).
 
-1. Confirm the exact onboarding scope and Acceptance Criteria in LeanKit.
-2. Record the actual open-data sources, licences, fields and refresh method.
-3. Agree on the first database migration and security policies in a team architecture review.
-4. Confirm the course boundary for AI-assisted coding; the current student-reported permission covers planning, not implementation code.
+## Environment
 
-## Working documents
+Copy `.env.example` to `.env` and fill in:
 
-- [Overall solution and repository structure](docs/01-overall-solution-and-repository-structure.md)
-- [System architecture plan](docs/02-system-architecture-plan.md)
-- [Six-person GitHub usage handbook](docs/03-six-person-github-usage-handbook.md)
-- [Deployment handbook](docs/04-deployment-handbook.md)
-- [Security baseline](docs/05-security-baseline.md)
-- [Member contribution rules](docs/06-member-contribution-rules.md)
+| Variable | Required | Notes |
+| --- | --- | --- |
+| `VITE_SUPABASE_URL` | Yes | Supabase project URL |
+| `VITE_SUPABASE_ANON_KEY` | Yes | Browser-safe anon key only |
+| `VITE_GOOGLE_MAPS_API_KEY` | Recommended | Places, Geocoding, Routes (transit) |
+| `VITE_OSRM_URL` | No | Defaults to public OSRM |
+
+Never put `SUPABASE_SERVICE_ROLE_KEY` in frontend env vars.
+
+Without a Google key, search falls back to curated CBD landmarks. Transit needs **Routes API** enabled on the Google key.
+
+## Deploy (Vercel)
+
+1. Push this branch to GitHub.
+2. Import the repo in [Vercel](https://vercel.com) → Framework Preset: **Vite**.
+3. Build command: `npm run build` · Output: `dist` · Node **20+**.
+4. Add environment variables (same `VITE_*` names as `.env`).
+5. Deploy. SPA routing is handled by `vercel.json`.
+
+After deploy, restrict the Google API key to your production domain (HTTP referrer).
+
+### Cloudflare Pages (optional)
+
+- Build command: `npm run build`
+- Output directory: `dist`
+- Same `VITE_*` env vars
+- `public/_redirects` covers client-side routes
+
+## Stack
+
+- Vite + React + TypeScript + Leaflet
+- Supabase (density, refuges, quiet windows)
+- Google Places / Geocoding / Routes (optional)
+- Public OSRM (walk / cycle / drive)
+
+## Pages
+
+- `/` — landing
+- `/map` — plan routes, live Go navigation, overload markers, nearest refuge

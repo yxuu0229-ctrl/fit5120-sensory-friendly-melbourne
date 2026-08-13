@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Relax Maps">
+  <defs>
+    <linearGradient id="tile" x1="18%" y1="8%" x2="88%" y2="92%">
+      <stop offset="0%" stop-color="#2a9b88"/>
+      <stop offset="100%" stop-color="#17685c"/>
+    </linearGradient>
+    <linearGradient id="path" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f4fffb"/>
+      <stop offset="100%" stop-color="#c8ebe3"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Soft rounded map card (not a pin) -->
+  <rect x="56" y="56" width="400" height="400" rx="96" fill="url(#tile)"/>
+
+  <!-- Subtle grid suggesting streets -->
+  <g stroke="#ffffff" stroke-opacity="0.14" stroke-width="10" stroke-linecap="round">
+    <path d="M140 170h232"/>
+    <path d="M140 256h232"/>
+    <path d="M140 342h232"/>
+    <path d="M190 130v252"/>
+    <path d="M278 130v252"/>
+    <path d="M366 130v252"/>
+  </g>
+
+  <!-- Calm winding route -->
+  <path
+    d="M148 360C190 300 210 250 248 228c42-24 78-8 104 28 18 26 42 48 78 42"
+    fill="none"
+    stroke="url(#path)"
+    stroke-width="28"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+
+  <!-- Refuge / reset diamond -->
+  <rect
+    x="286"
+    y="168"
+    width="52"
+    height="52"
+    rx="8"
+    fill="#f4fffb"
+    transform="rotate(45 312 194)"
+  />
+</svg>

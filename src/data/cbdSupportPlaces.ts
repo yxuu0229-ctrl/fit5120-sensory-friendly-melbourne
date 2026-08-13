@@ -1,0 +1,112 @@
+import type { RefugePlace } from "../lib/types";
+
+/**
+ * Curated CBD support facilities for ND planning.
+ * Shown only when the matching Places-panel filter is on.
+ */
+export const CBD_SUPPORT_PLACES: RefugePlace[] = [
+  {
+    id: "support-toilet-state-library",
+    name: "State Library amenities",
+    category: "Bathroom",
+    theme: "Public toilet near calm indoor space",
+    latitude: -37.8098,
+    longitude: 144.9643,
+  },
+  {
+    id: "support-toilet-fed-square",
+    name: "Federation Square toilets",
+    category: "Bathroom",
+    theme: "Accessible public bathrooms",
+    latitude: -37.8182,
+    longitude: 144.9691,
+  },
+  {
+    id: "support-water-flagstaff",
+    name: "Flagstaff Gardens fountain",
+    category: "Water fountain",
+    theme: "Drinking water · shaded park edge",
+    latitude: -37.8106,
+    longitude: 144.9548,
+  },
+  {
+    id: "support-water-carlton",
+    name: "Carlton Gardens water point",
+    category: "Drinking water",
+    theme: "Hydration near Museum / gardens",
+    latitude: -37.8055,
+    longitude: 144.9715,
+  },
+  {
+    id: "support-seat-treasury",
+    name: "Treasury Gardens seating",
+    category: "Shaded seating",
+    theme: "Benches under trees",
+    latitude: -37.8139,
+    longitude: 144.9755,
+  },
+  {
+    id: "support-seat-birrarung",
+    name: "Birrarung Marr seating",
+    category: "Seating · shade",
+    theme: "Riverside rest spots",
+    latitude: -37.8194,
+    longitude: 144.9732,
+  },
+  {
+    id: "support-pharmacy-bourke",
+    name: "Bourke Street pharmacy hub",
+    category: "Pharmacy",
+    theme: "Medical retail · toggle only",
+    latitude: -37.8135,
+    longitude: 144.9658,
+  },
+  {
+    id: "support-medical-rmh-edge",
+    name: "RMH precinct edge",
+    category: "Medical",
+    theme: "Hospital approach · quieter side streets nearby",
+    latitude: -37.7992,
+    longitude: 144.9565,
+  },
+  {
+    id: "support-landmark-flinders",
+    name: "Flinders Street Station",
+    category: "Landmark",
+    theme: "Clear wayfinding landmark",
+    latitude: -37.8183,
+    longitude: 144.9671,
+  },
+  {
+    id: "support-landmark-parliament",
+    name: "Parliament House",
+    category: "Landmark · square",
+    theme: "Visible orientation landmark",
+    latitude: -37.8111,
+    longitude: 144.9735,
+  },
+  {
+    id: "support-library-state",
+    name: "State Library Victoria",
+    category: "Library · quiet refuge",
+    theme: "Large calm indoor reset space",
+    latitude: -37.8098,
+    longitude: 144.9652,
+  },
+  {
+    id: "support-park-treasury",
+    name: "Treasury Gardens",
+    category: "Park · garden",
+    theme: "Green quiet corridor",
+    latitude: -37.8142,
+    longitude: 144.9762,
+  },
+  {
+    id: "support-quiet-st-pauls",
+    name: "St Paul’s Cathedral precinct",
+    category: "Quiet · calm",
+    theme: "Quieter stone precinct near Flinders",
+    latitude: -37.8169,
+    longitude: 144.9676,
+  },
+];
